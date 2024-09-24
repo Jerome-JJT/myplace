@@ -1,0 +1,120 @@
+version: "3.7"
+
+
+services:
+
+  # db:
+  #   image: postgres:14.2
+
+  #   volumes:
+  #     - /etc/localtime:/etc/localtime:ro
+  #     - main_db:/var/lib/postgresql/data/
+
+  #   networks:
+  #     - back
+
+  #   environment:
+  #     POSTGRES_DB: ${DATABASE_DB}
+  #     POSTGRES_USER: ${DATABASE_USERNAME}
+  #     POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+
+  # adminer:
+  #   image: adminer
+
+  #   # depends_on:
+  #   #   - postgres
+
+  #   # volumes:
+  #   #   - ./adminer:/var/www/html
+
+  #   networks:
+  #     - back
+
+  # back:
+  #   build: ./_build/php
+  #   # image: httpd:2.4.57-alpine
+  #   depends_on:
+  #     - db
+
+  #   volumes:
+  #     - /etc/localtime:/etc/localtime:ro
+  #     - ./secure_static:/secure_static
+  #     - ./back:/var/www/html
+
+  #   networks:
+  #     - back
+  #     - front
+  #     - logging_logstash
+
+  #   # ports:
+  #   #   - "8888:80"
+
+  #   environment:
+  #     DATABASE_CONNECT: 'pgsql'
+  #     DATABASE_HOST: 'db'
+  #     DATABASE_PORT: '5432'
+
+  #     DATABASE_DB: ${DATABASE_DB}
+  #     DATABASE_USER: ${DATABASE_USERNAME}
+  #     DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+
+  #     CALLBACK_URL: ${CALLBACK_URL}
+
+  #     RABBIT_USER: ${RABBIT_USER}
+  #     RABBIT_PASS: ${RABBIT_PASS}
+
+  #     INTRA_USER: ${INTRA_USER}
+  #     INTRA_PASS: ${INTRA_PASS}
+
+  #     API_UID: ${API_FRONT_UID}
+  #     API_SECRET: ${API_FRONT_SECRET}
+
+  #     CURRENT_POOL: ${CURRENT_POOL}
+  
+  #   working_dir: /var/www/html
+
+
+  front:
+    build: ./_build/react
+
+    ports:
+     - "8080:5173"
+    #  - "8443:443"
+
+    volumes:
+      - ./front:/app
+
+    networks:
+      - front
+
+    working_dir: /app
+
+
+  # nginx:
+  #   build: 
+  #     context: .
+  #     dockerfile: ./_build/nginx/Dockerfile
+
+  #   depends_on:
+  #     - front
+  #     - back
+
+  #   volumes:
+  #     - /etc/localtime:/etc/localtime:ro
+  #     - ./static:/var/www/static
+
+  #   networks:
+  #     - front
+  #     - back
+
+
+networks:
+  front:
+  back:
+
+# volumes:
+#   main_db:
+#   rabbit_data:
+#   jar:
+
+
