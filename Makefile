@@ -1,8 +1,10 @@
 
+include .env
+
 APP_NAME	= place
 
 COMPOSE_BASE		= -f ./docker-compose.yml
-COMPOSE_DEV		= -f ./docker-compose.yml #-f ./docker-compose.dev.yml
+COMPOSE_DEV		= -f ./docker-compose.yml -f ./docker-compose.dev.yml
 COMPOSE_PROD	= -f ./docker-compose.yml -f ./docker-compose.override.yml
 
 #Dev
@@ -35,7 +37,8 @@ flogs:
 
 logsfront:
 			${DOCKER} logs front
-
+logsback:
+			${DOCKER} logs back
 logspostg:
 			${DOCKER} logs db
 logsf:
@@ -45,6 +48,8 @@ logsnginx:
 
 flogsfront:
 			${DOCKER} logs --tail 40 -ft front
+flogsback:
+			${DOCKER} logs --tail 40 -ft back
 flogspostg:
 			${DOCKER} logs --tail 40 -ft db
 flogsnginx:
@@ -59,8 +64,8 @@ repostg:
 
 runf:
 			${DOCKER} exec flyway bash
-runapi:
-			${DOCKER} exec api bash
+runredis:
+			${DOCKER} exec cache redis-cli --askpass
 runfront:
 			${DOCKER} exec front sh
 runback:
@@ -68,7 +73,7 @@ runback:
 runpostg:
 			${DOCKER} exec postgres bash
 rundb:
-			${DOCKER} exec db psql --host=db --dbname=test_db --username=user -W
+			${DOCKER} exec db psql --host=db --dbname=${DATABASE_DB} --username=${DATABASE_USERNAME} -W
 db: rundb
 
 

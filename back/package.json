@@ -1,0 +1,17 @@
+{
+    "name": "place-back",
+    "private": true,
+    "version": "0.0.0",
+    "scripts": {
+        "dev": "nodemon --legacy-watch src/main.js"
+    },
+    "dependencies": {
+        "express": "^4.21.0",
+        "pg": "^8.13.0",
+        "redis": "^4.7.0",
+        "ws": "^8.18.0"
+    },
+    "devDependencies": {
+        "nodemon": "^3.1.4"
+    }
+}
