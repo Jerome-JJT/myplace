@@ -15,8 +15,8 @@ export function Place() {
   const [ratio, setRatio] = useState(16);
 
   const [activePixel, setActivePixel] = useState<{x: number, y: number}>({ x: -1, y: -1 });
-  const [offset, setOffset] = useState<{x: number, y: number}>({ x: -1, y: -1 });
-  const [translate, setTranslate] = useState<{x: number, y: number}>({ x: -1, y: -1 });
+  // const [offset, setOffset] = useState<{x: number, y: number}>({ x: -1, y: -1 });
+  const [translate, setTranslate] = useState<{x: number, y: number}>({ x: 0, y: 0 });
 
   const [colors, setColors] = useState<Map<number, { name: string, color: string }>>(new Map());
   const [board, setBoard] = useState<Map<string, pixel>>(new Map());
@@ -31,6 +31,22 @@ export function Place() {
   });
 
 
+  // const [windowSize, setWindowSize] = useState<{width: number| undefined, height: number | undefined}>({
+  //   width:  undefined,
+  //   height: undefined,
+  // });
+  // useEffect(() => {
+  //   function handleResize() {
+  //     setWindowSize({
+  //       width:  window.innerWidth,
+  //       height: window.innerHeight,
+  //     });
+  //   }
+  //   window.addEventListener('resize', handleResize);
+  //   handleResize();
+  //   return () => window.removeEventListener('resize', handleResize);
+  // }, []);
+
   useEffect(() => {
     const newRatio = zoom ? 16 : 40;
     setRatio(newRatio);
@@ -38,17 +54,31 @@ export function Place() {
   }, [zoom]);
 
   useEffect(() => {
-    setOverlayStyle((prev) => {
-      return {
-        ...prev,
-        width:  `${ratio - 2}px`,
-        height: `${ratio - 2}px`,
+    if (pl.current !== null) {
 
-        top:  ((activePixel.y * ratio) + offset.y) + 'px',
-        left: ((activePixel.x * ratio) + offset.x) + 'px',
-      };
-    });
-  }, [ratio, activePixel.x, activePixel.y, offset.x, offset.y]);
+      const centerX = pl.current.width / 2;
+      const centerY = pl.current.height / 2;
+
+      const offsetX = (pl.current.offsetLeft - (centerX * ratio) + centerX);
+      const offsetY = pl.current.offsetTop;
+
+      const tx = ((activePixel.x * ratio) + offsetX) + translate.x * ratio;
+      const ty = ((activePixel.y * ratio) + offsetY) + translate.y * ratio;
+
+      console.log(activePixel.x, ratio, offsetX, centerX, tx);
+
+      setOverlayStyle((prev) => {
+        return {
+          ...prev,
+          width:  `${ratio - 2}px`,
+          height: `${ratio - 2}px`,
+
+          top:  ty + 'px',
+          left: tx + 'px',
+        };
+      });
+    }
+  }, [pl.current?.offsetLeft, pl.current?.offsetTop, ratio, activePixel.x, activePixel.y, translate.x, translate.y]);
 
 
   useEffect(() => {
@@ -121,74 +151,97 @@ export function Place() {
 
 
   const canvasClicked = useCallback((e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
-    const offsetX = (e.target as HTMLCanvasElement).offsetLeft;
-    const offsetY = (e.target as HTMLCanvasElement).offsetTop;
 
-    const centerX = (e.target as HTMLCanvasElement).width / 2;
-    const centerY = (e.target as HTMLCanvasElement).height / 2;
+    if (pl.current !== null) {
 
-    setOffset({ x: offsetX, y: offsetY });
+      const centerX = pl.current.width / 2;
+      const centerY = pl.current.height / 2;
 
-    const clickedX = Math.floor((e.pageX - offsetX) / Math.floor(ratio));
-    const clickedY = Math.floor((e.pageY - offsetY) / Math.floor(ratio));
-
-    // console.log(clickedX, clickedY, ratio, e.pageX, e.pageY, offsetX, offsetY);
-
-    const trX = (centerX - (e.pageX - offsetX)) * 40;
-    const trY = (centerY - (e.pageY - offsetY)) * 40;
-
-    // console.log(trX, trY, e.pageX, e.pageY, centerX, centerY, offsetX, offsetY);
-
-    // setTranslate({ x: trX, y: trY });
-    setRatio(40);
+      const offsetX = (pl.current.offsetLeft - (centerX * ratio) + centerX);
+      const offsetY = pl.current.offsetTop;
 
 
+      // console.log('base', e, e.pageX, offsetX, centerX, e.pageX - offsetX);
 
-    if (clickedX < 100 && clickedY < 100) {
-      setActivePixel({ x: clickedX, y: clickedY });
+      const clickedX = Math.floor((e.pageX - offsetX) / ratio - translate.x);
+      const clickedY = Math.floor((e.pageY - offsetY) / ratio - translate.y);
+
+      // console.log(clickedX, clickedY, ratio, e.pageX, e.pageY, offsetX, offsetY);
+      console.log('click', clickedX, clickedY);
+
+      const trX = (centerX - (e.pageX - offsetX)) / ratio;
+      const trY = (centerY - (e.pageY - offsetY)) / ratio;
+
+
+      if (clickedX < 100 && clickedY < 100) {
+        setActivePixel({ x: clickedX, y: clickedY });
+        console.log('begintr', centerX, clickedX, centerY, clickedY);
+
+        setTranslate({ x: centerX - clickedX, y: centerY - clickedY });
+        setRatio(30);
+      }
+      else {
+        setActivePixel({ x: -1, y: -1 });
+      }
     }
-    else {
-      setActivePixel({ x: -1, y: -1 });
+
+  }, [ratio, translate.x, translate.y]);
+
+
+  const canvasZoomed = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const factor = Math.sign(e.deltaY) > 0 ? 0.9 : 1.1;
+    console.log(e.deltaY);
+
+    if (pl.current !== null) {
+      const centerX = pl.current.width / 2;
+      const centerY = pl.current.height / 2;
+
+      const offsetX = (pl.current.offsetLeft - (centerX * ratio) + centerX);
+      const offsetY = pl.current.offsetTop;
+
+      const mouseX = Math.floor((e.pageX - offsetX) / ratio - translate.x);
+      const mouseY = Math.floor((e.pageY - offsetY) / ratio - translate.y);
+
+      if (e.deltaY < 0) {
+        setTranslate({ x: centerX - mouseX, y: centerY - mouseY });
+      }
     }
 
-  }, [ratio]);
+    setRatio((prev) => {
+      return (Math.round(Math.min(Math.max(prev * factor, 16), 40)));
+    });
+  }, [ratio, translate.x, translate.y]);
 
   return (
     <>
-      <canvas width="50" height="50" ref={pl} onClick={canvasClicked}
+      <canvas
+        width="50px"
+        height="50px"
+        ref={pl}
+        onClick={canvasClicked}
+        onWheel={canvasZoomed}
+        // onMouseDown={}
+        // onMouseMove={}
+        // onMouseUp={}
         style={{
-          transform:  `scale(${ratio})`,
-          transition: 'transform 1.4s linear',
-          translate:  `(${translate.x / ratio}px, ${translate.y / ratio}px)`,
-        //   transformOrigin: 'center center',
+          // width:      '50px',
+          // height:     '50px',
+          transform:  `scale(${ratio}) translate(${translate.x}px, ${translate.y}px)`,
+          transition: 'transform 0.5s linear',
         }}
 
-        onWheel={(e: any) => {
-          console.log(e);
-          e.preventDefault();
-          e.stopPropagation();
-
-          // const off = {
-          //     x: e.pageX - pl.current!.offsetLeft,
-          //     y: e.pageY - pl.current!.offsetTop
-          // }
-
-          const factor = Math.sign(e.deltaY) > 0 ? 0.9 : 1.1;
-
-          setRatio((prev) => {
-            return (Math.min(Math.max(prev * factor, 16), 40));
-          });
-        }}
       >
-
       </canvas>
 
       {activePixel.x !== -1 && <div id="overlay" style={overlayStyle}></div>}
 
-      <div className='fixed flex bottom-0 w-full'>
+      <div className='fixed flex bottom-0 w-full pointer-events-none'>
         <div id='menu' className='mx-auto self-center bg-red-500 flex flex-col '>
           <div className='self-center bg-blue-500 w-40'>
-                        text
+            text
           </div>
           <div className='self-center bg-green-500 p-2 flex flex-row gap-2'>
             {
@@ -200,7 +253,7 @@ export function Place() {
                       style={{ backgroundColor: 'rgb(' + v[1].color + ')' }}
                       onClick={() => {
                         setActiveColor(v[0]);
-                        setZoom(!zoom);
+                        setTranslate({ x: 0, y: 0 });
                       }}
                     >
 
