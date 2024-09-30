@@ -78,12 +78,12 @@ export function Place() {
       const centerX = pl.current.width / 2;
       const centerY = pl.current.height / 2;
 
-      const offsetX = (pl.current.offsetLeft - (centerX * ratio) + centerX);
-      const offsetY = (pl.current.offsetTop - (centerY * ratio) + centerY);
+      const offsetX = (pl.current.offsetLeft - (centerX * ratio));
+      const offsetY = (pl.current.offsetTop - (centerY * ratio));
       // const offsetY = pl.current.offsetTop;
 
-      const tx = ((activePixel.x * ratio) + offsetX) + translate.x * ratio;
-      const ty = ((activePixel.y * ratio) + offsetY) + translate.y * ratio;
+      const tx = (activePixel.x + translate.x) * ratio + centerX + offsetX;
+      const ty = (activePixel.y + translate.y) * ratio + centerY + offsetY;
 
       console.log('render cursor', activePixel.x, ratio, offsetX, centerX, tx);
 
@@ -173,15 +173,18 @@ export function Place() {
   const canvasClicked = useCallback((e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
 
     if (pl.current !== null) {
-      const rect = pl.current.getBoundingClientRect();
 
-      const offsetX = rect.left + translate.x * ratio;
-      const offsetY = rect.top + translate.y * ratio;
-      // const centerX = rect.width / 2;
-      // const centerY = rect.height / 2;
 
-      const clickedX = Math.floor((e.pageX - offsetX) / ratio + translate.x);
-      const clickedY = Math.floor((e.pageY - offsetY) / ratio + translate.y);
+
+      const centerX = pl.current.width / 2;
+      const centerY = pl.current.height / 2;
+
+      const offsetX = (pl.current.offsetLeft - centerX * ratio) + ((translate.x * ratio * 2));
+      const offsetY = (pl.current.offsetTop - centerY * ratio) + ((translate.y * ratio * 2));
+
+      const clickedX = Math.floor((e.pageX - offsetX - centerX) / ratio + translate.x);
+      const clickedY = Math.floor((e.pageY - offsetY - centerY) / ratio + translate.y);
+
 
       console.log('click', clickedX, clickedY);
 
@@ -209,12 +212,11 @@ export function Place() {
 
     if (pl.current !== null) {
 
-      const rect = pl.current.getBoundingClientRect();
+      const centerX = pl.current.width / 2;
+      const centerY = pl.current.height / 2;
 
-      const offsetX = rect.left + translate.x * ratio;
-      const offsetY = rect.top + translate.y * ratio;
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
+      const offsetX = (pl.current.offsetLeft - centerX * ratio) + (centerX + (translate.x * ratio * 2));
+      const offsetY = (pl.current.offsetTop - centerY * ratio) + (centerY + (translate.y * ratio * 2));
 
       const mouseX = ((e.pageX - offsetX) / ratio + translate.x - centerX);
       const mouseY = ((e.pageY - offsetY) / ratio + translate.y - centerY);
