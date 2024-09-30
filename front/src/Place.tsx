@@ -17,7 +17,7 @@ interface co {
 export function Place() {
   const pl = useRef<HTMLCanvasElement | null>(null);
 
-  const [scale, setscale] = useState(8);
+  const [scale, setScale] = useState(8);
   const [translate, setTranslate] = useState<co>({ x: 0, y: 0 });
 
   const [activePixel, setActivePixel] = useState<co>({ x: -1, y: -1 });
@@ -122,16 +122,14 @@ export function Place() {
 
       const centerX = pl.current.width / 2;
       const centerY = pl.current.height / 2;
-
-
       const trueOffsetX = pl.current.offsetLeft - centerX * scale;
       const trueOffsetY = pl.current.offsetTop - centerY * scale;
 
       const offsetX = trueOffsetX;
       const offsetY = trueOffsetY;
 
-      const tx = (activePixel.x + centerX + translate.x) * scale + centerX + offsetX;
-      const ty = (activePixel.y + centerY + translate.y) * scale + centerY + offsetY;
+      const tx = (activePixel.x + translate.x) * scale + centerX + offsetX;
+      const ty = (activePixel.y + translate.y) * scale + centerY + offsetY;
 
       console.log('render cursor', activePixel.x, scale, offsetX, centerX, tx);
 
@@ -153,15 +151,15 @@ export function Place() {
 
       const centerX = pl.current.width / 2;
       const centerY = pl.current.height / 2;
-
       const trueOffsetX = pl.current.offsetLeft - centerX * scale;
       const trueOffsetY = pl.current.offsetTop - centerY * scale;
+
 
       const offsetX = trueOffsetX + translate.x * scale * 2;
       const offsetY = trueOffsetY + translate.y * scale * 2;
 
-      const mouseX = (e.pageX - offsetX - centerX) / scale + translate.x - centerX;
-      const mouseY = (e.pageY - offsetY - centerY) / scale + translate.y - centerY;
+      const mouseX = ((e.pageX - offsetX) - centerX) / scale + translate.x;
+      const mouseY = ((e.pageY - offsetY) - centerY) / scale + translate.y;
 
       const clickedX = Math.floor(mouseX);
       const clickedY = Math.floor(mouseY);
@@ -173,7 +171,7 @@ export function Place() {
       if (clickedX < 100 && clickedY < 100) {
         setActivePixel({ x: clickedX, y: clickedY });
         // setTranslate({ x: centerX - clickedX, y: centerY - clickedY });
-        // setscale(30);
+        // setScale(30);
       }
       else {
         setActivePixel({ x: -1, y: -1 });
@@ -194,9 +192,9 @@ export function Place() {
 
       const centerX = pl.current.width / 2;
       const centerY = pl.current.height / 2;
-
       const trueOffsetX = pl.current.offsetLeft - centerX * scale;
       const trueOffsetY = pl.current.offsetTop - centerY * scale;
+
 
       const offsetX = trueOffsetX + (centerX + (translate.x * scale * 2));
       const offsetY = trueOffsetY + (centerY + (translate.y * scale * 2));
@@ -211,24 +209,25 @@ export function Place() {
 
     }
 
-    setscale(newScale);
+    setScale(newScale);
   }, [scale, translate.x, translate.y]);
 
 
 
   const canvasMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     if (pl.current !== null) {
+
       const centerX = pl.current.width / 2;
       const centerY = pl.current.height / 2;
-
       const trueOffsetX = pl.current.offsetLeft - centerX * scale;
       const trueOffsetY = pl.current.offsetTop - centerY * scale;
+
 
       const offsetX = trueOffsetX + centerX;
       const offsetY = trueOffsetY + centerY;
 
-      const mouseX = Math.floor((e.pageX - offsetX) / scale - translate.x);
-      const mouseY = Math.floor((e.pageY - offsetY) / scale - translate.y);
+      const mouseX = (e.pageX - offsetX) / scale - translate.x;
+      const mouseY = (e.pageY - offsetY) / scale - translate.y;
 
 
       setDragStart({ x: mouseX, y: mouseY });
@@ -238,17 +237,18 @@ export function Place() {
 
   const canvasMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     if (pl.current !== null && isDragging >= 1) {
+
       const centerX = pl.current.width / 2;
       const centerY = pl.current.height / 2;
-
       const trueOffsetX = pl.current.offsetLeft - centerX * scale;
       const trueOffsetY = pl.current.offsetTop - centerY * scale;
+
 
       const offsetX = trueOffsetX + centerX;
       const offsetY = trueOffsetY + centerY;
 
-      const mouseX = Math.floor((e.pageX - offsetX) / scale - translate.x);
-      const mouseY = Math.floor((e.pageY - offsetY) / scale - translate.y);
+      const mouseX = (e.pageX - offsetX) / scale - translate.x;
+      const mouseY = (e.pageY - offsetY) / scale - translate.y;
 
       setTranslate((prev) => {
         return {
@@ -281,7 +281,7 @@ export function Place() {
         onWheel={canvasZoomed}
 
         onDoubleClick={() => {
-          setscale(8);
+          setScale(8);
         }}
 
         onMouseDown={canvasMouseDown}
