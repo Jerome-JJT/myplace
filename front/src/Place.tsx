@@ -123,8 +123,12 @@ export function Place() {
       const centerX = pl.current.width / 2;
       const centerY = pl.current.height / 2;
 
-      const offsetX = (pl.current.offsetLeft - (centerX * scale));
-      const offsetY = (pl.current.offsetTop - (centerY * scale));
+
+      const trueOffsetX = pl.current.offsetLeft - centerX * scale;
+      const trueOffsetY = pl.current.offsetTop - centerY * scale;
+
+      const offsetX = trueOffsetX;
+      const offsetY = trueOffsetY;
 
       const tx = (activePixel.x + centerX + translate.x) * scale + centerX + offsetX;
       const ty = (activePixel.y + centerY + translate.y) * scale + centerY + offsetY;
@@ -150,8 +154,11 @@ export function Place() {
       const centerX = pl.current.width / 2;
       const centerY = pl.current.height / 2;
 
-      const offsetX = (pl.current.offsetLeft - centerX * scale) + ((translate.x * scale * 2));
-      const offsetY = (pl.current.offsetTop - centerY * scale) + ((translate.y * scale * 2));
+      const trueOffsetX = pl.current.offsetLeft - centerX * scale;
+      const trueOffsetY = pl.current.offsetTop - centerY * scale;
+
+      const offsetX = trueOffsetX + translate.x * scale * 2;
+      const offsetY = trueOffsetY + translate.y * scale * 2;
 
       const mouseX = (e.pageX - offsetX - centerX) / scale + translate.x - centerX;
       const mouseY = (e.pageY - offsetY - centerY) / scale + translate.y - centerY;
@@ -188,8 +195,11 @@ export function Place() {
       const centerX = pl.current.width / 2;
       const centerY = pl.current.height / 2;
 
-      const offsetX = (pl.current.offsetLeft - centerX * scale) + (centerX + (translate.x * scale * 2));
-      const offsetY = (pl.current.offsetTop - centerY * scale) + (centerY + (translate.y * scale * 2));
+      const trueOffsetX = pl.current.offsetLeft - centerX * scale;
+      const trueOffsetY = pl.current.offsetTop - centerY * scale;
+
+      const offsetX = trueOffsetX + (centerX + (translate.x * scale * 2));
+      const offsetY = trueOffsetY + (centerY + (translate.y * scale * 2));
 
       const mouseX = ((e.pageX - offsetX) / scale + translate.x - centerX);
       const mouseY = ((e.pageY - offsetY) / scale + translate.y - centerY);
@@ -211,8 +221,11 @@ export function Place() {
       const centerX = pl.current.width / 2;
       const centerY = pl.current.height / 2;
 
-      const offsetX = (pl.current.offsetLeft - (centerX * scale) + centerX);
-      const offsetY = (pl.current.offsetTop - (centerY * scale) + centerY);
+      const trueOffsetX = pl.current.offsetLeft - centerX * scale;
+      const trueOffsetY = pl.current.offsetTop - centerY * scale;
+
+      const offsetX = trueOffsetX + centerX;
+      const offsetY = trueOffsetY + centerY;
 
       const mouseX = Math.floor((e.pageX - offsetX) / scale - translate.x);
       const mouseY = Math.floor((e.pageY - offsetY) / scale - translate.y);
@@ -228,8 +241,11 @@ export function Place() {
       const centerX = pl.current.width / 2;
       const centerY = pl.current.height / 2;
 
-      const offsetX = (pl.current.offsetLeft - (centerX * scale) + centerX);
-      const offsetY = (pl.current.offsetTop - (centerY * scale) + centerY);
+      const trueOffsetX = pl.current.offsetLeft - centerX * scale;
+      const trueOffsetY = pl.current.offsetTop - centerY * scale;
+
+      const offsetX = trueOffsetX + centerX;
+      const offsetY = trueOffsetY + centerY;
 
       const mouseX = Math.floor((e.pageX - offsetX) / scale - translate.x);
       const mouseY = Math.floor((e.pageY - offsetY) / scale - translate.y);
