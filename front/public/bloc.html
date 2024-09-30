@@ -211,8 +211,8 @@
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
 
-      const mouseX = (Math.floor((e.pageX - offsetX) / ratio) - centerX);
-      const mouseY = (Math.floor((e.pageY - offsetY) / ratio) - centerY);
+      const mouseX = (((e.pageX - offsetX) / ratio) + translate.x - centerX);
+      const mouseY = (((e.pageY - offsetY) / ratio) + translate.y - centerY);
 
       // const deltaX = translate.x - mouseX;
       // const deltaY = translate.y - mouseY;
@@ -255,57 +255,112 @@
       
       // console.log(factor)
 
-      if (ratio != 16) {
-        ratio = 16;
-        translate = { x: 0, y: 0 };
-      }
-      // else if (ratio == 16) {
+      // if (ratio != 16) {
+      //   ratio = 16;
       //   translate = { x: 0, y: 0 };
-      //   const oldRatio = ratio;
-
-      //   console.log('t1', translate)
-      //   translate = { x: translate.x - mouseX, y: translate.y - mouseY };
-      //   // translate = { x: translate.x - (mouseX * oldRatio / ratio), y: translate.y - (mouseY * oldRatio / ratio) };
-        
-      //   console.log('t2', translate)
-      //   ratio = 25;
-      //   translate = { x: translate.x + (mouseX * oldRatio / ratio), y: translate.y + (mouseY * oldRatio / ratio) };
-      //   console.log('t3', translate)
       // }
-      else {
-        // translate = { x: 0, y: 0 };
-        // console.log('t1', translate)
-        const oldTranslate = translate;
-        // translate = { x: -mouseX, y: -mouseY };
-        // translate = { x: -24, y: -24 };
-        // translate = { x: translate.x - (mouseX * oldRatio / ratio), y: translate.y - (mouseY * oldRatio / ratio) };
-        // ratio = 40;
-        const oldRatio = ratio;
-        // ratio = Math.min(Math.max(ratio * factor, 16), 40);
-        ratio = 40;
+      // // else if (ratio == 16) {
+      // //   translate = { x: 0, y: 0 };
+      // //   const oldRatio = ratio;
+
+      // //   console.log('t1', translate)
+      // //   translate = { x: translate.x - mouseX, y: translate.y - mouseY };
+      // //   // translate = { x: translate.x - (mouseX * oldRatio / ratio), y: translate.y - (mouseY * oldRatio / ratio) };
         
-        // console.log('t2', translate)
-        // translate = { x:  (translate.x + (mouseX - 16 * (factor))), y:  (translate.y + mouseY * (1 / factor)) };
-        translate = { x: -mouseX + ((mouseX) * (oldRatio / ratio)), y: -mouseY + (mouseY * oldRatio / ratio) };
-        // translate = { x: -2.19, y: -2.1818181818 };
-        console.log('t3', mouseX, mouseY, translate, oldTranslate)
-      } 
-      renderCanvas();
-      renderOverlay();
-      // ratio = Math.min(Math.max(ratio * factor, 16), 40);
-      
+      // //   console.log('t2', translate)
+      // //   ratio = 25;
+      // //   translate = { x: translate.x + (mouseX * oldRatio / ratio), y: translate.y + (mouseY * oldRatio / ratio) };
+      // //   console.log('t3', translate)
+      // // }
+      // else {
+      //   // translate = { x: 0, y: 0 };
+      //   // console.log('t1', translate)
+      //   const oldTranslate = translate;
+      //   // translate = { x: -mouseX, y: -mouseY };
+      //   // translate = { x: -24, y: -24 };
+      //   // translate = { x: translate.x - (mouseX * oldRatio / ratio), y: translate.y - (mouseY * oldRatio /  ratio) };
+      //   // ratio = 40; p
+      //   // ratio = Math.min(Math.max(ratio * factor, 16), 40);
+        
+        
+      //   const oldRatio = ratio;
+      //   ratio = 40;
+        
+      //   // translate = { x: translate.x - mouseX, y: translate.y - mouseY };
+      //   // translate = { 
+      //   //   x: translate.x + mouseX * (oldRatio / ratio) - oldTranslate.x, 
+      //   //   y: translate.y + mouseY * (oldRatio / ratio) -
+      //   // }
+
+
+      //   // const dx = mouseX;
+      //   // const dy = mouseY;
+
+      //   // const dx = mouseX - oldTranslate.x;
+      //   // const dy = mouseY - oldTranslate.y;
+
+      //   // const tx = oldTranslate.x - (oldTranslate.x - oldTranslate.x * (oldRatio / ratio))
+      //   // const ty = oldTranslate.y - (oldTranslate.y - oldTranslate.y * (oldRatio / ratio));
+
+      //   // const tx = (oldTranslate.x - oldTranslate.x * (oldRatio / ratio))
+      //   // const ty = (oldTranslate.y - oldTranslate.y * (oldRatio / ratio));
+        
+      //   // console.log('t2', translate)
+      //   // translate = { x:  (translate.x + (mouseX - 16 * (factor))), y:  (translate.y + mouseY * (1 / factor)) };
+      //   // translate = { x: -mouseX + ((mouseX) * (oldRatio / ratio)) + 3, y: -mouseY + (mouseY * (oldRatio / ratio)) };
+      //   // translate = { x: -(dx) + ((dx) * (oldRatio / ratio)) , y: -(dy) + (dy * (oldRatio / ratio)) };
+      //   // translate = { x: dx * (oldRatio / ratio - 1) , y: dy * (oldRatio / ratio - 1) };
+
+      //   // translate = { 
+      //   //   x: ((mouseX - translate.x) * (oldRatio / ratio)) - (mouseX - translate.x), 
+      //   //   y: ((mouseY - translate.y) * (oldRatio / ratio)) - (mouseY - translate.y) 
+      //   // };
+
+
+      //   // translate = { x: -mouseX + ((mouseX) * (oldRatio / ratio)) + 3, y: -mouseY + (mouseY * (oldRatio / ratio)) };
+
+      //   // translate = { x: -(dx) + ((mouseX) * (oldRatio / ratio)) - (oldTranslate.x - tx) , y: -(dy) + ((mouseY) * (oldRatio / ratio)) - (oldTranslate.y - ty) };
+      //   // translate = { x: -2.19, y: -2.1818181818 };
+      //   console.log('t3', mouseX, mouseY, translate, oldTranslate)
+      //   // console.log('t3', dx, dy, tx, ty, translate, oldTranslate)
+      // } 
       // renderCanvas();
       // renderOverlay();
+      // ratio = Math.min(Math.max(ratio * factor, 16), 40);
+      
 
-      // for (let i = 16; i < 25; i++) {
+      oldTranslate = translate;
+      translate = { x: -(mouseX), y: -(mouseY) };
+      // translate = { x: -(mouseX + translate.x), y: -(mouseY + translate.y) };
+
+      renderCanvas();
+      renderOverlay();
+
+      // oldRatio = 16;
+      // ratio = 40;
+      oldRatio = ratio;
+      ratio = Math.min(Math.max(ratio * factor, 16), 40);
+      renderCanvas();
+      renderOverlay();
+
+      // for (let i = 16; i < 3000; i++) {
       //   setTimeout(() => {
       //     ratio = i;
 
       //     renderCanvas();
       //     renderOverlay();
 
-      //   }, (i - 16) * 100)
+      //   }, (i - 16) * 20)
       // }
+
+      // translate = { x: -(mouseX + 0.5 + translate.x), y: -(mouseY + 0.5 + translate.y) };
+      // translate = { x: -((mouseX + 0.5) * (oldRatio / ratio)), y: -((mouseY + 0.5) * (oldRatio / ratio)) };
+      translate = { 
+        x: translate.x + ((mouseX + oldTranslate.x) * (oldRatio / ratio)), 
+        y: translate.y + ((mouseY + oldTranslate.y) * (oldRatio / ratio))  
+      };
+      renderCanvas();
+      renderOverlay();
 
       // setTimeout(() => {
       //   translate = { x: translate.x + (mouseX * oldRatio / ratio), y: translate.y + (mouseY * oldRatio / ratio) };
