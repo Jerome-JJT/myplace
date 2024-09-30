@@ -79,7 +79,8 @@ export function Place() {
       const centerY = pl.current.height / 2;
 
       const offsetX = (pl.current.offsetLeft - (centerX * ratio) + centerX);
-      const offsetY = pl.current.offsetTop;
+      const offsetY = (pl.current.offsetTop - (centerY * ratio) + centerY);
+      // const offsetY = pl.current.offsetTop;
 
       const tx = ((activePixel.x * ratio) + offsetX) + translate.x * ratio;
       const ty = ((activePixel.y * ratio) + offsetY) + translate.y * ratio;
@@ -172,32 +173,24 @@ export function Place() {
   const canvasClicked = useCallback((e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
 
     if (pl.current !== null) {
+      const rect = pl.current.getBoundingClientRect();
 
-      const centerX = pl.current.width / 2;
-      const centerY = pl.current.height / 2;
+      const offsetX = rect.left + translate.x * ratio;
+      const offsetY = rect.top + translate.y * ratio;
+      // const centerX = rect.width / 2;
+      // const centerY = rect.height / 2;
 
-      const offsetX = (pl.current.offsetLeft - (centerX * ratio) + centerX);
-      const offsetY = pl.current.offsetTop;
+      const clickedX = Math.floor((e.pageX - offsetX) / ratio + translate.x);
+      const clickedY = Math.floor((e.pageY - offsetY) / ratio + translate.y);
 
-
-      // console.log('base', e, e.pageX, offsetX, centerX, e.pageX - offsetX);
-
-      const clickedX = Math.floor((e.pageX - offsetX) / ratio - translate.x);
-      const clickedY = Math.floor((e.pageY - offsetY) / ratio - translate.y);
-
-      // console.log(clickedX, clickedY, ratio, e.pageX, e.pageY, offsetX, offsetY);
       console.log('click', clickedX, clickedY);
-
-      const trX = (centerX - (e.pageX - offsetX)) / ratio;
-      const trY = (centerY - (e.pageY - offsetY)) / ratio;
 
 
       if (clickedX < 100 && clickedY < 100) {
         setActivePixel({ x: clickedX, y: clickedY });
-        console.log('begintr', centerX, clickedX, centerY, clickedY);
 
-        setTranslate({ x: centerX - clickedX, y: centerY - clickedY });
-        setRatio(30);
+        // setTranslate({ x: centerX - clickedX, y: centerY - clickedY });
+        // setRatio(30);
       }
       else {
         setActivePixel({ x: -1, y: -1 });
@@ -212,42 +205,39 @@ export function Place() {
     e.stopPropagation();
 
     const factor = Math.sign(e.deltaY) > 0 ? 0.9 : 1.1;
-    console.log('delta', e.deltaY);
-
-
     const newRatio = Math.round(Math.min(Math.max(ratio * factor, 16), 40));
 
     if (pl.current !== null) {
-      const centerX = pl.current.width / 2;
-      const centerY = pl.current.height / 2;
 
-      const offsetX = (pl.current.offsetLeft - (centerX * newRatio) + centerX);
-      const offsetY = pl.current.offsetTop;
+      const rect = pl.current.getBoundingClientRect();
 
-      const mouseX = Math.floor((e.pageX - offsetX) / newRatio - translate.x);
-      const mouseY = Math.floor((e.pageY - offsetY) / newRatio - translate.y);
+      const offsetX = rect.left + translate.x * ratio;
+      const offsetY = rect.top + translate.y * ratio;
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
 
-      if (e.deltaY < 0) {
-        setTranslate({ x: centerX - mouseX, y: centerY - mouseY });
-      }
+      const mouseX = ((e.pageX - offsetX) / ratio + translate.x - centerX);
+      const mouseY = ((e.pageY - offsetY) / ratio + translate.y - centerY);
+
+      setTranslate((prev) => ({
+        x: ((mouseX + prev.x) * (ratio / newRatio)) - (mouseX),
+        y: ((mouseY + prev.y) * (ratio / newRatio)) - (mouseY),
+      }));
+
     }
 
     setRatio(newRatio);
-    // setRatio((prev) => {
-    //   return (Math.round(Math.min(Math.max(prev * factor, 16), 40)));
-    // });
   }, [ratio, translate.x, translate.y]);
 
 
 
   const canvasMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-  // const canvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (pl.current !== null) {
       const centerX = pl.current.width / 2;
       const centerY = pl.current.height / 2;
 
       const offsetX = (pl.current.offsetLeft - (centerX * ratio) + centerX);
-      const offsetY = pl.current.offsetTop;
+      const offsetY = (pl.current.offsetTop - (centerY * ratio) + centerY);
 
       const mouseX = Math.floor((e.pageX - offsetX) / ratio - translate.x);
       const mouseY = Math.floor((e.pageY - offsetY) / ratio - translate.y);
@@ -258,16 +248,14 @@ export function Place() {
 
     }
   }, [ratio, translate.x, translate.y]);
-  // };
 
   const canvasMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-  // const canvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (pl.current !== null && isDragging >= 1) {
       const centerX = pl.current.width / 2;
       const centerY = pl.current.height / 2;
 
       const offsetX = (pl.current.offsetLeft - (centerX * ratio) + centerX);
-      const offsetY = pl.current.offsetTop;
+      const offsetY = (pl.current.offsetTop - (centerY * ratio) + centerY);
 
       const mouseX = Math.floor((e.pageX - offsetX) / ratio - translate.x);
       const mouseY = Math.floor((e.pageY - offsetY) / ratio - translate.y);
@@ -278,25 +266,19 @@ export function Place() {
           y: prev.y - (dragStart.y - mouseY),
         };
       });
-      // setDragStart({ x: mouseX, y: mouseY });
-
-      console.log('drag', isDragging);
 
       if (isDragging <= 10) {
         setIsDragging((prev) => prev + 1);
       }
     }
   }, [dragStart.x, dragStart.y, isDragging, ratio, translate.x, translate.y]);
-  // };
 
   const canvasMouseUp = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-  // const canvasMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (isDragging <= 2) {
       canvasClicked(e);
     }
     setIsDragging(0);
   }, [canvasClicked, isDragging]);
-  // };
 
 
 
@@ -322,60 +304,9 @@ export function Place() {
           setIsDragging(0);
         }}
 
-        // onMouseDown={(e: React.MouseEvent<HTMLCanvasElement>) => {
-        //   if (pl.current !== null) {
-        //     const centerX = pl.current.width / 2;
-        //     const centerY = pl.current.height / 2;
-
-        //     const offsetX = (pl.current.offsetLeft - (centerX * ratio) + centerX);
-        //     const offsetY = pl.current.offsetTop;
-
-        //     const mouseX = Math.floor((e.pageX - offsetX) / ratio - translate.x);
-        //     const mouseY = Math.floor((e.pageY - offsetY) / ratio - translate.y);
-
-
-        //     dragStart = { x: mouseX, y: mouseY };
-        //     isDragging = true;
-        //   }
-        // }}
-
-        // onMouseMove={(e: React.MouseEvent<HTMLCanvasElement>) => {
-        //   if (pl.current !== null && isDragging === true) {
-        //     const centerX = pl.current.width / 2;
-        //     const centerY = pl.current.height / 2;
-
-        //     const offsetX = (pl.current.offsetLeft - (centerX * ratio) + centerX);
-        //     const offsetY = pl.current.offsetTop;
-
-        //     const mouseX = Math.floor((e.pageX - offsetX) / ratio - translate.x);
-        //     const mouseY = Math.floor((e.pageY - offsetY) / ratio - translate.y);
-
-        //     setTranslate((prev) => {
-        //       return {
-        //         x: prev.x - (dragStart.x - mouseX),
-        //         y: prev.y - (dragStart.y - mouseY),
-        //       };
-        //     });
-        //     dragStart = { x: mouseX, y: mouseY };
-        //   }
-        // }}
-
-
-        // onMouseUp={(e: React.MouseEvent<HTMLCanvasElement>) => {
-        //   if (isDragging === true) {
-        //     isDragging = false;
-        //   }
-        //   else {
-        //     canvasClicked(e);
-        //   }
-        // }}
-
-
         style={{
-          // width:      '50px',
-          // height:     '50px',
-          transform:  `scale(${ratio}) translate(${translate.x}px, ${translate.y}px)`,
-          transition: 'transform 0.1s linear',
+          transform: `scale(${ratio}) translate(${translate.x}px, ${translate.y}px)`,
+          // transition: 'transform 0.1s linear',
         }}
 
       >

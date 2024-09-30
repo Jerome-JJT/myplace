@@ -67,10 +67,10 @@ canvas {
 
   max-height: 100%;
 
-  margin: 50px auto;
+  margin: 500px auto;
 
   image-rendering: pixelated;
-  transform-origin: top center;
+  transform-origin: center center;
 }
 
 #overlay {

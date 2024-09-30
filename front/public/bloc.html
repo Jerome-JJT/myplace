@@ -27,7 +27,7 @@
       margin: 500px auto;
 
       image-rendering: pixelated;
-      transform-origin: middle center;
+      transform-origin: center center;
 
       transform: scale(16);
     }
@@ -329,38 +329,50 @@
       // ratio = Math.min(Math.max(ratio * factor, 16), 40);
       
 
-      oldTranslate = translate;
-      translate = { x: -(mouseX), y: -(mouseY) };
-      // translate = { x: -(mouseX + translate.x), y: -(mouseY + translate.y) };
+      // oldTranslate = translate;
+      // translate = { x: -(mouseX), y: -(mouseY) };
+      // // translate = { x: -(mouseX + translate.x), y: -(mouseY + translate.y) };
 
-      renderCanvas();
-      renderOverlay();
+      // renderCanvas();
+      // renderOverlay();
 
-      // oldRatio = 16;
-      // ratio = 40;
+      // // oldRatio = 16;
+      // // ratio = 40;
+      // oldRatio = ratio;
+      // ratio = Math.min(Math.max(ratio * factor, 16), 40);
+      // renderCanvas();
+      // renderOverlay();
+
+      // // for (let i = 16; i < 3000; i++) {
+      // //   setTimeout(() => {
+      // //     ratio = i;
+
+      // //     renderCanvas();
+      // //     renderOverlay();
+
+      // //   }, (i - 16) * 20)
+      // // }
+
+      // // translate = { x: -(mouseX + 0.5 + translate.x), y: -(mouseY + 0.5 + translate.y) };
+      // // translate = { x: -((mouseX + 0.5) * (oldRatio / ratio)), y: -((mouseY + 0.5) * (oldRatio / ratio)) };
+      // translate = { 
+      //   x: translate.x + ((mouseX + oldTranslate.x) * (oldRatio / ratio)), 
+      //   y: translate.y + ((mouseY + oldTranslate.y) * (oldRatio / ratio))  
+      // };
+      // renderCanvas();
+      // renderOverlay();
+
+
       oldRatio = ratio;
       ratio = Math.min(Math.max(ratio * factor, 16), 40);
+
+      translate = {
+        x: ((mouseX + translate.x) * (oldRatio / ratio)) - (mouseX),
+        y: ((mouseY + translate.y) * (oldRatio / ratio)) - (mouseY),
+      }
       renderCanvas();
       renderOverlay();
 
-      // for (let i = 16; i < 3000; i++) {
-      //   setTimeout(() => {
-      //     ratio = i;
-
-      //     renderCanvas();
-      //     renderOverlay();
-
-      //   }, (i - 16) * 20)
-      // }
-
-      // translate = { x: -(mouseX + 0.5 + translate.x), y: -(mouseY + 0.5 + translate.y) };
-      // translate = { x: -((mouseX + 0.5) * (oldRatio / ratio)), y: -((mouseY + 0.5) * (oldRatio / ratio)) };
-      translate = { 
-        x: translate.x + ((mouseX + oldTranslate.x) * (oldRatio / ratio)), 
-        y: translate.y + ((mouseY + oldTranslate.y) * (oldRatio / ratio))  
-      };
-      renderCanvas();
-      renderOverlay();
 
       // setTimeout(() => {
       //   translate = { x: translate.x + (mouseX * oldRatio / ratio), y: translate.y + (mouseY * oldRatio / ratio) };
