@@ -155,11 +155,11 @@ export function Place() {
       const trueOffsetY = pl.current.offsetTop - centerY * scale;
 
 
-      const offsetX = trueOffsetX + translate.x * scale * 2;
-      const offsetY = trueOffsetY + translate.y * scale * 2;
+      const offsetX = trueOffsetX + translate.x * scale;
+      const offsetY = trueOffsetY + translate.y * scale;
 
-      const mouseX = ((e.pageX - offsetX) - centerX) / scale + translate.x;
-      const mouseY = ((e.pageY - offsetY) - centerY) / scale + translate.y;
+      const mouseX = ((e.pageX - offsetX) - centerX) / scale;
+      const mouseY = ((e.pageY - offsetY) - centerY) / scale;
 
       console.log('mouse ONE', mouseX, mouseY);
 
@@ -225,11 +225,11 @@ export function Place() {
       const trueOffsetY = pl.current.offsetTop - centerY * scale;
 
 
-      const offsetX = trueOffsetX;
-      const offsetY = trueOffsetY;
+      const offsetX = trueOffsetX + translate.x * scale;
+      const offsetY = trueOffsetY + translate.y * scale;
 
-      const mouseX = ((e.pageX - offsetX) - centerX) / scale - translate.x;
-      const mouseY = ((e.pageY - offsetY) - centerY) / scale - translate.y;
+      const mouseX = ((e.pageX - offsetX) - centerX) / scale;
+      const mouseY = ((e.pageY - offsetY) - centerY) / scale;
 
       console.log('mouse THREE', mouseX, mouseY);
 
@@ -248,11 +248,11 @@ export function Place() {
       const trueOffsetY = pl.current.offsetTop - centerY * scale;
 
 
-      const offsetX = trueOffsetX + centerX;
-      const offsetY = trueOffsetY + centerY;
+      const offsetX = trueOffsetX + translate.x * scale;
+      const offsetY = trueOffsetY + translate.y * scale;
 
-      const mouseX = (e.pageX - offsetX) / scale - translate.x;
-      const mouseY = (e.pageY - offsetY) / scale - translate.y;
+      const mouseX = ((e.pageX - offsetX) - centerX) / scale;
+      const mouseY = ((e.pageY - offsetY) - centerY) / scale;
 
       console.log('mouse FOUR', mouseX, mouseY);
 
