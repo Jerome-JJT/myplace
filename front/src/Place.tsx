@@ -280,7 +280,7 @@ export function Place() {
         .catch((error) => {
         });
     }
-  }, []);
+  }, [getUserData]);
 
   const paintButton = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     if (activePixel.x !== -1 && activePixel.y !== -1) {
