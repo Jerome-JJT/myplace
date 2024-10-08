@@ -17,7 +17,10 @@ interface co {
 export function Place() {
   const pl = useRef<HTMLCanvasElement | null>(null);
 
-  const [scale, setScale] = useState(8);
+  const MIN_ZOOM = 8;
+  const MAX_ZOOM = 40;
+
+  const [scale, setScale] = useState(MIN_ZOOM);
   const [translate, setTranslate] = useState<co>({ x: 0, y: 0 });
 
   const [activePixel, setActivePixel] = useState<co>({ x: -1, y: -1 });
@@ -131,8 +134,6 @@ export function Place() {
       const tx = (activePixel.x + translate.x) * scale + centerX + offsetX;
       const ty = (activePixel.y + translate.y) * scale + centerY + offsetY;
 
-      // console.log('render cursor', activePixel.x, scale, offsetX, centerX, tx);
-
       setOverlayStyle((prev) => {
         return {
           ...prev,
@@ -151,28 +152,19 @@ export function Place() {
 
       const centerX = pl.current.width / 2;
       const centerY = pl.current.height / 2;
-      const trueOffsetX = pl.current.offsetLeft - centerX * scale;
-      const trueOffsetY = pl.current.offsetTop - centerY * scale;
 
-
-      const offsetX = trueOffsetX + translate.x * scale;
-      const offsetY = trueOffsetY + translate.y * scale;
+      const offsetX = pl.current.offsetLeft + (translate.x - centerX) * scale;
+      const offsetY = pl.current.offsetTop + (translate.y - centerY) * scale;
 
       const mouseX = ((e.pageX - offsetX) - centerX) / scale;
       const mouseY = ((e.pageY - offsetY) - centerY) / scale;
 
-      console.log('mouse ONE', mouseX, mouseY);
 
       const clickedX = Math.floor(mouseX);
       const clickedY = Math.floor(mouseY);
 
-
-
-
       if (clickedX < 100 && clickedY < 100) {
         setActivePixel({ x: clickedX, y: clickedY });
-        // setTranslate({ x: centerX - clickedX, y: centerY - clickedY });
-        // setScale(30);
       }
       else {
         setActivePixel({ x: -1, y: -1 });
@@ -181,57 +173,48 @@ export function Place() {
 
   }, [scale, translate.x, translate.y]);
 
+  const doZoom = useCallback((pageX: number, pageY: number, newScale: number) => {
+    if (pl.current !== null) {
+
+      const centerX = pl.current.width / 2;
+      const centerY = pl.current.height / 2;
+
+      const offsetX = pl.current.offsetLeft + ((translate.x) * scale * 2);
+      const offsetY = pl.current.offsetTop + ((translate.y) * scale * 2);
+
+      const mouseX = ((pageX - offsetX) - centerX) / scale;
+      const mouseY = ((pageY - offsetY) - centerY) / scale;
+
+      setTranslate((prev) => ({
+        x: ((mouseX + prev.x * 2) * (scale / newScale)) - (mouseX + translate.x),
+        y: ((mouseY + prev.y * 2) * (scale / newScale)) - (mouseY + translate.y),
+      }));
+
+      setScale(newScale);
+    }
+  }, [scale, translate.x, translate.y]);
 
   const canvasZoomed = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
     e.stopPropagation();
 
     const factor = Math.sign(e.deltaY) > 0 ? 0.9 : 1.1;
-    const newScale = Math.round(Math.min(Math.max(scale * factor, 8), 40));
+    const newScale = Math.round(Math.min(Math.max(scale * factor, MIN_ZOOM), MAX_ZOOM));
 
-    if (pl.current !== null) {
+    doZoom(e.pageX, e.pageY, newScale);
 
-      const centerX = pl.current.width / 2;
-      const centerY = pl.current.height / 2;
-      const trueOffsetX = pl.current.offsetLeft - centerX * scale;
-      const trueOffsetY = pl.current.offsetTop - centerY * scale;
-
-
-      const offsetX = trueOffsetX + (centerX + (translate.x * scale * 2));
-      const offsetY = trueOffsetY + (centerY + (translate.y * scale * 2));
-
-      const mouseX = ((e.pageX - offsetX) / scale + translate.x - centerX);
-      const mouseY = ((e.pageY - offsetY) / scale + translate.y - centerY);
-
-      // console.log('mouse TWO', mouseX, mouseY);
-
-      setTranslate((prev) => ({
-        x: ((mouseX + prev.x) * (scale / newScale)) - (mouseX),
-        y: ((mouseY + prev.y) * (scale / newScale)) - (mouseY),
-      }));
-
-    }
-
-    setScale(newScale);
-  }, [scale, translate.x, translate.y]);
-
-
+  }, [doZoom, scale]);
 
   const canvasMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     if (pl.current !== null) {
 
       const centerX = pl.current.width / 2;
       const centerY = pl.current.height / 2;
-      const trueOffsetX = pl.current.offsetLeft - centerX * scale;
-      const trueOffsetY = pl.current.offsetTop - centerY * scale;
 
-
-      const offsetX = trueOffsetX + translate.x * scale;
-      const offsetY = trueOffsetY + translate.y * scale;
+      const offsetX = pl.current.offsetLeft + (translate.x - centerX) * scale;
+      const offsetY = pl.current.offsetTop + (translate.y - centerY) * scale;
 
       const mouseX = ((e.pageX - offsetX) - centerX) / scale;
       const mouseY = ((e.pageY - offsetY) - centerY) / scale;
-
-      console.log('mouse THREE', mouseX, mouseY);
 
       setDragStart({ x: mouseX, y: mouseY });
       setIsDragging(1);
@@ -240,22 +223,15 @@ export function Place() {
 
   const canvasMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     if (pl.current !== null && isDragging >= 1) {
-    // if (pl.current !== null) {
 
       const centerX = pl.current.width / 2;
       const centerY = pl.current.height / 2;
-      const trueOffsetX = pl.current.offsetLeft - centerX * scale;
-      const trueOffsetY = pl.current.offsetTop - centerY * scale;
 
-
-      const offsetX = trueOffsetX + translate.x * scale;
-      const offsetY = trueOffsetY + translate.y * scale;
+      const offsetX = pl.current.offsetLeft + (translate.x - centerX) * scale;
+      const offsetY = pl.current.offsetTop + (translate.y - centerY) * scale;
 
       const mouseX = ((e.pageX - offsetX) - centerX) / scale;
       const mouseY = ((e.pageY - offsetY) - centerY) / scale;
-
-      console.log('mouse FOUR', mouseX, mouseY);
-
 
       setTranslate((prev) => {
         return {
@@ -287,8 +263,13 @@ export function Place() {
         // onClick={}
         onWheel={canvasZoomed}
 
-        onDoubleClick={() => {
-          setScale(8);
+        onDoubleClick={(e: React.MouseEvent<HTMLCanvasElement>) => {
+          if (scale > (MIN_ZOOM + MAX_ZOOM) / 2) {
+            doZoom(e.pageX, e.pageY, MIN_ZOOM);
+          }
+          else {
+            doZoom(e.pageX, e.pageY, MAX_ZOOM);
+          }
         }}
 
         onMouseDown={canvasMouseDown}
