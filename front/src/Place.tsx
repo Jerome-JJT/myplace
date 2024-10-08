@@ -1,38 +1,41 @@
 import axios from 'axios';
 import classNames from 'classnames';
-import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
+import { useLogin } from './LoginProvider';
 
 
-interface pixel {
-    user: string,
+interface Pixel {
+    username: string,
     time: Date,
     color_id: number
 }
 
-interface co {
+export interface Update extends Pixel {
+  x: number
+  y: number
+}
+
+interface Point {
   x: number,
   y: number
 }
 
 export function Place() {
+  const { isLogged, userInfos, getUserData } = useLogin();
+
+  const [activePixel, setActivePixel] = useState<Point>({ x: -1, y: -1 });
+  const [activeColor, setActiveColor] = useState(-1);
+
+  const [colors, setColors] = useState<Map<number, { name: string, color: string }>>(new Map());
+  const [board, setBoard] = useState<Map<string, Pixel>>(new Map());
+
   const pl = useRef<HTMLCanvasElement | null>(null);
 
   const MIN_ZOOM = 8;
   const MAX_ZOOM = 40;
 
   const [scale, setScale] = useState(MIN_ZOOM);
-  const [translate, setTranslate] = useState<co>({ x: 0, y: 0 });
-
-  const [activePixel, setActivePixel] = useState<co>({ x: -1, y: -1 });
-
-  const [dragStart, setDragStart] = useState<co>({ x: -1, y: -1 });
-  const [isDragging, setIsDragging] = useState(0);
-
-
-  const [colors, setColors] = useState<Map<number, { name: string, color: string }>>(new Map());
-  const [board, setBoard] = useState<Map<string, pixel>>(new Map());
-
-  const [activeColor, setActiveColor] = useState(-1);
+  const [translate, setTranslate] = useState<Point>({ x: 0, y: 0 });
   const [overlayStyle, setOverlayStyle] = useState({
     width:  `${scale - 2}px`,
     height: `${scale - 2}px`,
@@ -40,45 +43,52 @@ export function Place() {
     left:   '0px',
   });
 
-  // const [windowSize, setWindowSize] = useState<{width: number| undefined, height: number | undefined}>({
-  //   width:  undefined,
-  //   height: undefined,
-  // });
-  // useEffect(() => {
-  //   function handleResize() {
-  //     setWindowSize({
-  //       width:  window.innerWidth,
-  //       height: window.innerHeight,
-  //     });
-  //   }
-  //   window.addEventListener('resize', handleResize);
-  //   handleResize();
-  //   return () => window.removeEventListener('resize', handleResize);
-  // }, []);
+  const [dragStart, setDragStart] = useState<Point>({ x: -1, y: -1 });
+  const [isDragging, setIsDragging] = useState(0);
 
   useEffect(() => {
     const socket = new WebSocket('ws://localhost:8081');
+    const updates: Update[] = [];
 
     socket.onopen = () => {
       console.log('WebSocket connected.');
     };
 
-    // socket.onmessage = (event) => {
-    //     // Parse the incoming message
-    //     const updates = JSON.parse(event.data);
-    //     console.log('Received updates:', updates);
+    socket.onmessage = (event) => {
+      const incoming = JSON.parse(event.data) as Update[];
+      console.log('Received updates:', incoming);
 
-    //     // Apply updates to the board
-    //     setBoard((prevBoard) => {
-    //       const newBoard = [...prevBoard];
-    //       updates.forEach(({ x, y, color }) => {
-    //         // Update only the cells that have been changed
-    //         newBoard[x][y] = color;
-    //       });
-    //       return newBoard;
-    //     });
-    //   };
-  }, []);
+      incoming.forEach((u) => updates.push(u));
+
+      if (pl.current !== null) {
+        const ctx = pl.current.getContext('2d');
+        if (ctx !== null) {
+
+          setBoard((prev) => {
+            const fut = new Map(prev);
+
+            while (updates.length > 0) {
+              const up = updates.shift()!;
+
+              const { x, y, ...pixel } = up;
+              const color = colors.get(pixel.color_id);
+
+              if (color !== undefined && pixel.time > (prev.get(`${x}:${y}`)?.time || 0)) {
+                ctx.fillStyle = 'rgb(' + color.color + ')';
+                ctx.fillRect(x, y, 1, 1);
+                fut.set(`${x}:${y}`, pixel);
+              }
+            }
+            return fut;
+          });
+        }
+      }
+    };
+
+    return () => {
+      socket.close();
+    };
+  }, [colors]);
 
   useEffect(() => {
     if (pl.current !== null) {
@@ -102,7 +112,7 @@ export function Place() {
               setColors(cols);
 
               const pixs = new Map();
-              (res.data.board as pixel[][]).forEach((column, x) => {
+              (res.data.board as Pixel[][]).forEach((column, x) => {
                 column.forEach((pixel, y) => {
                   ctx.fillStyle = 'rgb(' + cols.get(pixel.color_id).color + ')';
                   ctx.fillRect(x, y, 1, 1);
@@ -253,6 +263,52 @@ export function Place() {
     setIsDragging(0);
   }, [canvasClicked, isDragging]);
 
+  const loginButton = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    const username = prompt('Username');
+
+    if (username && username.length > 3) {
+      axios
+        .post('/api/mocklogin',
+          {
+            username: username,
+          },
+          { withCredentials: true },
+        )
+        .then((res) => {
+          getUserData();
+        })
+        .catch((error) => {
+        });
+    }
+  }, []);
+
+  const paintButton = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    if (activePixel.x !== -1 && activePixel.y !== -1) {
+      if (activeColor !== -1) {
+        axios
+          .post('/api/set',
+            {
+              x:     activePixel.x,
+              y:     activePixel.y,
+              color: activeColor,
+
+            },
+            { withCredentials: true },
+          )
+          .then((res) => {
+          })
+          .catch((error) => {
+          });
+      }
+      else {
+        alert('Choose a color');
+      }
+    }
+    else {
+      alert('Choose a pixel');
+    }
+  }, [activeColor, activePixel]);
+
 
   return (
     <>
@@ -260,9 +316,14 @@ export function Place() {
         width="100px"
         height="100px"
         ref={pl}
-        // onClick={}
-        onWheel={canvasZoomed}
 
+        onMouseDown={canvasMouseDown}
+        onMouseMove={canvasMouseMove}
+        onMouseUp={canvasMouseUp}
+        onWheel={canvasZoomed}
+        onMouseLeave={() => {
+          setIsDragging(0);
+        }}
         onDoubleClick={(e: React.MouseEvent<HTMLCanvasElement>) => {
           if (scale > (MIN_ZOOM + MAX_ZOOM) / 2) {
             doZoom(e.pageX, e.pageY, MIN_ZOOM);
@@ -272,28 +333,40 @@ export function Place() {
           }
         }}
 
-        onMouseDown={canvasMouseDown}
-        onMouseMove={canvasMouseMove}
-        onMouseUp={canvasMouseUp}
-
-        onMouseLeave={() => {
-          setIsDragging(0);
-        }}
-
         style={{
           transform: `scale(${scale}) translate(${translate.x}px, ${translate.y}px)`,
-          // transition: 'transform 0.1s linear',
         }}
-
       >
       </canvas>
 
       {activePixel.x !== -1 && <div id="overlay" style={overlayStyle}></div>}
 
+      <div className='fixed flex top-0 right-0'>
+        <button
+          className={classNames('p-2 bg-gray-500 rounded border-2 border-black hover:border-white')}
+          onClick={loginButton}
+        >
+          { isLogged && userInfos?.username || '<Login>' }
+        </button>
+      </div>
+
+
       <div className='fixed flex bottom-0 w-full pointer-events-none'>
-        <div id='menu' className='mx-auto self-center bg-red-500 flex flex-col '>
-          <div className='self-center bg-blue-500 w-40'>
-            text
+        <div id='menu' className='mx-auto self-center bg-red-500 flex flex-col pointer-events-auto'>
+          <div className='self-center my-4 my-auto items-center flex flex-row gap-4'>
+            {activePixel.x !== -1 &&
+              <p className='h-fit'>
+                Set by {board.get(`${activePixel.x}:${activePixel.y}`)?.username} at {
+                  board.get(`${activePixel.x}:${activePixel.y}`) ? (new Date(board.get(`${activePixel.x}:${activePixel.y}`)?.time || '')).toISOString() : ''
+                }
+              </p>
+            }
+            <button
+              className={classNames('w-14 h-8 bg-gray-500 rounded border-2 border-black hover:border-white')}
+              onClick={paintButton}
+            >
+              Paint
+            </button>
           </div>
           <div className='self-center bg-green-500 p-2 flex flex-row gap-2'>
             {
@@ -305,10 +378,8 @@ export function Place() {
                       style={{ backgroundColor: 'rgb(' + v[1].color + ')' }}
                       onClick={() => {
                         setActiveColor(v[0]);
-                        setTranslate({ x: 0, y: 0 });
                       }}
                     >
-
                     </div>
                     {v[1].name}
                   </div>
