@@ -32,10 +32,13 @@ export function Place() {
 
   const pl = useRef<HTMLCanvasElement | null>(null);
 
-  const MIN_ZOOM = 8;
-  const MAX_ZOOM = 40;
+  const MIN_SCALE = 8;
+  const MAX_SCALE = 40;
 
-  const [scale, setScale] = useState(MIN_ZOOM);
+  const CANVAS_X = 100;
+  const CANVAS_Y = 100;
+
+  const [scale, setScale] = useState(MIN_SCALE);
   const [translate, setTranslate] = useState<Point>({ x: 0, y: 0 });
   const [overlayStyle, setOverlayStyle] = useState({
     width:  `${scale - 2}px`,
@@ -96,6 +99,8 @@ export function Place() {
 
   useEffect(() => {
     if (pl.current !== null) {
+      const centerX = pl.current.width / 2;
+      const centerY = pl.current.height / 2;
       const ctx = pl.current.getContext('2d');
 
       if (ctx !== null) {
@@ -125,6 +130,17 @@ export function Place() {
               });
 
               setBoard(pixs);
+
+              const params = new URLSearchParams(window.location.search);
+              const baseX = parseInt(params.get('x') || '');
+              const baseY = parseInt(params.get('y') || '');
+              const scale = parseInt(params.get('scale') || '');
+
+              if (!Number.isNaN(baseX) && !Number.isNaN(baseY)) {
+                setActivePixel({ x: baseX, y: baseY });
+                setScale(Number.isNaN(scale) ? Math.floor(((MIN_SCALE + MAX_SCALE) / 2 + MAX_SCALE) / 2 ) : scale);
+                setTranslate({ x: centerX - baseX, y: centerY - baseY });
+              }
             }
           })
           .catch((error) => {
@@ -177,7 +193,7 @@ export function Place() {
       const clickedX = Math.floor(mouseX);
       const clickedY = Math.floor(mouseY);
 
-      if (clickedX < 100 && clickedY < 100) {
+      if (clickedX < CANVAS_X && clickedY < CANVAS_Y) {
         setActivePixel({ x: clickedX, y: clickedY });
       }
       else {
@@ -212,7 +228,7 @@ export function Place() {
     e.stopPropagation();
 
     const factor = Math.sign(e.deltaY) > 0 ? 0.9 : 1.1;
-    const newScale = Math.round(Math.min(Math.max(scale * factor, MIN_ZOOM), MAX_ZOOM));
+    const newScale = Math.round(Math.min(Math.max(scale * factor, MIN_SCALE), MAX_SCALE));
 
     doZoom(e.pageX, e.pageY, newScale);
 
@@ -336,8 +352,8 @@ export function Place() {
   const moveRelative = useCallback((x: number, y: number) => {
     setActivePixel((prev) => {
       return {
-        x: prev.x !== -1 ? Math.min(Math.max(prev.x + x, 0), 100) : -1,
-        y: prev.y !== -1 ? Math.min(Math.max(prev.y + y, 0), 100) : -1,
+        x: prev.x !== -1 ? Math.min(Math.max(prev.x + x, 0), CANVAS_X) : -1,
+        y: prev.y !== -1 ? Math.min(Math.max(prev.y + y, 0), CANVAS_Y) : -1,
       };
     });
   }, []);
@@ -367,9 +383,10 @@ export function Place() {
   return (
     <>
       <Controls onMove={moveRelative} onAction={paintButton} onNumeric={numericAction} />
+
       <canvas
-        width="100px"
-        height="100px"
+        width={`${CANVAS_X}px`}
+        height={`${CANVAS_Y}px`}
         ref={pl}
 
         onMouseDown={canvasMouseDown}
@@ -380,11 +397,11 @@ export function Place() {
           setIsDragging(0);
         }}
         onDoubleClick={(e: React.MouseEvent<HTMLCanvasElement>) => {
-          if (scale > (MIN_ZOOM + MAX_ZOOM) / 2) {
-            doZoom(e.pageX, e.pageY, MIN_ZOOM);
+          if (scale > (MIN_SCALE + MAX_SCALE) / 2) {
+            doZoom(e.pageX, e.pageY, MIN_SCALE);
           }
           else {
-            doZoom(e.pageX, e.pageY, MAX_ZOOM);
+            doZoom(e.pageX, e.pageY, MAX_SCALE);
           }
         }}
 
@@ -396,6 +413,9 @@ export function Place() {
 
       {activePixel.x !== -1 && <div id="overlay" style={overlayStyle}></div>}
 
+
+
+
       <div className='fixed flex top-0 right-0'>
         <button
           className={classNames('p-2 bg-gray-500 rounded border-2 border-black hover:border-white')}
@@ -403,6 +423,52 @@ export function Place() {
         >
           { isLogged && userInfos?.username || '<Login>' }
         </button>
+      </div>
+
+      <div className='fixed flex gap-4 text-black top-[50%] left-[-180px] p-1 rounded bg-gray-400/50'
+        style={{
+          transform:       'rotate(270deg)',
+          transformOrigin: 'center center',
+        }}>
+
+        <input
+          // id='scale_range'
+          className={'w-[400px]'}
+          style={{
+          }}
+          type={'range'}
+          min={MIN_SCALE}
+          max={MAX_SCALE}
+          value={scale}
+          onChange={(e) => {
+            setScale(parseInt(e.target.value));
+          }}
+        />
+        <p
+          style={{
+            transform:       'rotate(90deg)',
+            transformOrigin: 'center center',
+          }}>
+          {scale}
+        </p>
+      </div>
+
+
+      <div className='fixed flex flex-col justify-center top-0 right-4 h-[100%] w-12 pointer-events-none'>
+        <div className='p-1 rounded bg-gray-400/50'>
+          <div className='whitespace-nowrap'>{scale}/{MAX_SCALE}</div>
+
+          <div className='flex flex-col bg-cyan-500 h-80'>
+            <div className='grow'/>
+            <div
+              className='bg-green-500'
+              style={{
+                height: `${scale / MAX_SCALE * 100}%`,
+              }}>
+
+            </div>
+          </div>
+        </div>
       </div>
 
 
@@ -416,12 +482,22 @@ export function Place() {
                 }
               </p>
             }
-            <button
-              className={classNames('w-14 h-8 bg-gray-500 rounded border-2 border-black hover:border-white')}
-              onClick={paintButton}
-            >
-              Paint
-            </button>
+
+            {isLogged && (
+              <button
+                className={classNames('px-2 h-8 bg-gray-500 rounded border-2 border-black hover:border-white')}
+                onClick={paintButton}
+              >
+                Paint
+              </button>
+            ) || (
+              <button
+                className={classNames('px-2 h-8 bg-gray-500 rounded border-2 border-black hover:border-whites')}
+                onClick={loginButton}
+              >
+                Log to paint
+              </button>
+            )}
           </div>
           <div className='self-center bg-green-500 p-2 flex flex-row gap-2'>
             {

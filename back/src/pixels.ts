@@ -21,6 +21,7 @@ async function initializeBoard() {
     const board: (Pixel | null)[][] = [];
 
     for (let x = 0; x < 100; x++) {
+        const lineExpire = Math.floor(Math.random() * 3600);
         board[x] = [];
         for (let y = 0; y < 100; y++) {
             const key = `${x}:${y}`;
@@ -43,7 +44,7 @@ async function initializeBoard() {
                     const cell = result.rows[0];
                     const p: Pixel = { color_id: cell.color_id, username: cell.name, time: cell.set_time }
                     board[x][y] = p;
-                    await redisClient.set(key, JSON.stringify(board[x][y]));
+                    await redisClient.set(key, JSON.stringify(board[x][y]), 'EX', lineExpire);
                 } //
                 else {
                     board[x][y] = null;
