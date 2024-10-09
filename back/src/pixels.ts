@@ -107,7 +107,7 @@ const setPixel = async (req: LoggedRequest, res: Response) => {
 
         updates.push({ ...p, x: x, y: y });
 
-        res.send('Cell updated successfully.');
+        res.status(201).send({ ...p, x: x, y: y });
     } //
     catch (err) {
         console.error(err);

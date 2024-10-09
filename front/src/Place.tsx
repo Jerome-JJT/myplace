@@ -2,6 +2,7 @@ import axios from 'axios';
 import classNames from 'classnames';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useLogin } from './LoginProvider';
+import { Controls } from './Controls';
 
 
 interface Pixel {
@@ -77,6 +78,9 @@ export function Place() {
                 ctx.fillStyle = 'rgb(' + color.color + ')';
                 ctx.fillRect(x, y, 1, 1);
                 fut.set(`${x}:${y}`, pixel);
+              }
+              else {
+                console.log('No need to set', pixel, prev.get(`${x}:${y}`));
               }
             }
             return fut;
@@ -282,7 +286,7 @@ export function Place() {
     }
   }, [getUserData]);
 
-  const paintButton = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+  const paintButton = useCallback(() => {
     if (activePixel.x !== -1 && activePixel.y !== -1) {
       if (activeColor !== -1) {
         axios
@@ -291,13 +295,33 @@ export function Place() {
               x:     activePixel.x,
               y:     activePixel.y,
               color: activeColor,
-
             },
             { withCredentials: true },
           )
           .then((res) => {
+            if (res.status === 201) {
+              if (pl.current !== null) {
+                const ctx = pl.current.getContext('2d');
+                if (ctx !== null) {
+                  setBoard((prev) => {
+                    const fut = new Map(prev);
+
+                    const { x, y, ...pixel } = res.data;
+                    const color = colors.get(pixel.color_id);
+
+                    if (color !== undefined && pixel.time > (prev.get(`${x}:${y}`)?.time || 0)) {
+                      ctx.fillStyle = 'rgb(' + color.color + ')';
+                      ctx.fillRect(x, y, 1, 1);
+                      fut.set(`${x}:${y}`, pixel);
+                    }
+                    return fut;
+                  });
+                }
+              }
+            }
           })
           .catch((error) => {
+            alert(`${error.response.status} ${error.response.statusText}`);
           });
       }
       else {
@@ -307,11 +331,42 @@ export function Place() {
     else {
       alert('Choose a pixel');
     }
-  }, [activeColor, activePixel]);
+  }, [activeColor, activePixel.x, activePixel.y, colors]);
 
+  const moveRelative = useCallback((x: number, y: number) => {
+    setActivePixel((prev) => {
+      return {
+        x: prev.x !== -1 ? Math.min(Math.max(prev.x + x, 0), 100) : -1,
+        y: prev.y !== -1 ? Math.min(Math.max(prev.y + y, 0), 100) : -1,
+      };
+    });
+  }, []);
+
+  const numericAction = useCallback((abs: number | undefined, rel: number | undefined) => {
+
+    if (abs !== undefined) {
+      if (colors.has(abs)) {
+        setActiveColor(abs);
+      }
+      else {
+        setActiveColor(-1);
+      }
+    }
+
+    if (rel !== undefined) {
+      setActiveColor((prev) => {
+        const next = (prev - 1 + rel + colors.size) % colors.size + 1;
+        if (colors.has(next)) {
+          return next;
+        }
+        return prev;
+      });
+    }
+  }, [colors]);
 
   return (
     <>
+      <Controls onMove={moveRelative} onAction={paintButton} onNumeric={numericAction} />
       <canvas
         width="100px"
         height="100px"

@@ -19,12 +19,12 @@ app.post('/set', authenticateToken, setPixel);
 const { mockLogin, logout } = require('./login');
 
 app.post('/mocklogin', mockLogin);
-app.post('/logout', logout);
+app.get('/logout', logout);
 app.get('/profile', authenticateToken, profile);
 
 setInterval(() => {
     sendUpdates(wss);
-}, 1000);
+}, 5000);
 
 const server = app.listen(8080, () => {
     console.log('Server is running on port 8080');
