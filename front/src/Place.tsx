@@ -3,6 +3,7 @@ import classNames from 'classnames';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useLogin } from './LoginProvider';
 import { Controls } from './Controls';
+import { objUrlEncode } from './objUrlEncode';
 
 
 interface Pixel {
@@ -195,6 +196,16 @@ export function Place() {
 
       if (clickedX < CANVAS_X && clickedY < CANVAS_Y) {
         setActivePixel({ x: clickedX, y: clickedY });
+
+        const args = objUrlEncode({
+          'x':     clickedX,
+          'y':     clickedY,
+          'scale': scale,
+        });
+
+        const base = `${window.location.origin}${window.location.pathname}`;
+        const link = `${base}?${args}`;
+        window.history.replaceState(null, '', link);
       }
       else {
         setActivePixel({ x: -1, y: -1 });
@@ -380,6 +391,27 @@ export function Place() {
     }
   }, [colors]);
 
+  const shareButton = useCallback(async () => {
+
+    const args = objUrlEncode({
+      'x':     activePixel.x,
+      'y':     activePixel.y,
+      'scale': scale,
+    });
+
+    const base = `${window.location.origin}${window.location.pathname}`;
+    const link = `${base}?${args}`;
+    window.history.replaceState(null, '', link);
+
+    try {
+      await navigator.clipboard.writeText(link);
+      alert('Copied to clipboard');
+    }
+    catch (error) {
+      alert('Unable to copy to clipboard');
+    }
+  }, [activePixel.x, activePixel.y, scale]);
+
   return (
     <>
       <Controls onMove={moveRelative} onAction={paintButton} onNumeric={numericAction} />
@@ -465,7 +497,6 @@ export function Place() {
               style={{
                 height: `${scale / MAX_SCALE * 100}%`,
               }}>
-
             </div>
           </div>
         </div>
@@ -498,6 +529,15 @@ export function Place() {
                 Log to paint
               </button>
             )}
+
+            {activePixel.x !== -1 &&
+              <button
+                className={classNames('px-2 h-8 bg-gray-500 rounded border-2 border-black hover:border-whites')}
+                onClick={shareButton}
+              >
+              Share pixel
+              </button>
+            }
           </div>
           <div className='self-center bg-green-500 p-2 flex flex-row gap-2'>
             {
