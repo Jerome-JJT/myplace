@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import { getLastUserPixels } from './pixels';
 
 export interface UserInfos {
     id: number
@@ -43,8 +44,7 @@ export const mockLogin = (req: Request, res: Response) => {
 
     res.cookie('token', token, {
         httpOnly: true,
-        // secure: process.env.NODE_ENV === 'production',
-        secure: true,
+        secure: process.env.NODE_ENV === 'production',
         maxAge: 3600000,
     });
 
@@ -57,8 +57,16 @@ export const logout = (req: Request, res: Response) => {
     res.json({ message: 'Logged out successfully' });
 }
 
-export const profile = (req: LoggedRequest, res: Response) => {
-    res.json(req.user);
-};
 
-module.exports = { authenticateToken, mockLogin, logout, profile }
+
+export const profile = async (req: LoggedRequest, res: Response) => {
+    const timers = await getLastUserPixels(req.user.id);
+    res.json({
+        userInfos: {
+            timers: timers,
+            pixel_buffer: process.env.PIXEL_BUFFER_SIZE,
+            pixel_timer: process.env.PIXEL_MINUTE_TIMER,
+            ...req.user
+        }
+    });
+};

@@ -10,6 +10,9 @@ declare global {
         POSTGRES_DB: string,
         POSTGRES_USER: string,
         POSTGRES_PASSWORD: string,
+
+        PIXEL_BUFFER_SIZE: number
+        PIXEL_MINUTE_TIMER: number
       }
     }
   }

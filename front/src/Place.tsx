@@ -8,8 +8,8 @@ import { objUrlEncode } from './objUrlEncode';
 
 interface Pixel {
     username: string,
-    time: Date,
-    color_id: number
+    color_id: number,
+    set_time: Date
 }
 
 export interface Update extends Pixel {
@@ -52,7 +52,7 @@ export function Place() {
   const [isDragging, setIsDragging] = useState(0);
 
   useEffect(() => {
-    const socket = new WebSocket('ws://localhost:8081');
+    const socket = new WebSocket('/ws/');
     const updates: Update[] = [];
 
     socket.onopen = () => {
@@ -78,7 +78,7 @@ export function Place() {
               const { x, y, ...pixel } = up;
               const color = colors.get(pixel.color_id);
 
-              if (color !== undefined && pixel.time > (prev.get(`${x}:${y}`)?.time || 0)) {
+              if (color !== undefined && pixel.set_time > (prev.get(`${x}:${y}`)?.set_time || 0)) {
                 ctx.fillStyle = 'rgb(' + color.color + ')';
                 ctx.fillRect(x, y, 1, 1);
                 fut.set(`${x}:${y}`, pixel);
@@ -144,7 +144,7 @@ export function Place() {
               }
             }
           })
-          .catch((error) => {
+          .catch(() => {
           });
       }
     }
@@ -333,10 +333,10 @@ export function Place() {
                   setBoard((prev) => {
                     const fut = new Map(prev);
 
-                    const { x, y, ...pixel } = res.data;
+                    const { x, y, ...pixel } = res.data.update as Update;
                     const color = colors.get(pixel.color_id);
 
-                    if (color !== undefined && pixel.time > (prev.get(`${x}:${y}`)?.time || 0)) {
+                    if (color !== undefined && pixel.set_time > (prev.get(`${x}:${y}`)?.set_time || 0)) {
                       ctx.fillStyle = 'rgb(' + color.color + ')';
                       ctx.fillRect(x, y, 1, 1);
                       fut.set(`${x}:${y}`, pixel);
@@ -407,7 +407,7 @@ export function Place() {
       await navigator.clipboard.writeText(link);
       alert('Copied to clipboard');
     }
-    catch (error) {
+    catch {
       alert('Unable to copy to clipboard');
     }
   }, [activePixel.x, activePixel.y, scale]);
@@ -457,7 +457,7 @@ export function Place() {
         </button>
       </div>
 
-      <div className='fixed flex gap-4 text-black top-[50%] left-[-180px] p-1 rounded bg-gray-400/50'
+      <div className='fixed flex gap-4 text-black top-[50%] left-[-180px] p-1 rounded bg-gray-400/70'
         style={{
           transform:       'rotate(270deg)',
           transformOrigin: 'center center',
@@ -485,22 +485,23 @@ export function Place() {
         </p>
       </div>
 
+      {isLogged && (
+        <div className='fixed flex flex-col justify-center top-0 right-4 h-[100%] w-12 pointer-events-none'>
+          <div className='p-1 rounded bg-gray-400/70'>
+            <div className='whitespace-nowrap'>{(userInfos?.pixel_buffer || 1) - (userInfos?.timers.length || 1)}</div>
 
-      <div className='fixed flex flex-col justify-center top-0 right-4 h-[100%] w-12 pointer-events-none'>
-        <div className='p-1 rounded bg-gray-400/50'>
-          <div className='whitespace-nowrap'>{scale}/{MAX_SCALE}</div>
-
-          <div className='flex flex-col bg-cyan-500 h-80'>
-            <div className='grow'/>
-            <div
-              className='bg-green-500'
-              style={{
-                height: `${scale / MAX_SCALE * 100}%`,
-              }}>
+            <div className='flex flex-col bg-cyan-500 h-80'>
+              <div className='grow'/>
+              <div
+                className='bg-green-500'
+                style={{
+                  height: `${(userInfos?.timers.length || 1) / (userInfos?.pixel_buffer || 1) * 100}%`,
+                }}>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
 
       <div className='fixed flex bottom-0 w-full pointer-events-none'>
@@ -509,7 +510,7 @@ export function Place() {
             {activePixel.x !== -1 &&
               <p className='h-fit'>
                 Set by {board.get(`${activePixel.x}:${activePixel.y}`)?.username} at {
-                  board.get(`${activePixel.x}:${activePixel.y}`) ? (new Date(board.get(`${activePixel.x}:${activePixel.y}`)?.time || '')).toISOString() : ''
+                  board.get(`${activePixel.x}:${activePixel.y}`) ? (new Date(board.get(`${activePixel.x}:${activePixel.y}`)?.set_time || '')).toISOString() : ''
                 }
               </p>
             }
@@ -523,7 +524,7 @@ export function Place() {
               </button>
             ) || (
               <button
-                className={classNames('px-2 h-8 bg-gray-500 rounded border-2 border-black hover:border-whites')}
+                className={classNames('px-2 h-8 bg-gray-500 rounded border-2 border-black hover:border-white')}
                 onClick={loginButton}
               >
                 Log to paint
@@ -532,7 +533,7 @@ export function Place() {
 
             {activePixel.x !== -1 &&
               <button
-                className={classNames('px-2 h-8 bg-gray-500 rounded border-2 border-black hover:border-whites')}
+                className={classNames('px-2 h-8 bg-gray-500 rounded border-2 border-black hover:border-white')}
                 onClick={shareButton}
               >
               Share pixel

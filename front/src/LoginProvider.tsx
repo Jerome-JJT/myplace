@@ -4,12 +4,17 @@ import { useContext, type ReactNode, createContext, useCallback, useState } from
 export interface LoggedUser {
   id: number
   username: string
+
+  timers: Date[]
+  pixel_buffer: number
+  pixel_timer: number
 }
 
 interface LoginContextProps {
   isLogged: boolean
   userInfos: LoggedUser | undefined
   getUserData: () => void
+  setPixelInfos: (timers: Date[]) => void
   logout: () => void
 }
 
@@ -35,7 +40,7 @@ export function LoginProvider({ children }: { children: ReactNode }): JSX.Elemen
       .then((res) => {
         if (res.status === 200) {
           setIsLogged(true);
-          setUserInfos(res.data as LoggedUser);
+          setUserInfos(res.data.userInfos as LoggedUser);
         }
       })
       .catch((error) => {
@@ -43,6 +48,20 @@ export function LoginProvider({ children }: { children: ReactNode }): JSX.Elemen
         setUserInfos({} as LoggedUser);
       });
   }, []);
+
+  const setPixelInfos = useCallback((timers: Date[]) => {
+    if (isLogged) {
+      setUserInfos((prev) => {
+        if (prev) {
+          return {
+            ...prev,
+            timers: timers,
+          };
+        }
+        return prev;
+      });
+    }
+  }, [isLogged]);
 
   const logout = useCallback(() => {
     axios
@@ -65,6 +84,7 @@ export function LoginProvider({ children }: { children: ReactNode }): JSX.Elemen
         isLogged,
         userInfos,
         getUserData,
+        setPixelInfos,
         logout,
       }}
     >

@@ -25,16 +25,25 @@ CREATE TABLE board (
 -- INSERT INTO users (id, name, email) VALUES (42, 'blur', 'blur');
 -- INSERT INTO users (id, name, email) VALUES (92477, 'moi', 'jerome');
 
--- INSERT INTO colors (name, red, green, blue) VALUES 
---     ('red', 231, 76, 60),
---     ('blue', 52, 152, 219),
---     ('yellow', 241, 196, 15),
---     ('green', 46, 204, 113),
---     ('orange', 230, 126, 34),
---     ('purple', 155, 89, 182),
---     ('white', 236, 240, 241),
---     ('black', 44, 62, 80)
+-- INSERT INTO colors (id, name, red, green, blue) VALUES 
+--     (1, 'white', 236, 240, 241),
+--     (2, 'black', 44, 62, 80)
+--     (3, 'red', 231, 76, 60),
+--     (4, 'blue', 52, 152, 219),
+--     (5, 'yellow', 241, 196, 15),
+--     (6, 'green', 46, 204, 113),
+--     (7, 'orange', 230, 126, 34),
+--     (8, 'purple', 155, 89, 182),
 -- ;
+
+-- DO $$
+-- BEGIN
+--     FOR i IN 0..99 LOOP
+--         FOR j IN 0..99 LOOP
+--             INSERT INTO board (x, y, color_id, user_id, set_time) VALUES (i, j, 1, 42);
+--         END LOOP;
+--     END LOOP;
+-- END $$;
 
 -- DO $$
 -- BEGIN

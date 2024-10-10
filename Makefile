@@ -73,7 +73,7 @@ runfront:
 runback:
 			${DOCKER} exec back bash
 runpostg:
-			${DOCKER} exec postgres bash
+			${DOCKER} exec db bash
 rundb:
 			${DOCKER} exec db psql --host=db --dbname=${DATABASE_DB} --username=${DATABASE_USERNAME} -W
 db: rundb

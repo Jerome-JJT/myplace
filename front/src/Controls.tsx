@@ -11,7 +11,7 @@ export const Controls = ({ onMove, onAction, onNumeric }: ControlsProps) => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const keyCode = event.code;
 
-      console.log(keyCode);
+      // console.log(keyCode);
 
       if (keyCode === 'ArrowUp' || keyCode === 'KeyW') {
         onMove(0, -1);

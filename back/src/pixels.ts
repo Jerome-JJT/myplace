@@ -7,7 +7,7 @@ import { updates } from './ws';
 export interface Pixel {
     color_id: number
     username: string
-    time: Date
+    set_time: Date
 }
 export interface Color {
     id: number
@@ -42,7 +42,7 @@ async function initializeBoard() {
 
                 if (result.rows.length > 0) {
                     const cell = result.rows[0];
-                    const p: Pixel = { color_id: cell.color_id, username: cell.name, time: cell.set_time }
+                    const p: Pixel = { color_id: cell.color_id, username: cell.name, set_time: cell.set_time }
                     board[x][y] = p;
                     await redisClient.set(key, JSON.stringify(board[x][y]), 'EX', lineExpire);
                 } //
@@ -65,7 +65,7 @@ async function getColor(): Promise<Color[]> {
     return result.rows;
 }
 
-const getPixels = async (req: Request, res: Response) => {
+export const getPixels = async (req: Request, res: Response) => {
     try {
         const board = await initializeBoard();
         const colors = await getColor();
@@ -80,40 +80,57 @@ const getPixels = async (req: Request, res: Response) => {
     }
 }
 
-const setPixel = async (req: LoggedRequest, res: Response) => {
+
+export const getLastUserPixels = async (user_id: number): Promise<Date[]> => {
+
+    const pixel_buffer = process.env.PIXEL_BUFFER_SIZE;
+    const pixel_timer = process.env.PIXEL_MINUTE_TIMER;
+
+    const result = await pool.query(`
+        SELECT set_time
+        FROM board
+        WHERE user_id = $1 AND set_time > NOW() - INTERVAL '1 minute' * $2
+        ORDER BY set_time DESC
+        LIMIT $3
+    `, [user_id, pixel_timer, pixel_buffer]);
+
+    return result.rows.map((r: {set_time: Date}) => r.set_time);
+}
+
+export const setPixel = async (req: LoggedRequest, res: Response) => {
     const { x, y, color } = req.body;
     const user = req.user;
 
     console.log("PRINT", x, y, color, user)
 
     try {
-        const key = `${x}:${y}`;
-        const timep = new Date();
-        const p: Pixel = { color_id: color, username: user.username, time: timep }
-        await redisClient.set(key, JSON.stringify(p));
+        
+        const ret = await pool.query(`
+            INSERT INTO board (x, y, color_id, user_id)
+            VALUES ($1, $2, $3, $4)
+            RETURNING x, y, color_id, set_time
+            `, [x, y, color, user.id]);
+            
+        const inserted = ret.rows.length === 1 ? ret.rows[0] : null;
 
-        // const colorResult = await pool.query(`
-        //     INSERT INTO colors (red, green, blue)
-        //     VALUES ($1, $2, $3)
-        //     ON CONFLICT DO NOTHING
-        //     RETURNING id
-        // `, [color.red, color.green, color.blue]);
-
-        // const color_id = colorResult.rows.length > 0 ? colorResult.rows[0].id : null;
-
-        await pool.query(`
-            INSERT INTO board (x, y, color_id, user_id, set_time)
-            VALUES ($1, $2, $3, $4, $5)
-        `, [x, y, color, user.id, timep]);
-
-        updates.push({ ...p, x: x, y: y });
-
-        res.status(201).send({ ...p, x: x, y: y });
+        if (inserted !== null) {
+            const key = `${inserted.x}:${inserted.y}`;
+            const p: Pixel = { username: user.username, color_id: inserted.color_id, set_time: inserted.set_time }
+    
+            await redisClient.set(key, JSON.stringify(p));
+    
+            updates.push({ ...p, x: inserted.x, y: inserted.y });
+            res.status(201).send({
+                update: { ...p, x: inserted.x, y: inserted.y },
+                timers: getLastUserPixels(user.id)
+            });
+        }
+        else {
+            res.status(417).send({});
+        }
     } //
     catch (err) {
         console.error(err);
         res.status(500).send('Error updating cell.');
     }
 }
-
-module.exports = { getPixels, setPixel }
