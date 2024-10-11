@@ -23,7 +23,7 @@ export interface UserInfos {
   id: number
   username: string
 
-  timers: Date[]
+  timers: string[]
   pixel_buffer: number
   pixel_timer: number
 }

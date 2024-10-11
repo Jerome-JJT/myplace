@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 
 interface ControlsProps {
     onMove: (x: number, y: number) => void
-    onAction: () => void
+    onAction: (e: React.MouseEvent<HTMLElement> | undefined) => void
     onNumeric: (abs: number | undefined, rel: number | undefined) => void
 }
 
@@ -26,7 +26,7 @@ export const Controls = ({ onMove, onAction, onNumeric }: ControlsProps) => {
         onMove(1, 0);
       }
       if (keyCode === 'Space' || keyCode === 'Enter') {
-        onAction();
+        onAction(undefined);
       }
 
       if (keyCode.startsWith('Digit') || keyCode.startsWith('Numpad')) {

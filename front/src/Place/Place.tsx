@@ -17,7 +17,7 @@ import { LoginBox } from './LoginBox';
 
 
 export function Place() {
-  const { getUserData } = useUser();
+  const { getUserData, setPixelInfos } = useUser();
   const { pl, activePixel, setActivePixel, activeColor, setActiveColor, colors, setBoard, scale } = useCanvas();
 
 
@@ -69,7 +69,8 @@ export function Place() {
   }, [colors, pl, setBoard]);
 
 
-  const loginButton = useCallback(() => {
+  const loginButton = useCallback((e: React.MouseEvent<HTMLElement> | undefined) => {
+    e?.currentTarget.blur();
     const username = prompt('Username');
 
     if (username && username.length > 3) {
@@ -89,7 +90,8 @@ export function Place() {
   }, [getUserData]);
 
 
-  const paintButton = useCallback(() => {
+  const paintButton = useCallback((e: React.MouseEvent<HTMLElement> | undefined) => {
+    e?.currentTarget.blur();
     if (activePixel.x !== -1 && activePixel.y !== -1) {
       if (activeColor !== -1) {
         axios
@@ -119,12 +121,18 @@ export function Place() {
                     }
                     return fut;
                   });
+                  setPixelInfos(res.data.timers);
                 }
               }
             }
           })
           .catch((error) => {
-            alert(`${error.response.status} ${error.response.statusText}`);
+            if (error.response.status === 425) {
+              setPixelInfos(error.response.data.timers);
+            }
+            else {
+              alert(`${error.response.status} ${error.response.statusText}`);
+            }
           });
       }
       else {
@@ -134,11 +142,11 @@ export function Place() {
     else {
       alert('Choose a pixel');
     }
-  }, [activeColor, activePixel.x, activePixel.y, colors, pl, setBoard]);
+  }, [activeColor, activePixel.x, activePixel.y, colors, pl, setBoard, setPixelInfos]);
 
 
-  const shareButton = useCallback(async () => {
-
+  const shareButton = useCallback(async (e: React.MouseEvent<HTMLElement> | undefined) => {
+    e?.currentTarget.blur();
     const args = objUrlEncode({
       'x':     activePixel.x,
       'y':     activePixel.y,

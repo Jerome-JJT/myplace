@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import { useUser } from 'src/UserProvider';
 
 interface LoginBoxProps {
-  loginButton: () => void
+  loginButton: (e: React.MouseEvent<HTMLElement> | undefined) => void
 }
 
 export const LoginBox = ({ loginButton }: LoginBoxProps) => {

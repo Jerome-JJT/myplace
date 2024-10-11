@@ -3,7 +3,7 @@ import { pool } from './db';
 import { Request, Response } from 'express';
 import { updates } from './ws';
 import { Color, LoggedRequest, Pixel } from './types';
-
+import { PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER } from './consts';
 
 
 async function initializeBoard() {
@@ -21,7 +21,7 @@ async function initializeBoard() {
             } //
             else {
                 const result = await pool.query(`
-                    SELECT b.x, b.y, b.color_id, u.name, b.set_time
+                    SELECT b.x, b.y, b.color_id, u.name, b.set_time::TIMESTAMPTZ
                     FROM board b
                     JOIN users u ON b.user_id = u.id
                     WHERE b.x = $1 AND b.y = $2
@@ -36,7 +36,9 @@ async function initializeBoard() {
                     await redisClient.set(key, JSON.stringify(board[x][y]), 'EX', lineExpire);
                 } //
                 else {
-                    board[x][y] = null;
+                    const p: Pixel = { color_id: 1, username: 'null', set_time: '1900-01-01T00:00:00.000Z' }
+                    board[x][y] = p;
+                    await redisClient.set(key, JSON.stringify(board[x][y]), 'EX', lineExpire);
                 }
             }
         }
@@ -72,16 +74,14 @@ export const getPixels = async (req: Request, res: Response) => {
 
 export const getLastUserPixels = async (user_id: number): Promise<Date[]> => {
 
-    const pixel_buffer = process.env.PIXEL_BUFFER_SIZE;
-    const pixel_timer = process.env.PIXEL_MINUTE_TIMER;
-
     const result = await pool.query(`
-        SELECT set_time
+        SELECT (set_time + INTERVAL '1 minute' * $2)::TIMESTAMPTZ AS set_time
         FROM board
-        WHERE user_id = $1 AND set_time > NOW() - INTERVAL '1 minute' * $2
+        WHERE user_id = $1 AND 
+        (set_time + INTERVAL '1 minute' * $2) > NOW()
         ORDER BY set_time DESC
         LIMIT $3
-    `, [user_id, pixel_timer, pixel_buffer]);
+    `, [user_id, PIXEL_MINUTE_TIMER, PIXEL_BUFFER_SIZE]);
 
     return result.rows.map((r: {set_time: Date}) => r.set_time);
 }
@@ -89,37 +89,47 @@ export const getLastUserPixels = async (user_id: number): Promise<Date[]> => {
 export const setPixel = async (req: LoggedRequest, res: Response) => {
     const { x, y, color } = req.body;
     const user = req.user;
+    const timers = await getLastUserPixels(user.id)
 
     console.log("PRINT", x, y, color, user)
 
-    try {
+    if (timers.length < PIXEL_BUFFER_SIZE) {
+        try {
+            const ret = await pool.query(`
+                INSERT INTO board (x, y, color_id, user_id)
+                VALUES ($1, $2, $3, $4)
+                RETURNING x, y, color_id, (set_time + INTERVAL '1 minute' * $5)::TIMESTAMPTZ AS set_time
+                `, [x, y, color, user.id, PIXEL_MINUTE_TIMER]);
+                
+            const inserted = ret.rows.length === 1 ? ret.rows[0] : null;
+    
+            if (inserted !== null) {
+                const key = `${inserted.x}:${inserted.y}`;
+                const p: Pixel = { username: user.username, color_id: inserted.color_id, set_time: inserted.set_time }
         
-        const ret = await pool.query(`
-            INSERT INTO board (x, y, color_id, user_id)
-            VALUES ($1, $2, $3, $4)
-            RETURNING x, y, color_id, set_time
-            `, [x, y, color, user.id]);
-            
-        const inserted = ret.rows.length === 1 ? ret.rows[0] : null;
-
-        if (inserted !== null) {
-            const key = `${inserted.x}:${inserted.y}`;
-            const p: Pixel = { username: user.username, color_id: inserted.color_id, set_time: inserted.set_time }
-    
-            await redisClient.set(key, JSON.stringify(p));
-    
-            updates.push({ ...p, x: inserted.x, y: inserted.y });
-            res.status(201).send({
-                update: { ...p, x: inserted.x, y: inserted.y },
-                timers: getLastUserPixels(user.id)
-            });
+                await redisClient.set(key, JSON.stringify(p));
+        
+                updates.push({ ...p, x: inserted.x, y: inserted.y });
+                timers.unshift(inserted.set_time);
+                res.status(201).send({
+                    update: { ...p, x: inserted.x, y: inserted.y },
+                    timers: timers
+                });
+            }
+            else {
+                res.status(417).send('Strange insertion error append');
+            }
+        } //
+        catch (err) {
+            console.error(err);
+            res.status(500).send('Error updating cell.');
         }
-        else {
-            res.status(417).send({});
-        }
-    } //
-    catch (err) {
-        console.error(err);
-        res.status(500).send('Error updating cell.');
+    }
+    else {
+        console.log('Timeout limit reached');
+        res.status(425).send({
+            timers: timers,
+            message: 'Too early'
+        });
     }
 }

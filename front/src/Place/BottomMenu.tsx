@@ -4,9 +4,9 @@ import { useUser } from 'src/UserProvider';
 import { useCanvas } from './CanvasProvider';
 
 interface BottomMenuProps {
-  loginButton: () => void
-  shareButton: () => void
-  paintButton: () => void
+  loginButton: (e: React.MouseEvent<HTMLElement> | undefined) => void
+  shareButton: (e: React.MouseEvent<HTMLElement> | undefined) => void
+  paintButton: (e: React.MouseEvent<HTMLElement> | undefined) => void
 }
 
 export const BottomMenu = ({ loginButton, shareButton, paintButton }: BottomMenuProps) => {
@@ -50,7 +50,7 @@ export const BottomMenu = ({ loginButton, shareButton, paintButton }: BottomMenu
             </button>
           }
         </div>
-        <div className='self-center bg-green-500 p-2 flex flex-row gap-2'>
+        <div className='self-center w-full bg-green-500 p-2 flex flex-row flex-wrap justify-center gap-2 max-w-[550px]'>
           {
             Array.from(colors.entries()).map((v) => {
               return (

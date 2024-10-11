@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { getLastUserPixels } from './pixels';
 import { LoggedRequest } from './types';
+import { PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER } from './consts';
 
 
 
@@ -59,8 +60,8 @@ export const profile = async (req: LoggedRequest, res: Response) => {
     res.json({
         userInfos: {
             timers: timers,
-            pixel_buffer: process.env.PIXEL_BUFFER_SIZE,
-            pixel_timer: process.env.PIXEL_MINUTE_TIMER,
+            pixel_buffer: PIXEL_BUFFER_SIZE,
+            pixel_timer: PIXEL_MINUTE_TIMER,
             ...req.user
         }
     });

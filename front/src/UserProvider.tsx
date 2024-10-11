@@ -6,7 +6,7 @@ interface UserContextProps {
   isLogged: boolean
   infos: UserInfos | undefined
   getUserData: () => void
-  setPixelInfos: (timers: Date[]) => void
+  setPixelInfos: (timers: string[]) => void
   logout: () => void
 }
 
@@ -41,7 +41,7 @@ export function UserProvider({ children }: { children: ReactNode }): JSX.Element
       });
   }, []);
 
-  const setPixelInfos = useCallback((timers: Date[]) => {
+  const setPixelInfos = useCallback((timers: string[]) => {
     if (isLogged) {
       setInfos((prev) => {
         if (prev) {

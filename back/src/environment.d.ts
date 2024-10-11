@@ -11,8 +11,8 @@ declare global {
         POSTGRES_USER: string,
         POSTGRES_PASSWORD: string,
 
-        PIXEL_BUFFER_SIZE: number
-        PIXEL_MINUTE_TIMER: number
+        PIXEL_BUFFER_SIZE: string
+        PIXEL_MINUTE_TIMER: string
       }
     }
   }
