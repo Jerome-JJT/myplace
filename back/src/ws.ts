@@ -1,13 +1,7 @@
-import { Pixel } from "./pixels";
 import WebSocket from "ws";
-
-export interface Update extends Pixel {
-    x: number
-    y: number
-}
+import { Update } from "./types";
 
 export const updates: Update[] = [];
-
 
 export const sendUpdates = (wss: WebSocket.Server) => {
     if (updates.length > 0) {

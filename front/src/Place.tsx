@@ -8,23 +8,10 @@ import { PaintBar } from './PaintBar';
 import { BottomMenu } from './BottomMenu';
 import { MIN_SCALE, MAX_SCALE, CANVAS_X, CANVAS_Y } from './const';
 import { ZoomBar } from './ZoomBar';
+import { ColorType, Pixel, Point, Update } from './types';
 
 
-export interface Pixel {
-    username: string,
-    color_id: number,
-    set_time: Date
-}
 
-export interface Update extends Pixel {
-  x: number
-  y: number
-}
-
-export interface Point {
-  x: number,
-  y: number
-}
 
 export function Place() {
   const { isLogged, userInfos, getUserData } = useLogin();
@@ -32,7 +19,7 @@ export function Place() {
   const [activePixel, setActivePixel] = useState<Point>({ x: -1, y: -1 });
   const [activeColor, setActiveColor] = useState(-1);
 
-  const [colors, setColors] = useState<Map<number, { name: string, color: string }>>(new Map());
+  const [colors, setColors] = useState<Map<number, ColorType>>(new Map());
   const [board, setBoard] = useState<Map<string, Pixel>>(new Map());
 
   const pl = useRef<HTMLCanvasElement | null>(null);

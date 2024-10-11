@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { Pixel, Point, Update } from './Place';
+import { Pixel, Point } from './Place';
 import { useLogin } from './LoginProvider';
 
 interface BottomMenuProps {

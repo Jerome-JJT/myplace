@@ -1,14 +1,9 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { getLastUserPixels } from './pixels';
+import { LoggedRequest } from './types';
 
-export interface UserInfos {
-    id: number
-    username: string
-}
-export interface LoggedRequest extends Request {
-  user: UserInfos
-}
+
 
 export const authenticateToken = (req: LoggedRequest, res: Response, next: any) => {
     const token = req.cookies.token;

@@ -1,21 +1,10 @@
 import { redisClient } from './redis';
 import { pool } from './db';
 import { Request, Response } from 'express';
-import { LoggedRequest } from './login';
 import { updates } from './ws';
+import { Color, LoggedRequest, Pixel } from './types';
 
-export interface Pixel {
-    color_id: number
-    username: string
-    set_time: Date
-}
-export interface Color {
-    id: number
-    name: string
-    red: number
-    green: number
-    blue: number
-}
+
 
 async function initializeBoard() {
     const board: (Pixel | null)[][] = [];
