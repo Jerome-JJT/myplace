@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import './App.css';
-import { Place } from './Place';
+import { Place } from './Place/Place';
 import { useUser } from './UserProvider';
 
 function App() {

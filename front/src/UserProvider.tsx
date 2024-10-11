@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { useContext, type ReactNode, createContext, useCallback, useState } from 'react';
-import { UserInfos } from './types';
+import { UserInfos } from './Utils/types';
 
 interface UserContextProps {
   isLogged: boolean

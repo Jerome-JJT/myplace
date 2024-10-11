@@ -4,7 +4,7 @@ import App from './App.tsx';
 import './index.css';
 import { ThemeProvider } from '@material-tailwind/react';
 import { UserProvider } from './UserProvider.tsx';
-import { CanvasProvider } from './CanvasProvider.tsx';
+import { CanvasProvider } from './Place/CanvasProvider.tsx';
 
 createRoot(document.getElementById('root')!).render(
   // <StrictMode>

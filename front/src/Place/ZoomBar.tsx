@@ -1,12 +1,6 @@
 import { useCanvas } from './CanvasProvider';
-import { MAX_SCALE, MIN_SCALE } from './consts';
+import { MAX_SCALE, MIN_SCALE } from 'src/Utils/consts';
 
-// interface ZoomBarProps {
-//   scale: number
-//   setScale: React.Dispatch<React.SetStateAction<number>>,
-// }
-
-// export const ZoomBar = ({ scale, setScale }: ZoomBarProps) => {
 export const ZoomBar = () => {
   const { scale, setScale } = useCanvas();
 

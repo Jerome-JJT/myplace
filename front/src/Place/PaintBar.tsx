@@ -1,4 +1,4 @@
-import { useUser } from './UserProvider';
+import { useUser } from 'src/UserProvider';
 
 export const PaintBar = () => {
   const { isLogged, infos } = useUser();

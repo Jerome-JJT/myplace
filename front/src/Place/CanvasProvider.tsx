@@ -1,9 +1,10 @@
-import axios from 'axios';
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { objUrlEncode } from './objUrlEncode';
-import { MIN_SCALE, MAX_SCALE, CANVAS_X, CANVAS_Y } from './consts';
-import { ColorType, Pixel, Point } from './types';
 import { useContext, type ReactNode, createContext } from 'react';
+import axios from 'axios';
+
+import { objUrlEncode } from 'src/Utils/objUrlEncode';
+import { MIN_SCALE, MAX_SCALE, CANVAS_X, CANVAS_Y } from 'src/Utils/consts';
+import { ColorType, Pixel, Point } from 'src/Utils/types';
 
 interface CanvasContextProps {
   pl: React.MutableRefObject<HTMLCanvasElement | null>

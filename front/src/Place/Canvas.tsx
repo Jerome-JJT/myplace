@@ -1,6 +1,6 @@
 
 import { useCanvas } from './CanvasProvider';
-import { CANVAS_X, CANVAS_Y, MAX_SCALE, MIN_SCALE } from './consts';
+import { CANVAS_X, CANVAS_Y, MAX_SCALE, MIN_SCALE } from 'src/Utils/consts';
 
 
 export const DisplayCanvas = () => {

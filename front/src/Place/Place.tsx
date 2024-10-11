@@ -1,13 +1,15 @@
 import axios from 'axios';
 import { useEffect, useCallback } from 'react';
-import { useUser } from './UserProvider';
+
+import { CANVAS_X, CANVAS_Y } from 'src/Utils/consts';
+import { Update } from 'src/Utils/types';
+import { useUser } from 'src/UserProvider';
+import { objUrlEncode } from 'src/Utils/objUrlEncode';
+
 import { Controls } from './Controls';
-import { objUrlEncode } from './objUrlEncode';
 import { PaintBar } from './PaintBar';
 import { BottomMenu } from './BottomMenu';
-import { CANVAS_X, CANVAS_Y } from './consts';
 import { ZoomBar } from './ZoomBar';
-import { Update } from './types';
 import { useCanvas } from './CanvasProvider';
 import { DisplayCanvas } from './Canvas';
 import { LoginBox } from './LoginBox';

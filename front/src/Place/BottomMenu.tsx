@@ -1,5 +1,6 @@
 import classNames from 'classnames';
-import { useUser } from './UserProvider';
+
+import { useUser } from 'src/UserProvider';
 import { useCanvas } from './CanvasProvider';
 
 interface BottomMenuProps {
