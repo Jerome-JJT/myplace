@@ -6,7 +6,7 @@ import { Controls } from './Controls';
 import { objUrlEncode } from './objUrlEncode';
 import { PaintBar } from './PaintBar';
 import { BottomMenu } from './BottomMenu';
-import { MIN_SCALE, MAX_SCALE, CANVAS_X, CANVAS_Y } from './const';
+import { MIN_SCALE, MAX_SCALE, CANVAS_X, CANVAS_Y } from './consts';
 import { ZoomBar } from './ZoomBar';
 import { ColorType, Pixel, Point, Update } from './types';
 

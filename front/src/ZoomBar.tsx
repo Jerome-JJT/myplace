@@ -1,4 +1,4 @@
-import { MAX_SCALE, MIN_SCALE } from './const';
+import { MAX_SCALE, MIN_SCALE } from './consts';
 
 interface ZoomBarProps {
   scale: number
