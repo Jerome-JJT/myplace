@@ -6,8 +6,6 @@ import { useLogin } from './LoginProvider';
 function App() {
   const { getUserData } = useLogin();
 
-  const logging = import.meta.env.DEV;
-
   useEffect(() => {
     getUserData();
   }, [getUserData]);

@@ -1,6 +1,6 @@
 import classNames from 'classnames';
-import { Pixel, Point } from './Place';
 import { useLogin } from './LoginProvider';
+import { Pixel, Point } from './types';
 
 interface BottomMenuProps {
   activePixel: Point,

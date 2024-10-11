@@ -43,7 +43,7 @@ export function LoginProvider({ children }: { children: ReactNode }): JSX.Elemen
           setUserInfos(res.data.userInfos as LoggedUser);
         }
       })
-      .catch((error) => {
+      .catch(() => {
         setIsLogged(false);
         setUserInfos({} as LoggedUser);
       });
@@ -74,7 +74,7 @@ export function LoginProvider({ children }: { children: ReactNode }): JSX.Elemen
           setUserInfos({} as LoggedUser);
         }
       })
-      .catch((error) => {
+      .catch(() => {
       });
   }, []);
 
