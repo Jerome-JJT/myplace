@@ -1,18 +1,20 @@
+import { Request, Response } from 'express';
+
+import { CANVAS_X, CANVAS_Y, PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER } from './consts';
+import { Color, LoggedRequest, Pixel } from './types';
 import { redisClient } from './redis';
 import { pool } from './db';
-import { Request, Response } from 'express';
 import { updates } from './ws';
-import { Color, LoggedRequest, Pixel } from './types';
-import { PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER } from './consts';
+import { checkAdmin } from './login';
 
 
 async function initializeBoard() {
     const board: (Pixel | null)[][] = [];
 
-    for (let x = 0; x < 100; x++) {
+    for (let x = 0; x < CANVAS_X; x++) {
         const lineExpire = Math.floor(Math.random() * 3600);
         board[x] = [];
-        for (let y = 0; y < 100; y++) {
+        for (let y = 0; y < CANVAS_Y; y++) {
             const key = `${x}:${y}`;
 
             const cachedCell = await redisClient.get(key);
@@ -21,11 +23,11 @@ async function initializeBoard() {
             } //
             else {
                 const result = await pool.query(`
-                    SELECT b.x, b.y, b.color_id, u.name, b.set_time::TIMESTAMPTZ
-                    FROM board b
-                    JOIN users u ON b.user_id = u.id
-                    WHERE b.x = $1 AND b.y = $2
-                    ORDER BY b.set_time DESC
+                    SELECT board.x, board.y, board.color_id, users.name, board.set_time::TIMESTAMPTZ
+                    FROM board
+                    JOIN users ON board.user_id = users.id
+                    WHERE board.x = $1 AND board.y = $2
+                    ORDER BY board.set_time DESC
                     LIMIT 1
                 `, [x, y]);
 
@@ -33,13 +35,42 @@ async function initializeBoard() {
                     const cell = result.rows[0];
                     const p: Pixel = { color_id: cell.color_id, username: cell.name, set_time: cell.set_time }
                     board[x][y] = p;
-                    await redisClient.set(key, JSON.stringify(board[x][y]), 'EX', lineExpire);
                 } //
                 else {
                     const p: Pixel = { color_id: 1, username: 'null', set_time: '1900-01-01T00:00:00.000Z' }
                     board[x][y] = p;
-                    await redisClient.set(key, JSON.stringify(board[x][y]), 'EX', lineExpire);
                 }
+                await redisClient.set(key, JSON.stringify(board[x][y]), 'EX', lineExpire);
+            }
+        }
+    }
+    return board;
+}
+
+async function viewTimedBoard(time: string) {
+    const board: (Pixel | null)[][] = [];
+
+    for (let x = 0; x < CANVAS_X; x++) {
+        board[x] = [];
+        for (let y = 0; y < CANVAS_Y; y++) {
+
+            const result = await pool.query(`
+                SELECT board.x, board.y, board.color_id, users.name, board.set_time::TIMESTAMPTZ
+                FROM board
+                JOIN users ON board.user_id = users.id
+                WHERE board.x = $1 AND board.y = $2 AND board.set_time > 
+                ORDER BY board.set_time DESC
+                LIMIT 1
+            `, [x, y]);
+
+            if (result.rows.length > 0) {
+                const cell = result.rows[0];
+                const p: Pixel = { color_id: cell.color_id, username: cell.name, set_time: cell.set_time }
+                board[x][y] = p;
+            }
+            else {
+                const p: Pixel = { color_id: 1, username: 'null', set_time: '1900-01-01T00:00:00.000Z' }
+                board[x][y] = p;
             }
         }
     }
@@ -72,7 +103,7 @@ export const getPixels = async (req: Request, res: Response) => {
 }
 
 
-export const getLastUserPixels = async (user_id: number): Promise<Date[]> => {
+export const getLastUserPixels = async (user_id: number): Promise<string[]> => {
 
     const result = await pool.query(`
         SELECT (set_time + INTERVAL '1 minute' * $2)::TIMESTAMPTZ AS set_time
@@ -83,7 +114,7 @@ export const getLastUserPixels = async (user_id: number): Promise<Date[]> => {
         LIMIT $3
     `, [user_id, PIXEL_MINUTE_TIMER, PIXEL_BUFFER_SIZE]);
 
-    return result.rows.map((r: {set_time: Date}) => r.set_time);
+    return result.rows.map((r: {set_time: string}) => r.set_time);
 }
 
 export const setPixel = async (req: LoggedRequest, res: Response) => {
@@ -91,9 +122,9 @@ export const setPixel = async (req: LoggedRequest, res: Response) => {
     const user = req.user;
     const timers = await getLastUserPixels(user.id)
 
-    console.log("PRINT", x, y, color, user)
+    console.log("PRINT", x, y, color, user);
 
-    if (timers.length < PIXEL_BUFFER_SIZE) {
+    if (timers.length < PIXEL_BUFFER_SIZE || (user.soft_is_admin === true && (await checkAdmin(user.id)))) {
         try {
             const ret = await pool.query(`
                 INSERT INTO board (x, y, color_id, user_id)

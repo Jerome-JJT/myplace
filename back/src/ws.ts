@@ -1,4 +1,5 @@
 import WebSocket from "ws";
+
 import { Update } from "./types";
 
 export const updates: Update[] = [];

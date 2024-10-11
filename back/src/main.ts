@@ -1,8 +1,8 @@
 import express from "express";
 import WebSocket from "ws";
 import cookieParser from 'cookie-parser';
+
 import { sendUpdates } from "./ws";
-// const { redisClient } = require('./redis');
 
 const app = express();
 app.use(express.json());

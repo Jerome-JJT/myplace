@@ -1,9 +1,10 @@
-import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { getLastUserPixels } from './pixels';
-import { LoggedRequest } from './types';
-import { PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER } from './consts';
+import { Request, Response } from 'express';
 
+import { PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER } from './consts';
+import { LoggedRequest, UserInfos } from './types';
+import { pool } from './db';
+import { getLastUserPixels } from './pixels';
 
 
 export const authenticateToken = (req: LoggedRequest, res: Response, next: any) => {
@@ -21,30 +22,66 @@ export const authenticateToken = (req: LoggedRequest, res: Response, next: any) 
     });
 }
 
+const loginUser = async (username: string, res: Response) => {
+    const result = await pool.query(`
+        SELECT id, name, email, is_admin
+        FROM users
+        WHERE name = $1
+        LIMIT 1
+    `, [username]);
+
+    if (result.rows.length > 0) {
+        const user = result.rows[0];
+
+        const token = jwt.sign(
+            { 
+                id: user.id, 
+                username: user.name,
+                soft_is_admin: user.is_admin
+            } as UserInfos,
+            process.env.JWT_SECRET as string, 
+            { 
+                expiresIn: process.env.JWT_EXPIRES_IN 
+            }
+        );
+    
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 3600000,
+        });
+    
+        res.json({ message: 'Login successful' });
+    }
+    else {
+        res.status(410).json({ message: 'Login failed' });
+    }
+}
+
+export const checkAdmin = async (id: number) => {
+    const result = await pool.query(`
+        SELECT is_admin
+        FROM users
+        WHERE id = $1
+        LIMIT 1
+    `, [id]);
+
+    if (result.rows.length > 0) {
+        const user = result.rows[0];
+        return user.is_admin;
+    }
+    else {
+        return false;
+    }
+}
+
 export const mockLogin = (req: Request, res: Response) => {
     const { username } = req.body;
     if (!username) {
         return res.status(400).json({ message: 'Username is required' });
-    } 
+    }
 
-    const token = jwt.sign(
-        { 
-            id: 92477, 
-            username: username 
-        }, 
-        process.env.JWT_SECRET as string, 
-        { 
-            expiresIn: process.env.JWT_EXPIRES_IN 
-        }
-    );
-
-    res.cookie('token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 3600000,
-    });
-
-    res.json({ message: 'Login successful' });
+    loginUser('moi', res);
 }
 
 
@@ -52,7 +89,6 @@ export const logout = (req: Request, res: Response) => {
     res.clearCookie('token');
     res.json({ message: 'Logged out successfully' });
 }
-
 
 
 export const profile = async (req: LoggedRequest, res: Response) => {

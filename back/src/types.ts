@@ -3,6 +3,7 @@ import { Request } from 'express';
 export interface UserInfos {
     id: number
     username: string
+    soft_is_admin: boolean,
 }
 export interface LoggedRequest extends Request {
   user: UserInfos

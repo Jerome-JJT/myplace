@@ -1,7 +1,7 @@
 export interface Pixel {
     username: string,
     color_id: number,
-    set_time: Date
+    set_time: string
 }
 
 export interface Update extends Pixel {
@@ -22,6 +22,7 @@ export interface ColorType {
 export interface UserInfos {
   id: number
   username: string
+  soft_is_admin: boolean
 
   timers: string[]
   pixel_buffer: number
