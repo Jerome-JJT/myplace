@@ -1,0 +1,50 @@
+name: Test build
+
+on:
+  push:
+    branches:
+      - '*'
+
+  create:
+    tags:
+      - '*'
+
+jobs:
+  build-front:
+    name: Front - Test build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: cd front && yarn install
+
+      - name: Build
+        run: cd front && yarn build
+
+  build-back:
+    name: Back - Test build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: cd back && yarn install
+
+      - name: Build
+        run: cd back && yarn build
+
