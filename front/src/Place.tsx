@@ -4,9 +4,13 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { useLogin } from './LoginProvider';
 import { Controls } from './Controls';
 import { objUrlEncode } from './objUrlEncode';
+import { PaintBar } from './PaintBar';
+import { BottomMenu } from './BottomMenu';
+import { MIN_SCALE, MAX_SCALE, CANVAS_X, CANVAS_Y } from './const';
+import { ZoomBar } from './ZoomBar';
 
 
-interface Pixel {
+export interface Pixel {
     username: string,
     color_id: number,
     set_time: Date
@@ -17,7 +21,7 @@ export interface Update extends Pixel {
   y: number
 }
 
-interface Point {
+export interface Point {
   x: number,
   y: number
 }
@@ -32,12 +36,6 @@ export function Place() {
   const [board, setBoard] = useState<Map<string, Pixel>>(new Map());
 
   const pl = useRef<HTMLCanvasElement | null>(null);
-
-  const MIN_SCALE = 8;
-  const MAX_SCALE = 40;
-
-  const CANVAS_X = 100;
-  const CANVAS_Y = 100;
 
   const [scale, setScale] = useState(MIN_SCALE);
   const [translate, setTranslate] = useState<Point>({ x: 0, y: 0 });
@@ -294,7 +292,8 @@ export function Place() {
     setIsDragging(0);
   }, [canvasClicked, isDragging]);
 
-  const loginButton = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+  // const loginButton = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+  const loginButton = useCallback(() => {
     const username = prompt('Username');
 
     if (username && username.length > 3) {
@@ -305,13 +304,25 @@ export function Place() {
           },
           { withCredentials: true },
         )
-        .then((res) => {
+        .then(() => {
           getUserData();
         })
-        .catch((error) => {
+        .catch(() => {
         });
     }
   }, [getUserData]);
+
+
+
+  const moveRelative = useCallback((x: number, y: number) => {
+    setActivePixel((prev) => {
+      return {
+        x: prev.x !== -1 ? Math.min(Math.max(prev.x + x, 0), CANVAS_X) : -1,
+        y: prev.y !== -1 ? Math.min(Math.max(prev.y + y, 0), CANVAS_Y) : -1,
+      };
+    });
+  }, []);
+
 
   const paintButton = useCallback(() => {
     if (activePixel.x !== -1 && activePixel.y !== -1) {
@@ -358,16 +369,9 @@ export function Place() {
     else {
       alert('Choose a pixel');
     }
-  }, [activeColor, activePixel.x, activePixel.y, colors]);
+  }, [activeColor, activePixel.x, activePixel.y, colors, pl, setBoard]);
 
-  const moveRelative = useCallback((x: number, y: number) => {
-    setActivePixel((prev) => {
-      return {
-        x: prev.x !== -1 ? Math.min(Math.max(prev.x + x, 0), CANVAS_X) : -1,
-        y: prev.y !== -1 ? Math.min(Math.max(prev.y + y, 0), CANVAS_Y) : -1,
-      };
-    });
-  }, []);
+
 
   const numericAction = useCallback((abs: number | undefined, rel: number | undefined) => {
 
@@ -457,110 +461,23 @@ export function Place() {
         </button>
       </div>
 
-      <div className='fixed flex gap-4 text-black top-[50%] left-[-180px] p-1 rounded bg-gray-400/70'
-        style={{
-          transform:       'rotate(270deg)',
-          transformOrigin: 'center center',
-        }}>
+      <ZoomBar scale={scale} setScale={setScale} />
 
-        <input
-          // id='scale_range'
-          className={'w-[400px]'}
-          style={{
-          }}
-          type={'range'}
-          min={MIN_SCALE}
-          max={MAX_SCALE}
-          value={scale}
-          onChange={(e) => {
-            setScale(parseInt(e.target.value));
-          }}
-        />
-        <p
-          style={{
-            transform:       'rotate(90deg)',
-            transformOrigin: 'center center',
-          }}>
-          {scale}
-        </p>
-      </div>
-
-      {isLogged && (
-        <div className='fixed flex flex-col justify-center top-0 right-4 h-[100%] w-12 pointer-events-none'>
-          <div className='p-1 rounded bg-gray-400/70'>
-            <div className='whitespace-nowrap'>{(userInfos?.pixel_buffer || 1) - (userInfos?.timers.length || 1)}</div>
-
-            <div className='flex flex-col bg-cyan-500 h-80'>
-              <div className='grow'/>
-              <div
-                className='bg-green-500'
-                style={{
-                  height: `${(userInfos?.timers.length || 1) / (userInfos?.pixel_buffer || 1) * 100}%`,
-                }}>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {isLogged && <PaintBar pixel_buffer={userInfos?.pixel_buffer} timers={userInfos?.timers} />}
 
 
-      <div className='fixed flex bottom-0 w-full pointer-events-none'>
-        <div id='menu' className='mx-auto self-center bg-red-500 flex flex-col pointer-events-auto'>
-          <div className='self-center my-4 my-auto items-center flex flex-row gap-4'>
-            {activePixel.x !== -1 &&
-              <p className='h-fit'>
-                Set by {board.get(`${activePixel.x}:${activePixel.y}`)?.username} at {
-                  board.get(`${activePixel.x}:${activePixel.y}`) ? (new Date(board.get(`${activePixel.x}:${activePixel.y}`)?.set_time || '')).toISOString() : ''
-                }
-              </p>
-            }
+      <BottomMenu
+        activePixel={activePixel}
+        activeColor={activeColor}
+        setActiveColor={setActiveColor}
+        board={board}
+        colors={colors}
 
-            {isLogged && (
-              <button
-                className={classNames('px-2 h-8 bg-gray-500 rounded border-2 border-black hover:border-white')}
-                onClick={paintButton}
-              >
-                Paint
-              </button>
-            ) || (
-              <button
-                className={classNames('px-2 h-8 bg-gray-500 rounded border-2 border-black hover:border-white')}
-                onClick={loginButton}
-              >
-                Log to paint
-              </button>
-            )}
+        loginButton={loginButton}
+        shareButton={shareButton}
+        paintButton={paintButton}
+      />
 
-            {activePixel.x !== -1 &&
-              <button
-                className={classNames('px-2 h-8 bg-gray-500 rounded border-2 border-black hover:border-white')}
-                onClick={shareButton}
-              >
-              Share pixel
-              </button>
-            }
-          </div>
-          <div className='self-center bg-green-500 p-2 flex flex-row gap-2'>
-            {
-              Array.from(colors.entries()).map((v) => {
-                return (
-                  <div key={v[0]} className='text-center'>
-                    <div
-                      className={classNames('w-14 h-8 rounded border-2 hover:border-white', activeColor === v[0] ? 'border-white' : 'border-black')}
-                      style={{ backgroundColor: 'rgb(' + v[1].color + ')' }}
-                      onClick={() => {
-                        setActiveColor(v[0]);
-                      }}
-                    >
-                    </div>
-                    {v[1].name}
-                  </div>
-                );
-              })
-            }
-          </div>
-        </div>
-      </div>
     </>
   );
 }
