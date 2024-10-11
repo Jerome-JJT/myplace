@@ -1,24 +1,16 @@
 import classNames from 'classnames';
 import { useUser } from './UserProvider';
-import { Pixel, Point } from './types';
+import { useCanvas } from './CanvasProvider';
 
 interface BottomMenuProps {
-  activePixel: Point,
-
-  activeColor: number
-  setActiveColor: React.Dispatch<React.SetStateAction<number>>,
-
-  board: Map<string, Pixel>,
-
-  colors: Map<number, { name: string, color: string }>
-
   loginButton: () => void
   shareButton: () => void
   paintButton: () => void
 }
 
-export const BottomMenu = ({ activePixel, activeColor, setActiveColor, board, colors, loginButton, shareButton, paintButton }: BottomMenuProps) => {
+export const BottomMenu = ({ loginButton, shareButton, paintButton }: BottomMenuProps) => {
   const { isLogged } = useUser();
+  const { activePixel, board, colors, activeColor, setActiveColor } = useCanvas();
 
   return (
     <div className='fixed flex bottom-0 w-full pointer-events-none'>

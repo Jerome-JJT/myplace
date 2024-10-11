@@ -1,11 +1,16 @@
+import { useCanvas } from './CanvasProvider';
 import { MAX_SCALE, MIN_SCALE } from './consts';
 
-interface ZoomBarProps {
-  scale: number
-  setScale: React.Dispatch<React.SetStateAction<number>>,
-}
+// interface ZoomBarProps {
+//   scale: number
+//   setScale: React.Dispatch<React.SetStateAction<number>>,
+// }
 
-export const ZoomBar = ({ scale, setScale }: ZoomBarProps) => {
+// export const ZoomBar = ({ scale, setScale }: ZoomBarProps) => {
+export const ZoomBar = () => {
+  const { scale, setScale } = useCanvas();
+
+
   return (
     <div className='fixed flex gap-4 text-black top-[50%] left-[-180px] p-1 rounded bg-gray-400/70'
       style={{

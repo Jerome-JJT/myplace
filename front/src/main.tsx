@@ -4,12 +4,15 @@ import App from './App.tsx';
 import './index.css';
 import { ThemeProvider } from '@material-tailwind/react';
 import { UserProvider } from './UserProvider.tsx';
+import { CanvasProvider } from './CanvasProvider.tsx';
 
 createRoot(document.getElementById('root')!).render(
   // <StrictMode>
   <ThemeProvider>
     <UserProvider>
-      <App />
+      <CanvasProvider>
+        <App />
+      </CanvasProvider>
     </UserProvider>
   </ThemeProvider>,
   // </StrictMode>,
