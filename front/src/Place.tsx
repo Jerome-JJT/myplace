@@ -1,7 +1,7 @@
 import axios from 'axios';
 import classNames from 'classnames';
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { useLogin } from './LoginProvider';
+import { useUser } from './UserProvider';
 import { Controls } from './Controls';
 import { objUrlEncode } from './objUrlEncode';
 import { PaintBar } from './PaintBar';
@@ -14,7 +14,7 @@ import { ColorType, Pixel, Point, Update } from './types';
 
 
 export function Place() {
-  const { isLogged, userInfos, getUserData } = useLogin();
+  const { isLogged, infos, getUserData } = useUser();
 
   const [activePixel, setActivePixel] = useState<Point>({ x: -1, y: -1 });
   const [activeColor, setActiveColor] = useState(-1);
@@ -444,13 +444,13 @@ export function Place() {
           className={classNames('p-2 bg-gray-500 rounded border-2 border-black hover:border-white')}
           onClick={loginButton}
         >
-          { isLogged && userInfos?.username || '<Login>' }
+          { isLogged && infos?.username || '<Login>' }
         </button>
       </div>
 
       <ZoomBar scale={scale} setScale={setScale} />
 
-      {isLogged && <PaintBar pixel_buffer={userInfos?.pixel_buffer} timers={userInfos?.timers} />}
+      {isLogged && <PaintBar pixel_buffer={infos?.pixel_buffer} timers={infos?.timers} />}
 
 
       <BottomMenu

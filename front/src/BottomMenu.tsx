@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { useLogin } from './LoginProvider';
+import { useUser } from './UserProvider';
 import { Pixel, Point } from './types';
 
 interface BottomMenuProps {
@@ -18,7 +18,7 @@ interface BottomMenuProps {
 }
 
 export const BottomMenu = ({ activePixel, activeColor, setActiveColor, board, colors, loginButton, shareButton, paintButton }: BottomMenuProps) => {
-  const { isLogged } = useLogin();
+  const { isLogged } = useUser();
 
   return (
     <div className='fixed flex bottom-0 w-full pointer-events-none'>
@@ -44,7 +44,7 @@ export const BottomMenu = ({ activePixel, activeColor, setActiveColor, board, co
               className={classNames('px-2 h-8 bg-gray-500 rounded border-2 border-black hover:border-white')}
               onClick={loginButton}
             >
-                Log to paint
+              Log to paint
             </button>
           )}
 

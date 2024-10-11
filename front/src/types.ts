@@ -18,3 +18,12 @@ export interface ColorType {
     name: string,
     color: string
 }
+
+export interface UserInfos {
+  id: number
+  username: string
+
+  timers: Date[]
+  pixel_buffer: number
+  pixel_timer: number
+}

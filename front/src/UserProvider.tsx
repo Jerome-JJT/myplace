@@ -1,36 +1,28 @@
 import axios from 'axios';
 import { useContext, type ReactNode, createContext, useCallback, useState } from 'react';
+import { UserInfos } from './types';
 
-export interface LoggedUser {
-  id: number
-  username: string
-
-  timers: Date[]
-  pixel_buffer: number
-  pixel_timer: number
-}
-
-interface LoginContextProps {
+interface UserContextProps {
   isLogged: boolean
-  userInfos: LoggedUser | undefined
+  infos: UserInfos | undefined
   getUserData: () => void
   setPixelInfos: (timers: Date[]) => void
   logout: () => void
 }
 
-const LoginContext = createContext<LoginContextProps | undefined>(undefined);
+const UserContext = createContext<UserContextProps | undefined>(undefined);
 
-export function useLogin(): LoginContextProps {
-  const context = useContext(LoginContext);
+export function useUser(): UserContextProps {
+  const context = useContext(UserContext);
   if (!context) {
-    throw new Error('useLogin must be used within a LoginProvider');
+    throw new Error('useUser must be used within a UserProvider');
   }
   return context;
 }
 
-export function LoginProvider({ children }: { children: ReactNode }): JSX.Element {
+export function UserProvider({ children }: { children: ReactNode }): JSX.Element {
   const [isLogged, setIsLogged] = useState(false);
-  const [userInfos, setUserInfos] = useState<LoggedUser | undefined>();
+  const [infos, setInfos] = useState<UserInfos | undefined>();
 
   const getUserData = useCallback(() => {
     axios
@@ -40,18 +32,18 @@ export function LoginProvider({ children }: { children: ReactNode }): JSX.Elemen
       .then((res) => {
         if (res.status === 200) {
           setIsLogged(true);
-          setUserInfos(res.data.userInfos as LoggedUser);
+          setInfos(res.data.userInfos as UserInfos);
         }
       })
       .catch(() => {
         setIsLogged(false);
-        setUserInfos({} as LoggedUser);
+        setInfos({} as UserInfos);
       });
   }, []);
 
   const setPixelInfos = useCallback((timers: Date[]) => {
     if (isLogged) {
-      setUserInfos((prev) => {
+      setInfos((prev) => {
         if (prev) {
           return {
             ...prev,
@@ -71,7 +63,7 @@ export function LoginProvider({ children }: { children: ReactNode }): JSX.Elemen
       .then((res) => {
         if (res.status === 204) {
           setIsLogged(false);
-          setUserInfos({} as LoggedUser);
+          setInfos({} as UserInfos);
         }
       })
       .catch(() => {
@@ -79,16 +71,16 @@ export function LoginProvider({ children }: { children: ReactNode }): JSX.Elemen
   }, []);
 
   return (
-    <LoginContext.Provider
+    <UserContext.Provider
       value={{
         isLogged,
-        userInfos,
+        infos,
         getUserData,
         setPixelInfos,
         logout,
       }}
     >
       {children}
-    </LoginContext.Provider>
+    </UserContext.Provider>
   );
 }

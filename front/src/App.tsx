@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import './App.css';
 import { Place } from './Place';
-import { useLogin } from './LoginProvider';
+import { useUser } from './UserProvider';
 
 function App() {
-  const { getUserData } = useLogin();
+  const { getUserData } = useUser();
 
   useEffect(() => {
     getUserData();
