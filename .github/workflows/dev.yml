@@ -43,7 +43,7 @@ jobs:
       - name: Migrate database
         env:
           POSTGRES_PASSWORD: postgres
-        run: cd _build/db && psql -d postgresql://postgres@localhost/postgres -f setup.sql
+        run: cd _build/db && psql -d postgresql://postgres@localhost/postgres -f setup.sql -w
 
       - name: Install front dependencies
         run: cd front && yarn install
