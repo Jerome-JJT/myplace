@@ -10,9 +10,26 @@ on:
       - '*'
 
 jobs:
-  build-front:
-    name: Front - Test build
+  build:
+    name: Test build
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres
+
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: postgres
+
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
 
     steps:
       - name: Checkout code
@@ -23,28 +40,18 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install dependencies
+      - name: Migrate database
+        run: cd _build/db && psql -d postgresql://postgres@postgres/postgres -f setup.sql
+
+      - name: Install front dependencies
         run: cd front && yarn install
 
-      - name: Build
+      - name: Build front
         run: cd front && yarn build
 
-  build-back:
-    name: Back - Test build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
-      - name: Install dependencies
+      - name: Install back dependencies
         run: cd back && yarn install
 
-      - name: Build
+      - name: Build back
         run: cd back && yarn build
 
