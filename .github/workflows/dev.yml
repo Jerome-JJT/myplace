@@ -41,6 +41,8 @@ jobs:
           node-version: 18
 
       - name: Migrate database
+        env:
+          POSTGRES_PASSWORD: postgres
         run: cd _build/db && psql -d postgresql://postgres@localhost/postgres -f setup.sql
 
       - name: Install front dependencies
