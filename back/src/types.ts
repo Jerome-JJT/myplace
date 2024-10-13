@@ -6,7 +6,7 @@ export interface UserInfos {
     soft_is_admin: boolean,
 }
 export interface LoggedRequest extends Request {
-  user: UserInfos
+  user: UserInfos | undefined
 }
 
 export interface Color {

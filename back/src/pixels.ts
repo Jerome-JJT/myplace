@@ -49,6 +49,22 @@ async function initializeBoard() {
 
 async function viewTimedBoard(time: string) {
     const board: (Pixel | null)[][] = [];
+    const times = {
+        min_time: '',
+        max_time: ''
+    }
+    console.log(time);
+
+    const time_result = await pool.query(`
+        SELECT MIN(board.set_time::TIMESTAMPTZ) AS min_time, MAX(board.set_time::TIMESTAMPTZ) AS max_time
+        FROM board
+        LIMIT 1
+    `, []);
+    if (time_result.rows.length > 0) {
+        const cell = time_result.rows[0];
+        times.min_time = cell.min_time;
+        times.max_time = cell.max_time;
+    }
 
     for (let x = 0; x < CANVAS_X; x++) {
         board[x] = [];
@@ -58,10 +74,10 @@ async function viewTimedBoard(time: string) {
                 SELECT board.x, board.y, board.color_id, users.name, board.set_time::TIMESTAMPTZ
                 FROM board
                 JOIN users ON board.user_id = users.id
-                WHERE board.x = $1 AND board.y = $2 AND board.set_time > 
+                WHERE board.x = $1 AND board.y = $2 AND board.set_time < $3
                 ORDER BY board.set_time DESC
                 LIMIT 1
-            `, [x, y]);
+            `, [x, y, time]);
 
             if (result.rows.length > 0) {
                 const cell = result.rows[0];
@@ -74,7 +90,7 @@ async function viewTimedBoard(time: string) {
             }
         }
     }
-    return board;
+    return {board, ...times};
 }
 
 async function getColor(): Promise<Color[]> {
@@ -87,14 +103,25 @@ async function getColor(): Promise<Color[]> {
     return result.rows;
 }
 
-export const getPixels = async (req: Request, res: Response) => {
+export const getPixels = async (req: LoggedRequest, res: Response) => {
     try {
-        const board = await initializeBoard();
         const colors = await getColor();
-        res.json({
-            colors: colors, 
-            board: board
-        });
+        if (req.query.time !== undefined && (req.user?.soft_is_admin === true && await checkAdmin(req.user?.id))) {
+            const {board, min_time, max_time} = await viewTimedBoard(new Date(req.query.time as string).toISOString());
+            res.json({
+                colors: colors, 
+                board: board,
+                min_time: min_time,
+                max_time: max_time,
+            });
+        }
+        else {
+            const board = await initializeBoard();
+            res.json({
+                colors: colors, 
+                board: board
+            });
+        }
     } //
     catch (err) {
         console.error(err);
@@ -119,7 +146,7 @@ export const getLastUserPixels = async (user_id: number): Promise<string[]> => {
 
 export const setPixel = async (req: LoggedRequest, res: Response) => {
     const { x, y, color } = req.body;
-    const user = req.user;
+    const user = req.user!;
     const timers = await getLastUserPixels(user.id)
 
     console.log("PRINT", x, y, color, user);

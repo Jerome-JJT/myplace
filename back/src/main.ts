@@ -9,10 +9,10 @@ app.use(express.json());
 app.use(cookieParser());
 
 
-const { authenticateToken, profile } = require('./login');
+const { queryToken, authenticateToken, profile } = require('./login');
 const { getPixels, setPixel } = require('./pixels');
 
-app.get('/get', getPixels);
+app.get('/get', queryToken, getPixels);
 app.post('/set', authenticateToken, setPixel);
 
 

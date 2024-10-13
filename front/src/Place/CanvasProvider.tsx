@@ -7,35 +7,36 @@ import { MIN_SCALE, MAX_SCALE, CANVAS_X, CANVAS_Y } from 'src/Utils/consts';
 import { ColorType, Pixel, Point } from 'src/Utils/types';
 
 interface CanvasContextProps {
-  pl: React.MutableRefObject<HTMLCanvasElement | null>
+  pl: React.MutableRefObject<HTMLCanvasElement | null>,
 
-  activePixel : Point,
+  activePixel: Point,
   setActivePixel: React.Dispatch<React.SetStateAction<Point>>,
   activeColor: number,
   setActiveColor: React.Dispatch<React.SetStateAction<number>>,
 
-  colors: Map<number, ColorType>
-  board: Map<string, Pixel>
-  setBoard: React.Dispatch<React.SetStateAction<Map<string, Pixel>>>
+  colors: Map<number, ColorType>,
+  board: Map<string, Pixel>,
+  setBoard: React.Dispatch<React.SetStateAction<Map<string, Pixel>>>,
+  times: { min: number, max: number } | undefined,
 
   scale: number,
   setScale: React.Dispatch<React.SetStateAction<number>>,
-  translate: Point
+  translate: Point,
 
   overlayStyle: {
     width: string;
     height: string;
     top: string;
     left: string;
-  }
+  },
 
   setIsDragging: React.Dispatch<React.SetStateAction<number>>,
 
-  doZoom: (pageX: number, pageY: number, newScale: number) => void
-  canvasMouseDown: (e: React.MouseEvent<HTMLCanvasElement>) => void,
-  canvasMouseMove: (e: React.MouseEvent<HTMLCanvasElement>) => void,
-  canvasMouseUp: (e: React.MouseEvent<HTMLCanvasElement>) => void,
-  canvasZoomed: (e: React.WheelEvent<HTMLCanvasElement>) => void,
+  doZoom: (pageX: number, pageY: number, newScale: number) => void,
+  canvasMouseDown: (pageX: number, pageY: number) => void,
+  canvasMouseMove: (pageX: number, pageY: number) => void,
+  canvasMouseUp: (pageX: number, pageY: number) => void,
+  canvasZoomed: (pageX: number, pageY: number, deltaY: number) => void,
 }
 
 const CanvasContext = createContext<CanvasContextProps | undefined>(undefined);
@@ -57,36 +58,49 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
   const [colors, setColors] = useState<Map<number, ColorType>>(new Map());
   const [board, setBoard] = useState<Map<string, Pixel>>(new Map());
 
+  const [times, setTimes] = useState<{ min: number, max: number } | undefined>({ min: 0, max: 0 });
+
+
   const [scale, setScale] = useState(MIN_SCALE);
   const [translate, setTranslate] = useState<Point>({ x: 0, y: 0 });
   const [overlayStyle, setOverlayStyle] = useState({
-    width:  `${scale - 2}px`,
+    width: `${scale - 2}px`,
     height: `${scale - 2}px`,
-    top:    '0px',
-    left:   '0px',
+    top: '0px',
+    left: '0px',
   });
 
   const [dragStart, setDragStart] = useState<Point>({ x: -1, y: -1 });
   const [isDragging, setIsDragging] = useState(0);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const baseX = parseInt(params.get('x') || '');
+    const baseY = parseInt(params.get('y') || '');
+    const scale = parseInt(params.get('scale') || '');
+
     if (pl.current !== null) {
       const centerX = pl.current.width / 2;
       const centerY = pl.current.height / 2;
       const ctx = pl.current.getContext('2d');
 
       if (ctx !== null) {
+
+        const args = objUrlEncode({
+          'time': params.get('time'),
+        });
+
         axios
-          .get('/api/get',
+          .get(`/api/get${args.length > 0 ? `?${args}` : ''}`,
             { withCredentials: true },
           )
           .then((res) => {
             if (res.status === 200) {
 
               const cols = new Map();
-              res.data.colors.forEach((c: any) => {
+              res.data.colors?.forEach((c: any) => {
                 cols.set(c['id'], {
-                  name:  c['name'],
+                  name: c['name'],
                   color: `${c['red']}, ${c['green']}, ${c['blue']}`,
                 });
               });
@@ -100,17 +114,18 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
                   pixs.set(`${x}:${y}`, pixel);
                 });
               });
-
               setBoard(pixs);
 
-              const params = new URLSearchParams(window.location.search);
-              const baseX = parseInt(params.get('x') || '');
-              const baseY = parseInt(params.get('y') || '');
-              const scale = parseInt(params.get('scale') || '');
+              if (res.data.min_time !== undefined && res.data.max_time !== undefined) {
+                setTimes({ min: res.data.min_time, max: res.data.max_time })
+              }
+              else {
+                setTimes(undefined);
+              }
 
               if (!Number.isNaN(baseX) && !Number.isNaN(baseY)) {
                 setActivePixel({ x: baseX, y: baseY });
-                setScale(Number.isNaN(scale) ? Math.floor(((MIN_SCALE + MAX_SCALE) / 2 + MAX_SCALE) / 2 ) : scale);
+                setScale(Number.isNaN(scale) ? Math.floor(((MIN_SCALE + MAX_SCALE) / 2 + MAX_SCALE) / 2) : scale);
                 setTranslate({ x: centerX - baseX, y: centerY - baseY });
               }
             }
@@ -139,10 +154,10 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
       setOverlayStyle((prev) => {
         return {
           ...prev,
-          width:  `${scale - 2}px`,
+          width: `${scale - 2}px`,
           height: `${scale - 2}px`,
 
-          top:  ty + 'px',
+          top: ty + 'px',
           left: tx + 'px',
         };
       });
@@ -172,7 +187,13 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
   }, [scale, translate.x, translate.y]);
 
 
-  const canvasClicked = useCallback((e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
+  // const canvasClicked2 = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
+  //   e.
+  // }, []);
+
+
+
+  const canvasClicked = useCallback((pageX: number, pageY: number) => {
     if (pl.current !== null) {
 
       const centerX = pl.current.width / 2;
@@ -181,8 +202,8 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
       const offsetX = pl.current.offsetLeft + (translate.x - centerX) * scale;
       const offsetY = pl.current.offsetTop + (translate.y - centerY) * scale;
 
-      const mouseX = ((e.pageX - offsetX) - centerX) / scale;
-      const mouseY = ((e.pageY - offsetY) - centerY) / scale;
+      const mouseX = ((pageX - offsetX) - centerX) / scale;
+      const mouseY = ((pageY - offsetY) - centerY) / scale;
 
 
       const clickedX = Math.floor(mouseX);
@@ -191,9 +212,11 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
       if (clickedX < CANVAS_X && clickedY < CANVAS_Y) {
         setActivePixel({ x: clickedX, y: clickedY });
 
+        const params = new URLSearchParams(window.location.search);
         const args = objUrlEncode({
-          'x':     clickedX,
-          'y':     clickedY,
+          ...Object.fromEntries(params),
+          'x': clickedX,
+          'y': clickedY,
           'scale': scale,
         });
 
@@ -208,18 +231,16 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
   }, [scale, translate.x, translate.y]);
 
 
-  const canvasZoomed = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
-    e.stopPropagation();
-
-    const factor = Math.sign(e.deltaY) > 0 ? 0.9 : 1.1;
+  const canvasZoomed = useCallback((pageX: number, pageY: number, deltaY: number) => {
+    const factor = Math.sign(deltaY) > 0 ? 0.9 : 1.1;
     const newScale = Math.round(Math.min(Math.max(scale * factor, MIN_SCALE), MAX_SCALE));
 
-    doZoom(e.pageX, e.pageY, newScale);
+    doZoom(pageX, pageY, newScale);
 
   }, [doZoom, scale]);
 
 
-  const canvasMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+  const canvasMouseDown = useCallback((pageX: number, pageY: number) => {
     if (pl.current !== null) {
 
       const centerX = pl.current.width / 2;
@@ -228,8 +249,8 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
       const offsetX = pl.current.offsetLeft + (translate.x - centerX) * scale;
       const offsetY = pl.current.offsetTop + (translate.y - centerY) * scale;
 
-      const mouseX = ((e.pageX - offsetX) - centerX) / scale;
-      const mouseY = ((e.pageY - offsetY) - centerY) / scale;
+      const mouseX = ((pageX - offsetX) - centerX) / scale;
+      const mouseY = ((pageY - offsetY) - centerY) / scale;
 
       setDragStart({ x: mouseX, y: mouseY });
       setIsDragging(1);
@@ -237,7 +258,7 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
   }, [scale, translate.x, translate.y]);
 
 
-  const canvasMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+  const canvasMouseMove = useCallback((pageX: number, pageY: number) => {
     if (pl.current !== null && isDragging >= 1) {
 
       const centerX = pl.current.width / 2;
@@ -246,8 +267,8 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
       const offsetX = pl.current.offsetLeft + (translate.x - centerX) * scale;
       const offsetY = pl.current.offsetTop + (translate.y - centerY) * scale;
 
-      const mouseX = ((e.pageX - offsetX) - centerX) / scale;
-      const mouseY = ((e.pageY - offsetY) - centerY) / scale;
+      const mouseX = ((pageX - offsetX) - centerX) / scale;
+      const mouseY = ((pageY - offsetY) - centerY) / scale;
 
       setTranslate((prev) => {
         return {
@@ -263,9 +284,9 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
   }, [dragStart.x, dragStart.y, isDragging, scale, translate.x, translate.y]);
 
 
-  const canvasMouseUp = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+  const canvasMouseUp = useCallback((pageX: number, pageY: number) => {
     if (isDragging <= 2) {
-      canvasClicked(e);
+      canvasClicked(pageX, pageY);
     }
     setIsDragging(0);
   }, [canvasClicked, isDragging]);
@@ -284,6 +305,8 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
         colors,
         board,
         setBoard,
+
+        times,
 
         scale,
         setScale,

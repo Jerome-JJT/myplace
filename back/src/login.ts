@@ -7,19 +7,41 @@ import { pool } from './db';
 import { getLastUserPixels } from './pixels';
 
 
-export const authenticateToken = (req: LoggedRequest, res: Response, next: any) => {
+const checkToken = (req: LoggedRequest, res: Response, next: any, fail: boolean = false) => {
     const token = req.cookies.token;
     if (!token) {
-        return res.status(401).json({ message: 'Unauthorized: No token provided' });
+        if (fail) {
+            res.status(401).json({ message: 'Unauthorized: No token provided' });
+        }
+        else {
+            req.user = undefined;
+            next();
+        }
     }
-
+    
     jwt.verify(token, process.env.JWT_SECRET as string, (err: any, decoded: any) => {
         if (err) {
-            return res.status(403).json({ message: 'Invalid or expired token' });
+            if (fail) {
+                res.status(403).json({ message: 'Invalid or expired token' });
+            }
+            else {
+                req.user = undefined;
+                next();
+            }
         }
-        req.user = decoded;
-        next();
+        else 
+        {
+            req.user = decoded;
+            next();
+        }
     });
+}
+
+export const queryToken = (req: LoggedRequest, res: Response, next: any) => {
+    checkToken(req, res, next, false);
+}
+export const authenticateToken = (req: LoggedRequest, res: Response, next: any) => {
+    checkToken(req, res, next, true);
 }
 
 const loginUser = async (username: string, res: Response) => {
@@ -78,7 +100,7 @@ export const checkAdmin = async (id: number) => {
 export const mockLogin = (req: Request, res: Response) => {
     const { username } = req.body;
     if (!username) {
-        return res.status(400).json({ message: 'Username is required' });
+        res.status(400).json({ message: 'Username is required' });
     }
 
     loginUser('moi', res);
@@ -92,7 +114,9 @@ export const logout = (req: Request, res: Response) => {
 
 
 export const profile = async (req: LoggedRequest, res: Response) => {
-    const timers = await getLastUserPixels(req.user.id);
+    const user = req.user!;
+
+    const timers = await getLastUserPixels(user.id);
     res.json({
         userInfos: {
             timers: timers,

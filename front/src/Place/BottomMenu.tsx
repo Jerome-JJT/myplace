@@ -11,7 +11,7 @@ interface BottomMenuProps {
 
 export const BottomMenu = ({ loginButton, shareButton, paintButton }: BottomMenuProps) => {
   const { isLogged } = useUser();
-  const { activePixel, board, colors, activeColor, setActiveColor } = useCanvas();
+  const { activePixel, board, colors, activeColor, setActiveColor, times } = useCanvas();
 
   return (
     <div className='fixed flex bottom-0 w-full pointer-events-none'>
@@ -52,21 +52,40 @@ export const BottomMenu = ({ loginButton, shareButton, paintButton }: BottomMenu
         </div>
         <div className='self-center w-full bg-green-500 p-2 flex flex-row flex-wrap justify-center gap-2 max-w-[550px]'>
           {
-            Array.from(colors.entries()).map((v) => {
-              return (
-                <div key={v[0]} className='text-center'>
-                  <div
-                    className={classNames('w-14 h-8 rounded border-2 hover:border-white', activeColor === v[0] ? 'border-white' : 'border-black')}
-                    style={{ backgroundColor: 'rgb(' + v[1].color + ')' }}
-                    onClick={() => {
-                      setActiveColor(v[0]);
-                    }}
-                  >
+            times === undefined && (
+              Array.from(colors.entries()).map((v) => {
+                return (
+                  <div key={v[0]} className='text-center'>
+                    <div
+                      className={classNames('w-14 h-8 rounded border-2 hover:border-white', activeColor === v[0] ? 'border-white' : 'border-black')}
+                      style={{ backgroundColor: 'rgb(' + v[1].color + ')' }}
+                      onClick={() => {
+                        setActiveColor(v[0]);
+                      }}
+                    >
+                    </div>
+                    {v[1].name}
                   </div>
-                  {v[1].name}
-                </div>
-              );
-            })
+                );
+              })
+            ) || (
+              <div>
+               <input
+                  className={'w-[400px]'}
+                  // style={{
+                  // }}
+                  type={'range'}
+                  min={times?.min}
+                  max={times?.max}
+                  // value={scale}
+                  // onChange={(e) => {
+                  //   setScale(parseInt(e.target.value));
+                  // }}
+                />
+                <button className={classNames('w-14 h-8 rounded border-2 hover:border-white', activeColor === v[0] ? 'border-white' : 'border-black')}
+                >View</button>
+              </div>
+            )
           }
         </div>
       </div>
