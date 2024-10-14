@@ -8,6 +8,7 @@ interface UserContextProps {
   getUserData: () => void
   setPixelInfos: (timers: string[]) => void
   logout: () => void
+  loginButton: (e: React.MouseEvent<HTMLElement> | undefined) => void
 }
 
 const UserContext = createContext<UserContextProps | undefined>(undefined);
@@ -70,6 +71,27 @@ export function UserProvider({ children }: { children: ReactNode }): JSX.Element
       });
   }, []);
 
+
+  const loginButton = useCallback((e: React.MouseEvent<HTMLElement> | undefined) => {
+    e?.currentTarget.blur();
+    const username = prompt('Username');
+
+    if (username && username.length > 3) {
+      axios
+        .post('/api/mocklogin',
+          {
+            username: username,
+          },
+          { withCredentials: true },
+        )
+        .then(() => {
+          getUserData();
+        })
+        .catch(() => {
+        });
+    }
+  }, [getUserData]);
+
   return (
     <UserContext.Provider
       value={{
@@ -78,6 +100,7 @@ export function UserProvider({ children }: { children: ReactNode }): JSX.Element
         getUserData,
         setPixelInfos,
         logout,
+        loginButton,
       }}
     >
       {children}

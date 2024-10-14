@@ -12,12 +12,11 @@ import { BottomMenu } from './BottomMenu';
 import { ZoomBar } from './ZoomBar';
 import { useCanvas } from './CanvasProvider';
 import { DisplayCanvas } from './Canvas';
-import { LoginBox } from './LoginBox';
 
 
 
 export function Place() {
-  const { getUserData, setPixelInfos } = useUser();
+  const { setPixelInfos, loginButton } = useUser();
   const { pl, activePixel, setActivePixel, activeColor, setActiveColor, colors, setBoard, scale } = useCanvas();
 
 
@@ -69,25 +68,7 @@ export function Place() {
   }, [colors, pl, setBoard]);
 
 
-  const loginButton = useCallback((e: React.MouseEvent<HTMLElement> | undefined) => {
-    e?.currentTarget.blur();
-    const username = prompt('Username');
 
-    if (username && username.length > 3) {
-      axios
-        .post('/api/mocklogin',
-          {
-            username: username,
-          },
-          { withCredentials: true },
-        )
-        .then(() => {
-          getUserData();
-        })
-        .catch(() => {
-        });
-    }
-  }, [getUserData]);
 
 
   const paintButton = useCallback((e: React.MouseEvent<HTMLElement> | undefined) => {
@@ -204,8 +185,6 @@ export function Place() {
       <Controls onMove={moveRelative} onAction={paintButton} onNumeric={numericAction} />
 
       <DisplayCanvas />
-
-      <LoginBox loginButton={loginButton} />
 
       <ZoomBar />
 

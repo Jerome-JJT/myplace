@@ -2,9 +2,10 @@ import { useEffect } from 'react';
 import './App.css';
 import { Place } from './Place/Place';
 import { useUser } from './UserProvider';
+import { LoginBox } from './Place/LoginBox';
 
 function App() {
-  const { getUserData } = useUser();
+  const { getUserData, loginButton } = useUser();
 
   useEffect(() => {
     getUserData();
@@ -12,6 +13,7 @@ function App() {
 
   return (
     <>
+      <LoginBox loginButton={loginButton} />
       <Place />
     </>
   );
