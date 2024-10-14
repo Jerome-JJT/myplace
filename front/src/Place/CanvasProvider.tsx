@@ -147,7 +147,10 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
               cb();
             }
           })
-          .catch(() => {
+          .catch((error) => {
+            if (error.reponse === undefined || error.response.status === 502) {
+              alert('Too soon');
+            }
             if (cb) {
               cb();
             }
@@ -253,7 +256,8 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
 
   const canvasZoomed = useCallback((pageX: number, pageY: number, deltaY: number) => {
     const factor = Math.sign(deltaY) > 0 ? 0.9 : 1.1;
-    const newScale = Math.round(Math.min(Math.max(scale * factor, MIN_SCALE), MAX_SCALE));
+    const testScale = Math.round(factor > 1 ? Math.max(scale * factor, scale + 1) : Math.min(scale * factor, scale - 1));
+    const newScale = Math.round(Math.min(Math.max(testScale, MIN_SCALE), MAX_SCALE));
 
     doZoom(pageX, pageY, newScale);
 

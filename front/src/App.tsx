@@ -13,7 +13,6 @@ import {
 import {
   createBrowserRouter,
   RouterProvider,
-  useNavigate,
 } from 'react-router-dom';
 // import { IoMdSettings } from 'react-icons/io';
 import { IoIosFiling, IoMdMap, IoMdPodium } from 'react-icons/io';
@@ -47,7 +46,7 @@ function App() {
       <div className="absolute bottom-0 right-0">
         <SpeedDial>
           <SpeedDialHandler>
-            <IconButton className='w-12 max-w-12 h-12 max-h-12 bg-gray-600 mb-4 mr-4 rounded-3xl' {...quickFix}>
+            <IconButton className='w-12 !max-w-12 h-12 max-h-12 bg-gray-600 mb-4 mr-4 rounded-3xl' {...quickFix}>
               {/* <IoMdSettings size={32}/> */}
               <IoIosFiling size={32} />
             </IconButton>

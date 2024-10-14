@@ -14,25 +14,36 @@ async function initializeBoard() {
     for (let x = 0; x < CANVAS_X; x++) {
         const lineExpire = Math.floor(Math.random() * 3600);
         board[x] = [];
+        const queryKeys: string[] = [];
+
         for (let y = 0; y < CANVAS_Y; y++) {
             const key = `${x}:${y}`;
+            queryKeys.push(key);
+        }
+ 
+        const cachedCells = await redisClient.mGet(queryKeys);
+        const result = await pool.query(`
+            SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.name, ranked_board.set_time::TIMESTAMPTZ
+            FROM (
+                SELECT x, y, user_id, color_id, set_time,
+                    ROW_NUMBER() OVER (PARTITION BY x, y ORDER BY set_time DESC) as rn
+                FROM board
+                WHERE x = $1
+            ) as ranked_board
+            JOIN users ON users.id = ranked_board.user_id
+            WHERE rn = 1
+        `, [x]);
 
-            const cachedCell = await redisClient.get(key);
-            if (cachedCell) {
-                board[x][y] = JSON.parse(cachedCell);
+        for (let y = 0; y < CANVAS_Y; y++) {
+            if (cachedCells[y] !== null) {
+                board[x][y] = JSON.parse(cachedCells[y]);
             } //
             else {
-                const result = await pool.query(`
-                    SELECT board.x, board.y, board.color_id, users.name, board.set_time::TIMESTAMPTZ
-                    FROM board
-                    JOIN users ON board.user_id = users.id
-                    WHERE board.x = $1 AND board.y = $2
-                    ORDER BY board.set_time DESC
-                    LIMIT 1
-                `, [x, y]);
+                const cell = result.rows.find((v) => {
+                    return v.x === x && v.y === y
+                });
 
-                if (result.rows.length > 0) {
-                    const cell = result.rows[0];
+                if (cell !== undefined) {
                     const p: Pixel = { color_id: cell.color_id, username: cell.name, set_time: cell.set_time }
                     board[x][y] = p;
                 } //
@@ -40,6 +51,8 @@ async function initializeBoard() {
                     const p: Pixel = { color_id: 1, username: 'null', set_time: '1900-01-01T00:00:00.000Z' }
                     board[x][y] = p;
                 }
+
+                const key = `${x}:${y}`;
                 await redisClient.set(key, JSON.stringify(board[x][y]), 'EX', lineExpire);
             }
         }

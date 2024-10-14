@@ -9,11 +9,12 @@ services:
     depends_on:
       - db
 
+    networks:
+      - back
+
     ports:
       - "8082:8080"
 
-    networks:
-      - back
 
   back:
     ports:
@@ -26,11 +27,21 @@ services:
       NODE_ENV: DEV
 
   front:
+    build: ./_build/react
+
+    networks:
+      - front
+
     ports:
      - "8080:5173"
 
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ./front:/app
 
     environment:
-      NODE_ENV: DEV
+      # VITE_NODE_ENV: DEV
+      VITE_CANVAS_X: ${CANVAS_X}
+      VITE_CANVAS_Y: ${CANVAS_Y}
+    
+    working_dir: /app
