@@ -55,8 +55,10 @@ async function viewTimedBoard(time: string) {
     }
     console.log(time);
 
+    // SELECT MIN(board.set_time::TIMESTAMPTZ) AS min_time, MAX(board.set_time::TIMESTAMPTZ) AS max_time
     const time_result = await pool.query(`
-        SELECT MIN(board.set_time::TIMESTAMPTZ) AS min_time, MAX(board.set_time::TIMESTAMPTZ) AS max_time
+        SELECT MIN((EXTRACT(EPOCH FROM board.set_time))::INTEGER) AS min_time, MAX((EXTRACT(EPOCH FROM board.set_time))::INTEGER) AS max_time
+        
         FROM board
         LIMIT 1
     `, []);
@@ -108,7 +110,8 @@ export const getPixels = async (req: LoggedRequest, res: Response) => {
         const colors = await getColor();
         if (req.query.time !== undefined && (req.user?.soft_is_admin === true && await checkAdmin(req.user?.id))) {
             const {board, min_time, max_time} = await viewTimedBoard(new Date(req.query.time as string).toISOString());
-            res.json({
+
+            return res.status(200).json({
                 colors: colors, 
                 board: board,
                 min_time: min_time,
@@ -117,7 +120,7 @@ export const getPixels = async (req: LoggedRequest, res: Response) => {
         }
         else {
             const board = await initializeBoard();
-            res.json({
+            return res.status(200).json({
                 colors: colors, 
                 board: board
             });
@@ -125,7 +128,7 @@ export const getPixels = async (req: LoggedRequest, res: Response) => {
     } //
     catch (err) {
         console.error(err);
-        res.status(500).send('Error fetching board data.');
+        return res.status(500).send('Error fetching board data.');
     }
 }
 
@@ -169,23 +172,23 @@ export const setPixel = async (req: LoggedRequest, res: Response) => {
         
                 updates.push({ ...p, x: inserted.x, y: inserted.y });
                 timers.unshift(inserted.set_time);
-                res.status(201).send({
+                return res.status(201).send({
                     update: { ...p, x: inserted.x, y: inserted.y },
                     timers: timers
                 });
             }
             else {
-                res.status(417).send('Strange insertion error append');
+                return res.status(417).send('Strange insertion error append');
             }
         } //
         catch (err) {
             console.error(err);
-            res.status(500).send('Error updating cell.');
+            return res.status(500).send('Error updating cell.');
         }
     }
     else {
         console.log('Timeout limit reached');
-        res.status(425).send({
+        return res.status(425).send({
             timers: timers,
             message: 'Too early'
         });

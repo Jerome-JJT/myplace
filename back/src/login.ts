@@ -11,37 +11,38 @@ const checkToken = (req: LoggedRequest, res: Response, next: any, fail: boolean 
     const token = req.cookies.token;
     if (!token) {
         if (fail) {
-            res.status(401).json({ message: 'Unauthorized: No token provided' });
+            return res.status(401).json({ message: 'Unauthorized: No token provided' });
         }
         else {
             req.user = undefined;
-            next();
+            return next();
         }
     }
-    
-    jwt.verify(token, process.env.JWT_SECRET as string, (err: any, decoded: any) => {
-        if (err) {
-            if (fail) {
-                res.status(403).json({ message: 'Invalid or expired token' });
+    else {
+        jwt.verify(token, process.env.JWT_SECRET as string, (err: any, decoded: any) => {
+            if (err) {
+                if (fail) {
+                    return res.status(403).json({ message: 'Invalid or expired token' });
+                }
+                else {
+                    req.user = undefined;
+                    return next();
+                }
             }
-            else {
-                req.user = undefined;
-                next();
+            else 
+            {
+                req.user = decoded;
+                return next();
             }
-        }
-        else 
-        {
-            req.user = decoded;
-            next();
-        }
-    });
+        });
+    }
 }
 
 export const queryToken = (req: LoggedRequest, res: Response, next: any) => {
-    checkToken(req, res, next, false);
+    return checkToken(req, res, next, false);
 }
 export const authenticateToken = (req: LoggedRequest, res: Response, next: any) => {
-    checkToken(req, res, next, true);
+    return checkToken(req, res, next, true);
 }
 
 const loginUser = async (username: string, res: Response) => {
@@ -73,10 +74,10 @@ const loginUser = async (username: string, res: Response) => {
             maxAge: 3600000,
         });
     
-        res.json({ message: 'Login successful' });
+        return res.status(200).json({ message: 'Login successful' });
     }
     else {
-        res.status(410).json({ message: 'Login failed' });
+        return res.status(410).json({ message: 'Login failed' });
     }
 }
 
@@ -100,7 +101,7 @@ export const checkAdmin = async (id: number) => {
 export const mockLogin = (req: Request, res: Response) => {
     const { username } = req.body;
     if (!username) {
-        res.status(400).json({ message: 'Username is required' });
+        return res.status(400).json({ message: 'Username is required' });
     }
 
     loginUser('moi', res);
@@ -109,7 +110,7 @@ export const mockLogin = (req: Request, res: Response) => {
 
 export const logout = (req: Request, res: Response) => {
     res.clearCookie('token');
-    res.json({ message: 'Logged out successfully' });
+    return res.status(200).json({ message: 'Logged out successfully' });
 }
 
 
@@ -117,7 +118,7 @@ export const profile = async (req: LoggedRequest, res: Response) => {
     const user = req.user!;
 
     const timers = await getLastUserPixels(user.id);
-    res.json({
+    return res.status(200).json({
         userInfos: {
             timers: timers,
             pixel_buffer: PIXEL_BUFFER_SIZE,

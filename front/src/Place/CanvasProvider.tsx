@@ -9,6 +9,8 @@ import { ColorType, Pixel, Point } from 'src/Utils/types';
 interface CanvasContextProps {
   pl: React.MutableRefObject<HTMLCanvasElement | null>,
 
+  queryPlace: (time: string | undefined, cb: (() => any) | undefined) => void,
+
   activePixel: Point,
   setActivePixel: React.Dispatch<React.SetStateAction<Point>>,
   activeColor: number,
@@ -17,6 +19,9 @@ interface CanvasContextProps {
   colors: Map<number, ColorType>,
   board: Map<string, Pixel>,
   setBoard: React.Dispatch<React.SetStateAction<Map<string, Pixel>>>,
+
+  activeTime: number,
+  setActiveTime: React.Dispatch<React.SetStateAction<number>>,
   times: { min: number, max: number } | undefined,
 
   scale: number,
@@ -58,28 +63,30 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
   const [colors, setColors] = useState<Map<number, ColorType>>(new Map());
   const [board, setBoard] = useState<Map<string, Pixel>>(new Map());
 
+  const [activeTime, setActiveTime] = useState(-1);
   const [times, setTimes] = useState<{ min: number, max: number } | undefined>({ min: 0, max: 0 });
 
 
   const [scale, setScale] = useState(MIN_SCALE);
   const [translate, setTranslate] = useState<Point>({ x: 0, y: 0 });
   const [overlayStyle, setOverlayStyle] = useState({
-    width: `${scale - 2}px`,
+    width:  `${scale - 2}px`,
     height: `${scale - 2}px`,
-    top: '0px',
-    left: '0px',
+    top:    '0px',
+    left:   '0px',
   });
 
   const [dragStart, setDragStart] = useState<Point>({ x: -1, y: -1 });
   const [isDragging, setIsDragging] = useState(0);
 
-  useEffect(() => {
+  const queryPlace = useCallback((time: string | undefined, cb: (() => any) | undefined) => {
     const params = new URLSearchParams(window.location.search);
     const baseX = parseInt(params.get('x') || '');
     const baseY = parseInt(params.get('y') || '');
     const scale = parseInt(params.get('scale') || '');
 
     if (pl.current !== null) {
+      // setIsLoading
       const centerX = pl.current.width / 2;
       const centerY = pl.current.height / 2;
       const ctx = pl.current.getContext('2d');
@@ -87,7 +94,7 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
       if (ctx !== null) {
 
         const args = objUrlEncode({
-          'time': params.get('time'),
+          'time': time,
         });
 
         axios
@@ -100,7 +107,7 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
               const cols = new Map();
               res.data.colors?.forEach((c: any) => {
                 cols.set(c['id'], {
-                  name: c['name'],
+                  name:  c['name'],
                   color: `${c['red']}, ${c['green']}, ${c['blue']}`,
                 });
               });
@@ -117,7 +124,15 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
               setBoard(pixs);
 
               if (res.data.min_time !== undefined && res.data.max_time !== undefined) {
-                setTimes({ min: res.data.min_time, max: res.data.max_time })
+                setTimes({ min: res.data.min_time, max: res.data.max_time });
+                setActiveTime((prev) => {
+                  if (prev < res.data.min_time || prev > res.data.max_time) {
+                    return res.data.max_time;
+                  }
+                  else {
+                    return prev;
+                  }
+                });
               }
               else {
                 setTimes(undefined);
@@ -129,12 +144,23 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
                 setTranslate({ x: centerX - baseX, y: centerY - baseY });
               }
             }
+            if (cb) {
+              cb();
+            }
           })
           .catch(() => {
+            if (cb) {
+              cb();
+            }
           });
       }
     }
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    queryPlace(params.get('time') || undefined, undefined);
+  }, [queryPlace]);
 
 
   useEffect(() => {
@@ -154,10 +180,10 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
       setOverlayStyle((prev) => {
         return {
           ...prev,
-          width: `${scale - 2}px`,
+          width:  `${scale - 2}px`,
           height: `${scale - 2}px`,
 
-          top: ty + 'px',
+          top:  ty + 'px',
           left: tx + 'px',
         };
       });
@@ -215,8 +241,8 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
         const params = new URLSearchParams(window.location.search);
         const args = objUrlEncode({
           ...Object.fromEntries(params),
-          'x': clickedX,
-          'y': clickedY,
+          'x':     clickedX,
+          'y':     clickedY,
           'scale': scale,
         });
 
@@ -297,6 +323,8 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
       value={{
         pl,
 
+        queryPlace,
+
         activePixel,
         setActivePixel,
         activeColor,
@@ -306,6 +334,8 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
         board,
         setBoard,
 
+        activeTime,
+        setActiveTime,
         times,
 
         scale,

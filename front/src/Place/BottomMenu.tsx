@@ -2,6 +2,8 @@ import classNames from 'classnames';
 
 import { useUser } from 'src/UserProvider';
 import { useCanvas } from './CanvasProvider';
+import { useCallback, useMemo, useState } from 'react';
+import { objUrlEncode } from 'src/Utils/objUrlEncode';
 
 interface BottomMenuProps {
   loginButton: (e: React.MouseEvent<HTMLElement> | undefined) => void
@@ -11,7 +13,40 @@ interface BottomMenuProps {
 
 export const BottomMenu = ({ loginButton, shareButton, paintButton }: BottomMenuProps) => {
   const { isLogged } = useUser();
-  const { activePixel, board, colors, activeColor, setActiveColor, times } = useCanvas();
+  const { queryPlace, activePixel, board, colors, activeColor, setActiveColor, times, activeTime, setActiveTime } = useCanvas();
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { minText, currentText, maxText } = useMemo(() => {
+    const minDate = times !== undefined && (new Date(times.min * 1000)).toISOString() || '';
+    const currentDate = (new Date(activeTime * 1000)).toISOString();
+    const maxDate = times !== undefined && (new Date(times.max * 1000)).toISOString() || '';
+
+    const leftDisplay = minDate.substring(0, minDate.length - 5).replace('T', ' ');
+    const currentDisplay = currentDate.substring(0, currentDate.length - 5).replace('T', ' ');
+    const rightDisplay = maxDate.substring(0, maxDate.length - 5).replace('T', ' ');
+
+    return { minText: leftDisplay, currentText: currentDisplay, maxText: rightDisplay };
+  }, [activeTime, times]);
+
+  const setTime = useCallback(() => {
+    setIsLoading(true);
+    const isoTime = (new Date(activeTime * 1000)).toISOString();
+
+    const params = new URLSearchParams(window.location.search);
+    const args = objUrlEncode({
+      ...Object.fromEntries(params),
+      'time': isoTime,
+    });
+
+    const base = `${window.location.origin}${window.location.pathname}`;
+    const link = `${base}?${args}`;
+    window.history.replaceState(null, '', link);
+
+    queryPlace(isoTime, () => {
+      setIsLoading(false);
+    });
+  }, [activeTime, queryPlace]);
 
   return (
     <div className='fixed flex bottom-0 w-full pointer-events-none'>
@@ -68,22 +103,38 @@ export const BottomMenu = ({ loginButton, shareButton, paintButton }: BottomMenu
                   </div>
                 );
               })
-            ) || (
-              <div>
-               <input
+            ) || (times !== undefined) && (
+              <div className='w-full'>
+                <div className='grid grid-cols-5'>
+                  <div>{minText}</div>
+                  <div>|</div>
+                  <div>{currentText}</div>
+                  <div>|</div>
+                  <div>{maxText}</div>
+                </div>
+                <input
                   className={'w-[400px]'}
                   // style={{
                   // }}
                   type={'range'}
-                  min={times?.min}
-                  max={times?.max}
-                  // value={scale}
-                  // onChange={(e) => {
-                  //   setScale(parseInt(e.target.value));
-                  // }}
+                  min={times.min}
+                  max={times.max}
+                  value={activeTime}
+                  onChange={(e) => {
+                    setActiveTime(parseInt(e.target.value));
+                  }}
                 />
-                <button className={classNames('w-14 h-8 rounded border-2 hover:border-white', activeColor === v[0] ? 'border-white' : 'border-black')}
-                >View</button>
+                <button
+                  onClick={setTime}
+                  className={classNames(
+                    'w-14 h-8 ml-6 rounded bg-blue-400 border-2 border-black',
+                    isLoading && 'bg-gray-400 pointer-none hover:border-black',
+                    !isLoading && 'hover:border-white',
+                  )}
+                  disabled={isLoading}
+                >
+                  View
+                </button>
               </div>
             )
           }
