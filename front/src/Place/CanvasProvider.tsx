@@ -64,7 +64,7 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
   const [board, setBoard] = useState<Map<string, Pixel>>(new Map());
 
   const [activeTime, setActiveTime] = useState(-1);
-  const [times, setTimes] = useState<{ min: number, max: number } | undefined>({ min: 0, max: 0 });
+  const [times, setTimes] = useState<{ min: number, max: number } | undefined>(undefined);
 
 
   const [scale, setScale] = useState(MIN_SCALE);

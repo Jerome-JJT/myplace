@@ -13,6 +13,16 @@ declare global {
 
         PIXEL_BUFFER_SIZE: string
         PIXEL_MINUTE_TIMER: string
+
+        CANVAS_X: string
+        CANVAS_Y: string
+
+        REDIS_SPAN_SECONDS: string
+        REDIS_MIN_SECONDS: string
+
+        API_UID: string
+        API_SECRET: string
+        API_CALLBACK: string
       }
     }
   }

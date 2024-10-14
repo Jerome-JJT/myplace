@@ -9,6 +9,7 @@ interface UserContextProps {
   setPixelInfos: (timers: string[]) => void
   logout: () => void
   loginButton: (e: React.MouseEvent<HTMLElement> | undefined) => void
+  loginApi: (e: React.MouseEvent<HTMLElement> | undefined) => void
 }
 
 const UserContext = createContext<UserContextProps | undefined>(undefined);
@@ -62,7 +63,7 @@ export function UserProvider({ children }: { children: ReactNode }): JSX.Element
         { withCredentials: true },
       )
       .then((res) => {
-        if (res.status === 204) {
+        if (res.status === 200) {
           setIsLogged(false);
           setInfos({} as UserInfos);
         }
@@ -78,7 +79,7 @@ export function UserProvider({ children }: { children: ReactNode }): JSX.Element
 
     if (username && username.length > 3) {
       axios
-        .post('/api/mocklogin',
+        .post('/api/login/mock',
           {
             username: username,
           },
@@ -92,6 +93,11 @@ export function UserProvider({ children }: { children: ReactNode }): JSX.Element
     }
   }, [getUserData]);
 
+  const loginApi = useCallback((e: React.MouseEvent<HTMLElement> | undefined) => {
+    e?.currentTarget.blur();
+    window.location.href = '/api/login/api';
+  }, []);
+
   return (
     <UserContext.Provider
       value={{
@@ -101,6 +107,7 @@ export function UserProvider({ children }: { children: ReactNode }): JSX.Element
         setPixelInfos,
         logout,
         loginButton,
+        loginApi,
       }}
     >
       {children}

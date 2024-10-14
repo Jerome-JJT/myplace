@@ -18,7 +18,7 @@ async function initializeBoard() {
                 ROW_NUMBER() OVER (PARTITION BY x, y ORDER BY set_time DESC) as rn
             FROM board
         ) as ranked_board
-        JOIN users ON users.id = ranked_board.user_id
+        LEFT JOIN users ON users.id = ranked_board.user_id
         WHERE rn = 1
     `, []);
     const mapResults = new Map();
@@ -49,7 +49,7 @@ async function initializeBoard() {
                 //     return v.x === x && v.y === y
                 // });
 
-                const cell = mapResults.get(`${x}:${y}`)
+                const cell = mapResults.get(`${x}:${y}`);
                 if (cell !== undefined) {
                     const p: Pixel = { color_id: cell.color_id, username: cell.name, set_time: cell.set_time }
                     board[x][y] = p;
@@ -79,7 +79,6 @@ async function viewTimedBoard(time: string) {
     }
     console.log(time);
 
-    // SELECT MIN(board.set_time::TIMESTAMPTZ) AS min_time, MAX(board.set_time::TIMESTAMPTZ) AS max_time
     const time_result = await pool.query(`
         SELECT 
         MIN((EXTRACT(EPOCH FROM board.set_time))::INTEGER) AS min_time, 
@@ -93,21 +92,28 @@ async function viewTimedBoard(time: string) {
         times.max_time = cell.max_time;
     }
 
+    const result = await pool.query(`
+        SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.name, ranked_board.set_time::TIMESTAMPTZ
+        FROM (
+            SELECT x, y, user_id, color_id, set_time,
+                ROW_NUMBER() OVER (PARTITION BY x, y ORDER BY set_time DESC) as rn
+            FROM board
+            WHERE board.set_time < $1
+        ) as ranked_board
+        LEFT JOIN users ON users.id = ranked_board.user_id
+        WHERE rn = 1
+    `, [time]);
+    const mapResults = new Map();
+    result.rows.forEach((v) => {
+        mapResults.set(`${v.x}:${v.y}`, v)
+    });
+
     for (let x = 0; x < CANVAS_X; x++) {
         board[x] = [];
         for (let y = 0; y < CANVAS_Y; y++) {
 
-            const result = await pool.query(`
-                SELECT board.x, board.y, board.color_id, users.name, board.set_time::TIMESTAMPTZ
-                FROM board
-                JOIN users ON board.user_id = users.id
-                WHERE board.x = $1 AND board.y = $2 AND board.set_time < $3
-                ORDER BY board.set_time DESC
-                LIMIT 1
-            `, [x, y, time]);
-
-            if (result.rows.length > 0) {
-                const cell = result.rows[0];
+            const cell = mapResults.get(`${x}:${y}`);
+            if (cell !== undefined) {
                 const p: Pixel = { color_id: cell.color_id, username: cell.name, set_time: cell.set_time }
                 board[x][y] = p;
             }

@@ -1,10 +1,13 @@
 import jwt from 'jsonwebtoken';
+import https from 'https';
 import { Request, Response } from 'express';
 
 import { PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER } from './consts';
 import { LoggedRequest, UserInfos } from './types';
 import { pool } from './db';
 import { getLastUserPixels } from './pixels';
+import { objUrlEncode } from './objUrlEncode';
+import axios from 'axios';
 
 
 const checkToken = (req: LoggedRequest, res: Response, next: any, fail: boolean = false) => {
@@ -45,7 +48,7 @@ export const authenticateToken = (req: LoggedRequest, res: Response, next: any) 
     return checkToken(req, res, next, true);
 }
 
-const loginUser = async (username: string, res: Response) => {
+const loginUser = async (username: string, res: Response): Promise<boolean> => {
     const result = await pool.query(`
         SELECT id, name, email, is_admin
         FROM users
@@ -73,11 +76,25 @@ const loginUser = async (username: string, res: Response) => {
             secure: process.env.NODE_ENV === 'production',
             maxAge: 3600000,
         });
-    
-        return res.status(200).json({ message: 'Login successful' });
+        return true;
     }
     else {
-        return res.status(410).json({ message: 'Login failed' });
+        return false;
+    }
+}
+
+const createUser = async (id: number, username: string, email: string): Promise<boolean> => {
+    try {
+        const result = await pool.query(`
+            INSERT INTO users (id, name, email, is_admin) 
+            VALUES
+            ($1, $2, $3, FALSE)
+        `, [id, username, email]);
+    
+        return result.rowCount === 1;
+    }
+    catch {
+        return false;
     }
 }
 
@@ -98,15 +115,80 @@ export const checkAdmin = async (id: number) => {
     }
 }
 
-export const mockLogin = (req: Request, res: Response) => {
+export const mockLogin = async (req: Request, res: Response) => {
     const { username } = req.body;
     if (!username) {
         return res.status(400).json({ message: 'Username is required' });
     }
 
-    loginUser('moi', res);
+    if (await loginUser('moi', res)) { 
+        return res.status(200).json({ message: 'Login successful' });
+    }
+    else {
+        return res.status(410).json({ message: 'Login failed' });
+    }
 }
 
+export const apiLogin = (req: Request, res: Response) => {
+    const args = objUrlEncode({
+        response_type: 'code',
+        client_id: process.env.API_UID,
+        scope: 'public',
+        redirect_uri: process.env.API_CALLBACK
+    });
+    return res.redirect(`https://api.intra.42.fr/oauth/authorize?${args}`);
+}
+
+export const apiCallback = async (req: Request, res: Response) => {
+    const token = await axios.post('https://api.intra.42.fr/oauth/token', {
+        grant_type: 'authorization_code',
+        client_id: process.env.API_UID,
+        client_secret: process.env.API_SECRET,
+        code: req.query.code,
+        redirect_uri: process.env.API_CALLBACK,
+    }, {})
+
+    if (token.status === 200) {
+        const access_token: string = token.data.access_token;
+
+        const user = await axios.get('https://api.intra.42.fr/v2/me', {
+            headers: {
+                'Authorization': `Bearer ${access_token}`
+            }
+        })
+
+        if (user.status === 200) {
+            if (await loginUser(user.data.login, res)) { 
+                return res.redirect('/')
+                // return res.status(200).json({ message: 'Login successful' });
+            }
+            else {
+                if (await createUser(user.data.id, user.data.login, user.data.email)) {
+                    if (await loginUser(user.data.login, res)) { 
+                        return res.redirect('/')
+                        // return res.status(200).json({ message: 'Login successful' });
+                    }
+                    else {
+                        return res.status(410).json({ message: 'Login failed' });
+                    }
+                }
+                else {
+                    return res.status(410).json({ message: 'Login failed' });
+                }
+            }
+        }
+        else {
+            console.error('LOGIN FAILED');
+            return res.status(410).json({ message: 'Login failed' });
+            // return res.redirect('/')
+        }
+    }
+    else {
+        console.error('LOGIN FAILED');
+        return res.status(410).json({ message: 'Login failed' });
+        // return res.redirect('/')
+    }
+}
 
 export const logout = (req: Request, res: Response) => {
     res.clearCookie('token');

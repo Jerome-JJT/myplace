@@ -15,11 +15,11 @@ import {
   RouterProvider,
 } from 'react-router-dom';
 // import { IoMdSettings } from 'react-icons/io';
-import { IoIosFiling, IoMdMap, IoMdPodium } from 'react-icons/io';
+import { IoIosFiling, IoMdMap, IoMdPodium, IoLogoIonitron, IoMdLock, IoMdKey } from 'react-icons/io';
 import { Leaderboard } from './Leaderboard';
 
 function App() {
-  const { getUserData, loginButton } = useUser();
+  const { isLogged, getUserData, loginButton, loginApi, logout } = useUser();
 
   useEffect(() => {
     getUserData();
@@ -52,9 +52,21 @@ function App() {
             </IconButton>
           </SpeedDialHandler>
           <SpeedDialContent {...quickFix}>
-            <SpeedDialAction {...quickFix} onClick={loginButton}>
-              Login
-            </SpeedDialAction>
+            { !isLogged && (
+              <SpeedDialAction {...quickFix} onClick={loginButton}>
+                <IoMdKey />
+              </SpeedDialAction>
+            )}
+            { !isLogged && (
+              <SpeedDialAction {...quickFix} onClick={loginApi}>
+                <IoLogoIonitron />
+              </SpeedDialAction>
+            )}
+            { isLogged && (
+              <SpeedDialAction {...quickFix} onClick={logout}>
+                <IoMdLock />
+              </SpeedDialAction>
+            )}
             <SpeedDialAction {...quickFix} onClick={() => router.navigate('/leaderboard')}>
               <IoMdPodium />
             </SpeedDialAction>

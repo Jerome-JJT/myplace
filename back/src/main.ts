@@ -16,9 +16,11 @@ app.get('/get', queryToken, getPixels);
 app.post('/set', authenticateToken, setPixel);
 
 
-const { mockLogin, logout } = require('./login');
+const { mockLogin, apiLogin, apiCallback, logout } = require('./login');
 
-app.post('/mocklogin', mockLogin);
+app.post('/login/mock', mockLogin);
+app.get('/login/api', apiLogin);
+app.get('/login/callback', apiCallback);
 app.get('/logout', logout);
 app.get('/profile', authenticateToken, profile);
 

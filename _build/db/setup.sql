@@ -16,7 +16,7 @@ CREATE TABLE colors (
 CREATE TABLE board (
     x INT NOT NULL,
     y INT NOT NULL,
-    color_id INT REFERENCES colors(id),
+    color_id INT REFERENCES colors(id) ON DELETE SET NULL,
     user_id INT REFERENCES users(id),
     set_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (x, y, set_time)
