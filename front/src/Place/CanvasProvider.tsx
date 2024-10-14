@@ -5,6 +5,7 @@ import axios from 'axios';
 import { objUrlEncode } from 'src/Utils/objUrlEncode';
 import { MIN_SCALE, MAX_SCALE, CANVAS_X, CANVAS_Y } from 'src/Utils/consts';
 import { ColorType, Pixel, Point } from 'src/Utils/types';
+import { map } from 'src/Utils/map';
 
 interface CanvasContextProps {
   pl: React.MutableRefObject<HTMLCanvasElement | null>,
@@ -67,7 +68,7 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
   const [times, setTimes] = useState<{ min: number, max: number } | undefined>(undefined);
 
 
-  const [scale, setScale] = useState(MIN_SCALE);
+  const [scale, setScale] = useState(Math.round(Math.max(Math.min(map((CANVAS_X + CANVAS_Y) / 2, 100, 1000, 8, 1), MAX_SCALE), MIN_SCALE)));
   const [translate, setTranslate] = useState<Point>({ x: 0, y: 0 });
   const [overlayStyle, setOverlayStyle] = useState({
     width:  `${scale - 2}px`,
