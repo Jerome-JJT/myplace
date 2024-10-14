@@ -138,9 +138,12 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
               }
 
               if (!Number.isNaN(baseX) && !Number.isNaN(baseY)) {
-                setActivePixel({ x: baseX, y: baseY });
+                const setX = Math.max(Math.min(baseX, CANVAS_X - 1), 0);
+                const setY = Math.max(Math.min(baseY, CANVAS_Y - 1), 0);
+
+                setActivePixel({ x: setX, y: setY });
                 setScale(Number.isNaN(scale) ? Math.floor(((MIN_SCALE + MAX_SCALE) / 2 + MAX_SCALE) / 2) : scale);
-                setTranslate({ x: centerX - baseX, y: centerY - baseY });
+                setTranslate({ x: centerX - setX, y: centerY - setY });
               }
             }
             if (cb) {
@@ -148,7 +151,8 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
             }
           })
           .catch((error) => {
-            if (error.reponse === undefined || error.response.status === 502) {
+            console.log('is too soon', error);
+            if (error.response === undefined || error.response.status === 502) {
               alert('Too soon');
             }
             if (cb) {

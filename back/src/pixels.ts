@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 
-import { CANVAS_X, CANVAS_Y, PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER } from './consts';
+import { CANVAS_X, CANVAS_Y, PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER, redisTimeout } from './consts';
 import { Color, LoggedRequest, Pixel } from './types';
 import { redisClient } from './redis';
 import { pool } from './db';
@@ -11,8 +11,24 @@ import { checkAdmin } from './login';
 async function initializeBoard() {
     const board: (Pixel | null)[][] = [];
 
+    const result = await pool.query(`
+        SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.name, ranked_board.set_time::TIMESTAMPTZ
+        FROM (
+            SELECT x, y, user_id, color_id, set_time,
+                ROW_NUMBER() OVER (PARTITION BY x, y ORDER BY set_time DESC) as rn
+            FROM board
+        ) as ranked_board
+        JOIN users ON users.id = ranked_board.user_id
+        WHERE rn = 1
+    `, []);
+    const mapResults = new Map();
+    result.rows.forEach((v) => {
+        mapResults.set(`${v.x}:${v.y}`, v)
+    });
+
+
     for (let x = 0; x < CANVAS_X; x++) {
-        const lineExpire = Math.floor(Math.random() * 3600);
+        const lineExpire = redisTimeout();
         board[x] = [];
         const queryKeys: string[] = [];
 
@@ -22,27 +38,18 @@ async function initializeBoard() {
         }
  
         const cachedCells = await redisClient.mGet(queryKeys);
-        const result = await pool.query(`
-            SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.name, ranked_board.set_time::TIMESTAMPTZ
-            FROM (
-                SELECT x, y, user_id, color_id, set_time,
-                    ROW_NUMBER() OVER (PARTITION BY x, y ORDER BY set_time DESC) as rn
-                FROM board
-                WHERE x = $1
-            ) as ranked_board
-            JOIN users ON users.id = ranked_board.user_id
-            WHERE rn = 1
-        `, [x]);
+        const cachedSet: {[key: string]: string} = {};
 
         for (let y = 0; y < CANVAS_Y; y++) {
             if (cachedCells[y] !== null) {
                 board[x][y] = JSON.parse(cachedCells[y]);
             } //
             else {
-                const cell = result.rows.find((v) => {
-                    return v.x === x && v.y === y
-                });
+                // const cell = result.rows.find((v) => {
+                //     return v.x === x && v.y === y
+                // });
 
+                const cell = mapResults.get(`${x}:${y}`)
                 if (cell !== undefined) {
                     const p: Pixel = { color_id: cell.color_id, username: cell.name, set_time: cell.set_time }
                     board[x][y] = p;
@@ -53,8 +60,12 @@ async function initializeBoard() {
                 }
 
                 const key = `${x}:${y}`;
-                await redisClient.set(key, JSON.stringify(board[x][y]), 'EX', lineExpire);
+                cachedSet[key] = JSON.stringify(board[x][y]);
             }
+        }
+
+        if (Object.keys(cachedSet).length > 0) {
+            await redisClient.mSet(cachedSet, 'EX', lineExpire);
         }
     }
     return board;
@@ -70,8 +81,9 @@ async function viewTimedBoard(time: string) {
 
     // SELECT MIN(board.set_time::TIMESTAMPTZ) AS min_time, MAX(board.set_time::TIMESTAMPTZ) AS max_time
     const time_result = await pool.query(`
-        SELECT MIN((EXTRACT(EPOCH FROM board.set_time))::INTEGER) AS min_time, MAX((EXTRACT(EPOCH FROM board.set_time))::INTEGER) AS max_time
-        
+        SELECT 
+        MIN((EXTRACT(EPOCH FROM board.set_time))::INTEGER) AS min_time, 
+        MAX((EXTRACT(EPOCH FROM board.set_time))::INTEGER) AS max_time
         FROM board
         LIMIT 1
     `, []);
@@ -181,8 +193,8 @@ export const setPixel = async (req: LoggedRequest, res: Response) => {
                 const key = `${inserted.x}:${inserted.y}`;
                 const p: Pixel = { username: user.username, color_id: inserted.color_id, set_time: inserted.set_time }
         
-                await redisClient.set(key, JSON.stringify(p));
-        
+                await redisClient.set(key, JSON.stringify(p), 'EX', redisTimeout());
+
                 updates.push({ ...p, x: inserted.x, y: inserted.y });
                 timers.unshift(inserted.set_time);
                 return res.status(201).send({

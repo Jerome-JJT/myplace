@@ -66,8 +66,10 @@ runf:
 			${DOCKER} exec flyway bash
 runredis:
 			${DOCKER} exec cache redis-cli --askpass
-			# FLUSHALL
-			# KEYS *
+			@# -a password
+			@# FLUSHALL
+			@# KEYS *
+			@# DBSIZE
 runfront:
 			${DOCKER} exec front sh
 runback:

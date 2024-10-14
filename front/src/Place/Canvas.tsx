@@ -27,21 +27,21 @@ export const DisplayCanvas = () => {
         height={`${CANVAS_Y}px`}
         ref={pl}
 
-        onMouseDown={(e: React.MouseEvent<HTMLCanvasElement>) => { 
-          console.log('mousedown')
-          canvasMouseDown(e.pageX, e.pageY) 
+        onMouseDown={(e: React.MouseEvent<HTMLCanvasElement>) => {
+          console.log('mousedown');
+          canvasMouseDown(e.pageX, e.pageY);
         }}
-        onMouseMove={(e: React.MouseEvent<HTMLCanvasElement>) => { 
-          console.log('mousemove')
-          canvasMouseMove(e.pageX, e.pageY) 
+        onMouseMove={(e: React.MouseEvent<HTMLCanvasElement>) => {
+          console.log('mousemove');
+          canvasMouseMove(e.pageX, e.pageY);
         }}
-        onMouseUp={(e: React.MouseEvent<HTMLCanvasElement>) => { 
-          console.log('mouseup', e.pageX, e.pageY)
-          canvasMouseUp(e.pageX, e.pageY) 
+        onMouseUp={(e: React.MouseEvent<HTMLCanvasElement>) => {
+          console.log('mouseup', e.pageX, e.pageY);
+          canvasMouseUp(e.pageX, e.pageY);
         }}
         onWheel={(e: React.WheelEvent<HTMLCanvasElement>) => {
           e.stopPropagation();
-          canvasZoomed(e.pageX, e.pageY, e.deltaY)
+          canvasZoomed(e.pageX, e.pageY, e.deltaY);
         }}
         onMouseLeave={() => {
           setIsDragging(0);
@@ -67,7 +67,7 @@ export const DisplayCanvas = () => {
         // }}
 
         onDoubleClick={(e: React.MouseEvent<HTMLCanvasElement>) => {
-          console.log('double')
+          console.log('double');
           if (scale > (MIN_SCALE + MAX_SCALE) / 2) {
             doZoom(e.pageX, e.pageY, MIN_SCALE);
           }
