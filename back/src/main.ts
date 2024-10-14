@@ -22,6 +22,12 @@ app.post('/mocklogin', mockLogin);
 app.get('/logout', logout);
 app.get('/profile', authenticateToken, profile);
 
+
+const { getLeaderboards } = require('./leaderboard');
+
+app.get('/leaderboards', getLeaderboards);
+
+
 setInterval(() => {
     sendUpdates(wss);
 }, 5000);

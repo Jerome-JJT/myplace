@@ -86,7 +86,6 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
     const scale = parseInt(params.get('scale') || '');
 
     if (pl.current !== null) {
-      // setIsLoading
       const centerX = pl.current.width / 2;
       const centerY = pl.current.height / 2;
       const ctx = pl.current.getContext('2d');
@@ -156,11 +155,6 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
       }
     }
   }, []);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    queryPlace(params.get('time') || undefined, undefined);
-  }, [queryPlace]);
 
 
   useEffect(() => {

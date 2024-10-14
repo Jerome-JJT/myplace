@@ -17,7 +17,7 @@ import { DisplayCanvas } from './Canvas';
 
 export function Place() {
   const { setPixelInfos, loginButton } = useUser();
-  const { pl, activePixel, setActivePixel, activeColor, setActiveColor, colors, setBoard, scale } = useCanvas();
+  const { pl, board, queryPlace, activePixel, setActivePixel, activeColor, setActiveColor, colors, setBoard, scale } = useCanvas();
 
 
   useEffect(() => {
@@ -67,9 +67,10 @@ export function Place() {
     };
   }, [colors, pl, setBoard]);
 
-
-
-
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    queryPlace(params.get('time') || undefined, undefined);
+  }, [board.size, queryPlace]);
 
   const paintButton = useCallback((e: React.MouseEvent<HTMLElement> | undefined) => {
     e?.currentTarget.blur();
