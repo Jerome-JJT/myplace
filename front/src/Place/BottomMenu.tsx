@@ -4,15 +4,15 @@ import { useUser } from 'src/UserProvider';
 import { useCanvas } from './CanvasProvider';
 import { useCallback, useMemo, useState } from 'react';
 import { objUrlEncode } from 'src/Utils/objUrlEncode';
+import { dateIsoToNice } from 'src/Utils/dateIsoToNice';
 
 interface BottomMenuProps {
-  loginButton: (e: React.MouseEvent<HTMLElement> | undefined) => void
   shareButton: (e: React.MouseEvent<HTMLElement> | undefined) => void
   paintButton: (e: React.MouseEvent<HTMLElement> | undefined) => void
 }
 
-export const BottomMenu = ({ loginButton, shareButton, paintButton }: BottomMenuProps) => {
-  const { isLogged } = useUser();
+export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
+  const { isLogged, loginApi } = useUser();
   const { queryPlace, activePixel, board, colors, activeColor, setActiveColor, times, activeTime, setActiveTime } = useCanvas();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -22,11 +22,7 @@ export const BottomMenu = ({ loginButton, shareButton, paintButton }: BottomMenu
     const currentDate = (new Date(activeTime * 1000)).toISOString();
     const maxDate = times !== undefined && (new Date(times.max * 1000)).toISOString() || '';
 
-    const leftDisplay = minDate.substring(0, minDate.length - 5).replace('T', ' ');
-    const currentDisplay = currentDate.substring(0, currentDate.length - 5).replace('T', ' ');
-    const rightDisplay = maxDate.substring(0, maxDate.length - 5).replace('T', ' ');
-
-    return { minText: leftDisplay, currentText: currentDisplay, maxText: rightDisplay };
+    return { minText: dateIsoToNice(minDate), currentText: dateIsoToNice(currentDate), maxText: dateIsoToNice(maxDate) };
   }, [activeTime, times]);
 
   const setTime = useCallback(() => {
@@ -55,7 +51,7 @@ export const BottomMenu = ({ loginButton, shareButton, paintButton }: BottomMenu
           {activePixel.x !== -1 &&
             <p className='h-fit'>
               Set by {board.get(`${activePixel.x}:${activePixel.y}`)?.username} at {
-                board.get(`${activePixel.x}:${activePixel.y}`) ? (new Date(board.get(`${activePixel.x}:${activePixel.y}`)?.set_time || '')).toISOString() : ''
+                board.get(`${activePixel.x}:${activePixel.y}`) ? dateIsoToNice((new Date(board.get(`${activePixel.x}:${activePixel.y}`)?.set_time || '')).toISOString()) : ''
               }
             </p>
           }
@@ -70,7 +66,7 @@ export const BottomMenu = ({ loginButton, shareButton, paintButton }: BottomMenu
           ) || (
             <button
               className={classNames('px-2 h-8 bg-gray-500 rounded border-2 border-black hover:border-white')}
-              onClick={loginButton}
+              onClick={loginApi}
             >
               Log to paint
             </button>
@@ -114,8 +110,6 @@ export const BottomMenu = ({ loginButton, shareButton, paintButton }: BottomMenu
                 </div>
                 <input
                   className={'w-[400px]'}
-                  // style={{
-                  // }}
                   type={'range'}
                   min={times.min}
                   max={times.max}

@@ -40,7 +40,7 @@ function App() {
 
   return (
     <>
-      <LoginBox loginButton={loginButton} />
+      <LoginBox />
       <RouterProvider router={router} />
 
       <div className="absolute bottom-0 right-0">

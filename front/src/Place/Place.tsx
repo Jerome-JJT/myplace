@@ -16,7 +16,7 @@ import { DisplayCanvas } from './Canvas';
 
 
 export function Place() {
-  const { setPixelInfos, loginButton } = useUser();
+  const { setPixelInfos } = useUser();
   const { pl, board, queryPlace, activePixel, setActivePixel, activeColor, setActiveColor, colors, setBoard, scale } = useCanvas();
 
 
@@ -192,7 +192,6 @@ export function Place() {
       <PaintBar />
 
       <BottomMenu
-        loginButton={loginButton}
         shareButton={shareButton}
         paintButton={paintButton}
       />
