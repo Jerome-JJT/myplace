@@ -5,6 +5,8 @@ import { useNotification } from './NotificationProvider';
 
 interface UserContextProps {
   isLogged: boolean
+  tutoOpen: boolean
+  setTutoOpen: React.Dispatch<React.SetStateAction<boolean>>
   infos: UserInfos | undefined
   getUserData: () => void
   setPixelInfos: (timers: string[]) => void
@@ -23,9 +25,21 @@ export function useUser(): UserContextProps {
   return context;
 }
 
+const baseTutoState = () => {
+  const base = localStorage.getItem('tuto');
+  if (base === null) {
+    localStorage.setItem('tuto', 'yes');
+    return true;
+  }
+  else {
+    return false;
+  }
+};
+
 export function UserProvider({ children }: { children: ReactNode }): JSX.Element {
   const { addNotif } = useNotification();
   const [isLogged, setIsLogged] = useState(false);
+  const [tutoOpen, setTutoOpen] = useState(baseTutoState);
   const [infos, setInfos] = useState<UserInfos | undefined>();
 
   const getUserData = useCallback(() => {
@@ -107,6 +121,8 @@ export function UserProvider({ children }: { children: ReactNode }): JSX.Element
     <UserContext.Provider
       value={{
         isLogged,
+        tutoOpen,
+        setTutoOpen,
         infos,
         getUserData,
         setPixelInfos,

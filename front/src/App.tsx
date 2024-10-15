@@ -15,12 +15,13 @@ import {
   RouterProvider,
 } from 'react-router-dom';
 // import { IoMdSettings } from 'react-icons/io';
-import { IoIosFiling, IoMdMap, IoMdPodium, IoLogoIonitron, IoMdLock, IoMdKey } from 'react-icons/io';
+import { IoIosFiling, IoMdMap, IoMdPodium, IoLogoIonitron, IoMdLock, IoMdKey, IoMdHelpCircle } from 'react-icons/io';
 import { Leaderboard } from './Leaderboard';
 import { NotificationContainer } from './NotificationContainer';
+import { Tutorial } from './Place/Tutorial';
 
 function App() {
-  const { isLogged, getUserData, loginButton, loginApi, logout } = useUser();
+  const { isLogged, getUserData, loginButton, loginApi, logout, setTutoOpen } = useUser();
 
   useEffect(() => {
     getUserData();
@@ -47,6 +48,8 @@ function App() {
 
       <NotificationContainer />
 
+      <Tutorial />
+
       <div className="absolute bottom-0 right-0">
         <SpeedDial>
           <SpeedDialHandler>
@@ -56,6 +59,9 @@ function App() {
             </IconButton>
           </SpeedDialHandler>
           <SpeedDialContent {...quickFix}>
+            <SpeedDialAction {...quickFix} onClick={() => setTutoOpen(true)}>
+              <IoMdHelpCircle />
+            </SpeedDialAction>
             { !isLogged && (
               <SpeedDialAction {...quickFix} onClick={loginButton}>
                 <IoMdKey />
