@@ -46,12 +46,14 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
 
   return (
     <div className='fixed flex bottom-0 w-full pointer-events-none'>
-      <div id='menu' className='mx-auto self-center bg-red-500 flex flex-col pointer-events-auto'>
+      <div id='menu' className='mx-auto self-center bg-gray-400/70 pt-2 rounded-t-lg flex flex-col pointer-events-auto'>
         <div className='self-center my-4 my-auto items-center flex flex-row gap-4'>
           {activePixel.x !== -1 &&
             <p className='h-fit'>
               Set by {board.get(`${activePixel.x}:${activePixel.y}`)?.username} at {
-                board.get(`${activePixel.x}:${activePixel.y}`) ? dateIsoToNice((new Date(board.get(`${activePixel.x}:${activePixel.y}`)?.set_time || '')).toISOString()) : ''
+                board.get(`${activePixel.x}:${activePixel.y}`) ?
+                  dateIsoToNice((new Date(board.get(`${activePixel.x}:${activePixel.y}`)?.set_time || '')).toISOString()) :
+                  ''
               }
             </p>
           }
@@ -81,7 +83,7 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
             </button>
           }
         </div>
-        <div className='self-center w-full bg-green-500 p-2 flex flex-row flex-wrap justify-center gap-2 max-w-[550px]'>
+        <div className='self-center w-full p-2 flex flex-row flex-wrap justify-center gap-2 max-w-[550px]'>
           {
             times === undefined && (
               Array.from(colors.entries()).map((v) => {

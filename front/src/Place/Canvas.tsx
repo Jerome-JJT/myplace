@@ -23,7 +23,6 @@ export const DisplayCanvas = () => {
 
   return (
     <>
-      {activePixel.x !== -1 && <div id="overlay" style={overlayStyle}></div>}
       <canvas
         width={`${CANVAS_X}px`}
         height={`${CANVAS_Y}px`}
@@ -83,6 +82,8 @@ export const DisplayCanvas = () => {
         }}
       >
       </canvas>
+
+      {activePixel.x !== -1 && <div id="overlay" style={overlayStyle}></div>}
 
       { infos?.soft_is_admin && (
         <div className='pointer-events-none absolute top-0 left-0 right-0 bottom-0 border-8 border-red-500' />

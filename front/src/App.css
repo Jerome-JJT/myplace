@@ -79,7 +79,7 @@ canvas {
 
 #overlay {
   position: absolute;
-  z-index: 99;
+  /* z-index: 99; */
   pointer-events: none;
 
   margin-top: 1px;
