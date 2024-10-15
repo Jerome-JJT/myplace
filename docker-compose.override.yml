@@ -18,6 +18,9 @@ services:
 
     restart: "always"
 
+    environment:
+      NODE_ENV: PROD
+
 
   nginx:
     build: 

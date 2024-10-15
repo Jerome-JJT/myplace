@@ -62,7 +62,7 @@ function App() {
             <SpeedDialAction {...quickFix} onClick={() => setTutoOpen(true)}>
               <IoMdHelpCircle color='black' />
             </SpeedDialAction>
-            { !isLogged && (
+            { (!isLogged && import.meta.env.VITE_NODE_ENV === 'DEV') && (
               <SpeedDialAction {...quickFix} onClick={loginButton}>
                 <IoMdKey color='black' />
               </SpeedDialAction>
