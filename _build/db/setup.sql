@@ -61,11 +61,11 @@ INSERT INTO colors (id, corder, name, red, green, blue) VALUES
 (7,   70, 'orange', 230, 126, 34),
 (8,   80, 'brown', 160, 106, 66),
 (9,   90, 'yellow', 241, 196, 15),
-(10, 100, 'lime', 46, 204, 113),
+(10, 100, 'lime', 54, 222, 127),
 (11, 110, 'green', 2, 162, 1),
 (12, 120, 'cyan', 0, 211, 212),
-(13, 130, 'blue', 52, 152, 219),
-(14, 140, 'indigo', 0, 55, 151),
+(13, 130, 'blue', 0, 152, 255),
+(14, 140, 'indigo', 0, 65, 176),
 (15, 150, 'magenta', 207, 110, 228),
 (16, 160, 'purple', 155, 28, 182)
 ON CONFLICT (id) DO UPDATE SET
