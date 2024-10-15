@@ -1,7 +1,7 @@
 declare global {
     namespace NodeJS {
       interface ProcessEnv {
-        //   NODE_ENV: 'development' | 'production';
+        NODE_ENV: string;
         JWT_SECRET: string;
         JWT_EXPIRES_IN: string;
 
@@ -23,6 +23,9 @@ declare global {
         API_UID: string
         API_SECRET: string
         API_CALLBACK: string
+
+        UTC_TIME_START: string
+        UTC_TIME_END: string
       }
     }
   }

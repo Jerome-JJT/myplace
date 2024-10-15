@@ -18,7 +18,10 @@ app.post('/set', authenticateToken, setPixel);
 
 const { mockLogin, apiLogin, apiCallback, logout } = require('./login');
 
-app.post('/login/mock', mockLogin);
+if (process.env.NODE_ENV === 'DEV') {
+    app.get('/login/mock', mockLogin);
+    app.post('/login/mock', mockLogin);
+}
 app.get('/login/api', apiLogin);
 app.get('/login/callback', apiCallback);
 app.get('/logout', logout);

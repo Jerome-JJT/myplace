@@ -60,6 +60,9 @@ services:
       CANVAS_X: ${CANVAS_X}
       CANVAS_Y: ${CANVAS_Y}
 
+      UTC_TIME_START: ${UTC_TIME_START}
+      UTC_TIME_END: ${UTC_TIME_END}
+
       REDIS_HOST: cache
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}

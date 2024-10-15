@@ -36,7 +36,7 @@ INSERT INTO colors (id, name, red, green, blue) VALUES
 ;
 
 -- INSERT INTO users (id, name, email) VALUES (42, 'blur', 'blur');
--- INSERT INTO users (id, name, email) VALUES (92477, 'moi', 'jerome');
+-- INSERT INTO users (id, name, email) VALUES (007, 'moi', 'jerome');
 
 
 -- DO $$

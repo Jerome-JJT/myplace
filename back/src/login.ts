@@ -116,11 +116,6 @@ export const checkAdmin = async (id: number) => {
 }
 
 export const mockLogin = async (req: Request, res: Response) => {
-    const { username } = req.body;
-    if (!username) {
-        return res.status(400).json({ message: 'Username is required' });
-    }
-
     if (await loginUser('moi', res)) { 
         return res.status(200).json({ message: 'Login successful' });
     }

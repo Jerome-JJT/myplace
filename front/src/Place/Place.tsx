@@ -112,6 +112,14 @@ export function Place() {
             if (error.response.status === 425) {
               setPixelInfos(error.response.data.timers);
             }
+            else if (error.response.status === 420) {
+              if (error.response.data.interval > 0) {
+                alert(`Wait for start in ${error.response.data.interval} seconds`);
+              }
+              else {
+                alert(`Over since ${error.response.data.interval} seconds`);
+              }
+            }
             else {
               alert(`${error.response.status} ${error.response.statusText}`);
             }

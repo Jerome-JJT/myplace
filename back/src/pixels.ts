@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 
-import { CANVAS_X, CANVAS_Y, PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER, redisTimeout } from './consts';
+import { CANVAS_X, CANVAS_Y, PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER, redisTimeout, UTC_TIME_END, UTC_TIME_START } from './consts';
 import { Color, LoggedRequest, Pixel } from './types';
 import { redisClient } from './redis';
 import { pool } from './db';
@@ -77,7 +77,6 @@ async function viewTimedBoard(time: string) {
         min_time: '',
         max_time: ''
     }
-    console.log(time);
 
     const time_result = await pool.query(`
         SELECT 
@@ -183,45 +182,57 @@ export const setPixel = async (req: LoggedRequest, res: Response) => {
     const user = req.user!;
     const timers = await getLastUserPixels(user.id)
 
+    const actualDate = Date.now();
+    console.log(UTC_TIME_START, UTC_TIME_END, actualDate);
+
     console.log("PRINT", x, y, color, user);
 
-    if (timers.length < PIXEL_BUFFER_SIZE || (user.soft_is_admin === true && (await checkAdmin(user.id)))) {
-        try {
-            const ret = await pool.query(`
-                INSERT INTO board (x, y, color_id, user_id)
-                VALUES ($1, $2, $3, $4)
-                RETURNING x, y, color_id, (set_time + INTERVAL '1 minute' * $5)::TIMESTAMPTZ AS set_time
-                `, [x, y, color, user.id, PIXEL_MINUTE_TIMER]);
-                
-            const inserted = ret.rows.length === 1 ? ret.rows[0] : null;
-    
-            if (inserted !== null) {
-                const key = `${inserted.x}:${inserted.y}`;
-                const p: Pixel = { username: user.username, color_id: inserted.color_id, set_time: inserted.set_time }
+    if ((UTC_TIME_START < actualDate && actualDate < UTC_TIME_END) || (user.soft_is_admin === true && (await checkAdmin(user.id)))) {
+        if (timers.length < PIXEL_BUFFER_SIZE || (user.soft_is_admin === true && (await checkAdmin(user.id)))) {
+            try {
+                const ret = await pool.query(`
+                    INSERT INTO board (x, y, color_id, user_id)
+                    VALUES ($1, $2, $3, $4)
+                    RETURNING x, y, color_id, (set_time + INTERVAL '1 minute' * $5)::TIMESTAMPTZ AS set_time
+                    `, [x, y, color, user.id, PIXEL_MINUTE_TIMER]);
+                    
+                const inserted = ret.rows.length === 1 ? ret.rows[0] : null;
         
-                await redisClient.set(key, JSON.stringify(p), 'EX', redisTimeout());
+                if (inserted !== null) {
+                    const key = `${inserted.x}:${inserted.y}`;
+                    const p: Pixel = { username: user.username, color_id: inserted.color_id, set_time: inserted.set_time }
+            
+                    await redisClient.set(key, JSON.stringify(p), 'EX', redisTimeout());
 
-                updates.push({ ...p, x: inserted.x, y: inserted.y });
-                timers.unshift(inserted.set_time);
-                return res.status(201).send({
-                    update: { ...p, x: inserted.x, y: inserted.y },
-                    timers: timers
-                });
+                    updates.push({ ...p, x: inserted.x, y: inserted.y });
+                    timers.unshift(inserted.set_time);
+                    return res.status(201).send({
+                        update: { ...p, x: inserted.x, y: inserted.y },
+                        timers: timers
+                    });
+                }
+                else {
+                    return res.status(417).send('Strange insertion error append');
+                }
+            } //
+            catch (err) {
+                console.error(err);
+                return res.status(500).send('Error updating cell.');
             }
-            else {
-                return res.status(417).send('Strange insertion error append');
-            }
-        } //
-        catch (err) {
-            console.error(err);
-            return res.status(500).send('Error updating cell.');
+        }
+        else {
+            console.log('Timeout limit reached');
+            return res.status(425).send({
+                timers: timers,
+                message: 'Too early'
+            });
         }
     }
     else {
-        console.log('Timeout limit reached');
-        return res.status(425).send({
-            timers: timers,
-            message: 'Too early'
+        console.log('Hype incoming');
+        return res.status(420).send({
+            message: 'Enhance your hype',
+            interval: (UTC_TIME_START > actualDate) ? Math.round((UTC_TIME_START - actualDate) / 1000) : Math.round((UTC_TIME_END - actualDate) / 1000),
         });
     }
 }
