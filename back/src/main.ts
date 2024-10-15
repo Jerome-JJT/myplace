@@ -35,7 +35,7 @@ app.get('/leaderboards', getLeaderboards);
 
 setInterval(() => {
     sendUpdates(wss);
-}, 5000);
+}, 500);
 
 const server = app.listen(8080, () => {
     console.log('Server is running on port 8080');
