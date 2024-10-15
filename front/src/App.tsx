@@ -60,28 +60,28 @@ function App() {
           </SpeedDialHandler>
           <SpeedDialContent {...quickFix}>
             <SpeedDialAction {...quickFix} onClick={() => setTutoOpen(true)}>
-              <IoMdHelpCircle />
+              <IoMdHelpCircle color='black' />
             </SpeedDialAction>
             { !isLogged && (
               <SpeedDialAction {...quickFix} onClick={loginButton}>
-                <IoMdKey />
+                <IoMdKey color='black' />
               </SpeedDialAction>
             )}
             { !isLogged && (
               <SpeedDialAction {...quickFix} onClick={loginApi}>
-                <IoLogoIonitron />
+                <IoLogoIonitron color='black' />
               </SpeedDialAction>
             )}
             { isLogged && (
               <SpeedDialAction {...quickFix} onClick={logout}>
-                <IoMdLock />
+                <IoMdLock color='black' />
               </SpeedDialAction>
             )}
             <SpeedDialAction {...quickFix} onClick={() => router.navigate('/leaderboard')}>
-              <IoMdPodium />
+              <IoMdPodium color='black' />
             </SpeedDialAction>
             <SpeedDialAction {...quickFix} onClick={() => router.navigate('/')}>
-              <IoMdMap />
+              <IoMdMap color='black' />
             </SpeedDialAction>
           </SpeedDialContent>
         </SpeedDial>

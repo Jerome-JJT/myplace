@@ -88,6 +88,7 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
                 return (
                   <div key={v[0]} className='text-center'>
                     <div
+                      title={v[1].name}
                       className={classNames('w-14 h-8 rounded border-2 hover:border-white', activeColor === v[0] ? 'border-white' : 'border-black')}
                       style={{ backgroundColor: 'rgb(' + v[1].color + ')' }}
                       onClick={() => {
@@ -95,7 +96,7 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
                       }}
                     >
                     </div>
-                    {v[1].name}
+                    {/* {v[1].name} */}
                   </div>
                 );
               })

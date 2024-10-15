@@ -10,7 +10,8 @@ CREATE TABLE colors (
     name VARCHAR(50),
     red INT CHECK (red >= 0 AND red <= 255),
     green INT CHECK (green >= 0 AND green <= 255),
-    blue INT CHECK (blue >= 0 AND blue <= 255)
+    blue INT CHECK (blue >= 0 AND blue <= 255),
+    corder INT
 );
 
 CREATE TABLE board (
@@ -27,13 +28,54 @@ INSERT INTO colors (id, name, red, green, blue) VALUES
     (1, 'white', 236, 240, 241),
     (2, 'black', 44, 62, 80),
     (3, 'red', 231, 76, 60),
-    (4, 'blue', 52, 152, 219),
+    (4, 'indigo', 52, 152, 219),
     (5, 'yellow', 241, 196, 15),
-    (6, 'green', 46, 204, 113),
+    (6, 'lime', 46, 204, 113),
     (7, 'orange', 230, 126, 34),
     (8, 'purple', 155, 89, 182)
     ON CONFLICT DO NOTHING
 ;
+
+
+
+-- INSERT INTO colors (id, name, red, green, blue) VALUES 
+--     (1, 'white', 236, 240, 241),
+--     (2, 'black', 44, 62, 80),
+--     (3, 'red', 231, 76, 60),
+--     (4, 'indigo', 52, 152, 219),
+--     (5, 'yellow', 241, 196, 15),
+--     (6, 'lime', 46, 204, 113),
+--     (7, 'orange', 230, 126, 34),
+--     (8, 'purple', 155, 89, 182),
+--     ON CONFLICT DO NOTHING
+-- ;
+
+
+INSERT INTO colors (id, corder, name, red, green, blue) VALUES 
+(1,   10, 'white', 236, 240, 241),
+(2,   20, 'lightgray', 165, 180, 190),
+(3,   30, 'darkgray', 105, 121, 135),
+(4,   40, 'black', 44, 62, 80),
+(5,   50, 'pink', 255, 167, 209),
+(6,   60, 'red', 231, 76, 60),
+(7,   70, 'orange', 230, 126, 34),
+(8,   80, 'brown', 160, 106, 66),
+(9,   90, 'yellow', 241, 196, 15),
+(10, 100, 'lime', 46, 204, 113),
+(11, 110, 'green', 2, 162, 1),
+(12, 120, 'cyan', 0, 211, 212),
+(13, 130, 'blue', 52, 152, 219),
+(14, 140, 'indigo', 0, 55, 151),
+(15, 150, 'magenta', 207, 110, 228),
+(16, 160, 'purple', 155, 28, 182)
+ON CONFLICT (id) DO UPDATE SET
+name = EXCLUDED.name,
+corder = EXCLUDED.corder,
+red = EXCLUDED.red,
+green = EXCLUDED.green,
+blue = EXCLUDED.blue;
+
+
 
 -- INSERT INTO users (id, name, email) VALUES (42, 'blur', 'blur');
 -- INSERT INTO users (id, name, email) VALUES (007, 'moi', 'jerome');

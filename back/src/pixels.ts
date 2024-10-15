@@ -129,7 +129,7 @@ async function getColor(): Promise<Color[]> {
     const result = await pool.query(`
         SELECT id, name, red, green, blue
         FROM colors
-        ORDER BY id
+        ORDER BY corder ASC
     `);
 
     return result.rows;
