@@ -20,7 +20,7 @@ export const Tutorial = () => {
         {
           !isLogged && (
             <>
-                Don&apos;t forget to login first <br />
+                Don&apos;t forget to login first <br/><br/>
             </>
           )
         }
