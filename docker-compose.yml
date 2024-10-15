@@ -86,8 +86,6 @@ services:
     working_dir: /app
 
   nginx:
-    
-
     depends_on:
       - front
       - back

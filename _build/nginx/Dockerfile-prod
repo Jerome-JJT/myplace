@@ -7,7 +7,7 @@ WORKDIR /app
 
 COPY front .
 
-RUN yarn install #--production 
+RUN yarn install --production 
 RUN yarn add typescript -g
 RUN yarn build
 
