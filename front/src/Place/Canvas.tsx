@@ -2,7 +2,9 @@
 import { CANVAS_X, CANVAS_Y, MAX_SCALE, MIN_SCALE } from 'src/Utils/consts';
 import { useUser } from 'src/UserProvider';
 import { useCanvas } from './CanvasProvider';
+import { map } from 'src/Utils/map';
 
+const canvasMarginTop = `${map(CANVAS_Y, 100, 1000, 500, 20)}px`;
 
 export const DisplayCanvas = () => {
   const {
@@ -26,6 +28,10 @@ export const DisplayCanvas = () => {
       <canvas
         width={`${CANVAS_X}px`}
         height={`${CANVAS_Y}px`}
+        style={{
+          transform: `scale(${scale}) translate(${translate.x}px, ${translate.y}px)`,
+          marginTop: canvasMarginTop,
+        }}
         ref={pl}
 
         onMouseDown={(e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -75,10 +81,6 @@ export const DisplayCanvas = () => {
           else {
             doZoom(e.pageX, e.pageY, MAX_SCALE);
           }
-        }}
-
-        style={{
-          transform: `scale(${scale}) translate(${translate.x}px, ${translate.y}px)`,
         }}
       >
       </canvas>

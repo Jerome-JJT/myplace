@@ -71,7 +71,8 @@ canvas {
 
   max-height: 100%;
 
-  margin: 500px auto;
+  margin-left: auto;
+  margin-right: auto;
 
   image-rendering: pixelated;
   transform-origin: center center;

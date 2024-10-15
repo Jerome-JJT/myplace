@@ -70,7 +70,7 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
   const [times, setTimes] = useState<{ min: number, max: number } | undefined>(undefined);
 
 
-  const [scale, setScale] = useState(Math.round(Math.max(Math.min(map((CANVAS_X + CANVAS_Y) / 2, 100, 1000, 8, 1), MAX_SCALE), MIN_SCALE)));
+  const [scale, setScale] = useState(Math.round(Math.max(Math.min(1 / ((CANVAS_X + CANVAS_Y) / 2) * 800, MAX_SCALE), MIN_SCALE)));
   const [translate, setTranslate] = useState<Point>({ x: 0, y: 0 });
   const [overlayStyle, setOverlayStyle] = useState({
     width:  `${scale - 2}px`,
