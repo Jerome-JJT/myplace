@@ -56,6 +56,8 @@ export function useCanvas(): CanvasContextProps {
   return context;
 }
 
+export const baseScale = Math.round(Math.max(Math.min(1 / ((CANVAS_X + CANVAS_Y) / 2) * 800, MAX_SCALE), MIN_SCALE));
+
 export function CanvasProvider({ children }: { children: ReactNode }): JSX.Element {
   const { addNotif } = useNotification();
   const pl = useRef<HTMLCanvasElement | null>(null);
@@ -69,8 +71,7 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
   const [activeTime, setActiveTime] = useState(-1);
   const [times, setTimes] = useState<{ min: number, max: number } | undefined>(undefined);
 
-
-  const [scale, setScale] = useState(Math.round(Math.max(Math.min(1 / ((CANVAS_X + CANVAS_Y) / 2) * 800, MAX_SCALE), MIN_SCALE)));
+  const [scale, setScale] = useState(baseScale);
   const [translate, setTranslate] = useState<Point>({ x: 0, y: 0 });
   const [overlayStyle, setOverlayStyle] = useState({
     width:  `${scale - 2}px`,

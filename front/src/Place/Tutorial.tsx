@@ -6,17 +6,16 @@ import {
   DialogFooter,
 } from '@material-tailwind/react';
 import { useUser } from 'src/UserProvider';
+import { QUICK_FIX } from 'src/Utils/types';
 
 export const Tutorial = () => {
   const { isLogged, tutoOpen, setTutoOpen } = useUser();
 
-  const quickFix = { placeholder: '', onPointerEnterCapture: () => {}, onPointerLeaveCapture: () => {} };
-
   return (
-    <Dialog open={tutoOpen} handler={() => setTutoOpen(false)} {...quickFix}>
+    <Dialog open={tutoOpen} handler={() => setTutoOpen(false)} {...QUICK_FIX}>
 
-      <DialogHeader {...quickFix}>Tutorial for FTplace</DialogHeader>
-      <DialogBody {...quickFix}>
+      <DialogHeader {...QUICK_FIX}>Tutorial for FTplace</DialogHeader>
+      <DialogBody {...QUICK_FIX}>
         {
           !isLogged && (
             <>
@@ -32,8 +31,8 @@ export const Tutorial = () => {
         <br/>
         Have fun.<br/>
       </DialogBody>
-      <DialogFooter {...quickFix}>
-        <Button variant="gradient" color="green" onClick={() => setTutoOpen(false)} {...quickFix}>
+      <DialogFooter {...QUICK_FIX}>
+        <Button variant="gradient" color="green" onClick={() => setTutoOpen(false)} {...QUICK_FIX}>
           <span>Close</span>
         </Button>
       </DialogFooter>

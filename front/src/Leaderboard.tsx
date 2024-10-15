@@ -6,6 +6,7 @@ import {
   TabsHeader,
   Tab,
 } from '@material-tailwind/react';
+import { QUICK_FIX } from './Utils/types';
 
 interface leaderboards {
     placed: { name: string, count: number }[] | undefined
@@ -55,18 +56,14 @@ export const Leaderboard = () => {
       });
   }, []);
 
-  const quickFix = { placeholder: undefined, onPointerEnterCapture: undefined, onPointerLeaveCapture: undefined };
-
-
-
   return (
     <div className='rounded-md mx-auto w-fit mt-[5vh] bg-orange-400'>
       <Tabs value={menus[0].id} className='w-96'>
-        <TabsHeader {...quickFix}>
+        <TabsHeader {...QUICK_FIX}>
           {
             menus.map((v) => {
               return (
-                <Tab key={v.id} value={v.id} {...quickFix} onClick={() => setSelectedMenu(v.id)}>
+                <Tab key={v.id} value={v.id} {...QUICK_FIX} onClick={() => setSelectedMenu(v.id)}>
                   {v.name}
                 </Tab>
               );
@@ -96,7 +93,7 @@ export const Leaderboard = () => {
               );
             })) || (
             <div className='py-4 col-span-2 mx-auto'>
-              <Spinner className='m-auto w-12 h-12' {...quickFix} />
+              <Spinner className='m-auto w-12 h-12' {...QUICK_FIX} />
             </div>
           )}
         </div>

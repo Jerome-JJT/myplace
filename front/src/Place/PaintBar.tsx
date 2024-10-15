@@ -40,12 +40,12 @@ export const PaintBar = () => {
 
   return (
     isLogged && (
-      <div className='fixed flex flex-col justify-center top-0 right-4 h-[100%] w-12 pointer-events-none'>
-        <div className='p-1 rounded bg-gray-400/70'>
+      <div className='fixed flex flex-col md:justify-center top-[50px] md:top-0 right-4 h-[100%] w-6 md:w-12 pointer-events-none'>
+        <div className='p-1 rounded bg-gray-400/90'>
           <div className='whitespace-nowrap'>{infos && (infos.pixel_buffer - infos.timers.length)}</div>
           <div>{nextPixelSeconds !== -1 && `${Math.round(nextPixelSeconds)}s`}</div>
 
-          <div className='flex flex-col bg-red-500 h-80'>
+          <div className='flex flex-col bg-red-500 h-40 md:h-80'>
             <div className='grow' />
             <div
               className='bg-cyan-500'

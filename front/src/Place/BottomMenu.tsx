@@ -5,6 +5,10 @@ import { useCanvas } from './CanvasProvider';
 import { useCallback, useMemo, useState } from 'react';
 import { objUrlEncode } from 'src/Utils/objUrlEncode';
 import { dateIsoToNice } from 'src/Utils/dateIsoToNice';
+import { QUICK_FIX } from 'src/Utils/types';
+import { IconButton } from '@material-tailwind/react';
+import { IoMdBrush, IoIosShareAlt } from 'react-icons/io';
+import useBreakpoint from 'src/Utils/useBreakpoint';
 
 interface BottomMenuProps {
   shareButton: (e: React.MouseEvent<HTMLElement> | undefined) => void
@@ -14,6 +18,7 @@ interface BottomMenuProps {
 export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
   const { isLogged, loginApi } = useUser();
   const { queryPlace, activePixel, board, colors, activeColor, setActiveColor, times, activeTime, setActiveTime } = useCanvas();
+  const screen = useBreakpoint();
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -45,43 +50,64 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
   }, [activeTime, queryPlace]);
 
   return (
-    <div className='fixed flex bottom-0 w-full pointer-events-none'>
-      <div id='menu' className='mx-auto self-center bg-gray-400/70 pt-2 rounded-t-lg flex flex-col pointer-events-auto'>
-        <div className='self-center my-4 my-auto items-center flex flex-row gap-4'>
+    <div className='fixed flex bottom-0 w-[80%] text-xs md:w-full md:text-base pointer-events-none  '>
+      <div id='menu' className='mx-auto self-center bg-gray-400/90 pt-2 rounded-tr-lg -md:rounded-t-lg flex flex-col pointer-events-auto'>
+        <div className='self-center w-full pl-4 pr-2 my-4 my-auto items-center flex flex-row gap-2'>
           {activePixel.x !== -1 &&
             <p className='h-fit'>
-              Set by {board.get(`${activePixel.x}:${activePixel.y}`)?.username} at {
+              Set by {board.get(`${activePixel.x}:${activePixel.y}`)?.username} at <br />
+              {
                 board.get(`${activePixel.x}:${activePixel.y}`) ?
                   dateIsoToNice((new Date(board.get(`${activePixel.x}:${activePixel.y}`)?.set_time || '')).toISOString()) :
                   ''
               }
             </p>
           }
+          <div className='grow' />
 
           {isLogged && (
-            <button
-              className={classNames('px-2 h-8 bg-gray-500 rounded border-2 border-black hover:border-white')}
-              onClick={paintButton}
-            >
-              Paint
-            </button>
+            (
+              ['xs', 'sm'].includes(screen) && (
+                <IconButton
+                  onClick={shareButton}
+                  className='w-12 !max-w-12 h-12 !max-h-12 bg-gray-600 rounded-full'
+                  {...QUICK_FIX}>
+                  <IoMdBrush size={24} />
+                </IconButton>
+              ) || (
+                <button
+                  className={classNames('px-2 h-8 bg-gray-500 rounded border-2 border-black hover:border-white')}
+                  onClick={paintButton}
+                >
+                  Paint
+                </button>)
+            )
           ) || (
             <button
               className={classNames('px-2 h-8 bg-gray-500 rounded border-2 border-black hover:border-white')}
               onClick={loginApi}
             >
-              Log to paint
+            Login to paint
             </button>
           )}
 
-          {activePixel.x !== -1 &&
-            <button
-              className={classNames('px-2 h-8 bg-gray-500 rounded border-2 border-black hover:border-white')}
-              onClick={shareButton}
-            >
-              Share pixel
-            </button>
-          }
+          {activePixel.x !== -1 && (
+            ['xs', 'sm'].includes(screen) && (
+              <IconButton
+                onClick={shareButton}
+                className='w-12 !max-w-12 h-12 !max-h-12 bg-gray-600 rounded-full'
+                {...QUICK_FIX}>
+                <IoIosShareAlt />
+              </IconButton>
+            ) || (
+              <button
+                className={classNames('px-2 h-8 bg-gray-500 rounded border-2 border-black hover:border-white')}
+                onClick={shareButton}
+              >
+                Share pixel
+              </button>
+            )
+          )}
         </div>
         <div className='self-center w-full p-2 flex flex-row flex-wrap justify-center gap-2 max-w-[550px]'>
           {
@@ -91,7 +117,7 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
                   <div key={v[0]} className='text-center'>
                     <div
                       title={v[1].name}
-                      className={classNames('w-14 h-8 rounded border-2 hover:border-white', activeColor === v[0] ? 'border-white' : 'border-black')}
+                      className={classNames('w-8 h-6 md:w-14 md:h-8 rounded border-2 hover:border-white', activeColor === v[0] ? 'border-white' : 'border-black')}
                       style={{ backgroundColor: 'rgb(' + v[1].color + ')' }}
                       onClick={() => {
                         setActiveColor(v[0]);

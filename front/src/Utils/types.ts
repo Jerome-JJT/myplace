@@ -28,3 +28,5 @@ export interface UserInfos {
   pixel_buffer: number
   pixel_timer: number
 }
+
+export const QUICK_FIX = { placeholder: '', onPointerEnterCapture: () => {}, onPointerLeaveCapture: () => {} };

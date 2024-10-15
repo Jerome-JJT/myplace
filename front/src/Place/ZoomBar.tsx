@@ -4,9 +4,8 @@ import { MAX_SCALE, MIN_SCALE } from 'src/Utils/consts';
 export const ZoomBar = () => {
   const { scale, setScale } = useCanvas();
 
-
   return (
-    <div className='fixed flex gap-4 text-black top-[50%] left-[-180px] p-1 rounded bg-gray-400/70'
+    <div className='fixed flex gap-4 text-black top-[220px] md:top-[50%] left-[-190px] md:left-[-180px] p-1 rounded bg-gray-400/90'
       style={{
         transform:       'rotate(270deg)',
         transformOrigin: 'center center',

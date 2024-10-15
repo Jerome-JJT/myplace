@@ -19,6 +19,7 @@ import { IoIosFiling, IoMdMap, IoMdPodium, IoLogoIonitron, IoMdLock, IoMdKey, Io
 import { Leaderboard } from './Leaderboard';
 import { NotificationContainer } from './NotificationContainer';
 import { Tutorial } from './Place/Tutorial';
+import { QUICK_FIX } from './Utils/types';
 
 function App() {
   const { isLogged, getUserData, loginButton, loginApi, logout, setTutoOpen } = useUser();
@@ -38,7 +39,6 @@ function App() {
     },
   ]);
 
-  const quickFix = { placeholder: '', onPointerEnterCapture: () => {}, onPointerLeaveCapture: () => {} };
 
   return (
     <>
@@ -53,34 +53,33 @@ function App() {
       <div className="absolute bottom-0 right-0">
         <SpeedDial>
           <SpeedDialHandler>
-            <IconButton className='w-12 !max-w-12 h-12 max-h-12 bg-gray-600 mb-4 mr-4 rounded-full' {...quickFix}>
-              {/* <IoMdSettings size={32}/> */}
+            <IconButton className='w-12 !max-w-12 h-12 max-h-12 bg-gray-600 mb-2 mr-2 md:mb-4 md:mr-4 rounded-full' {...QUICK_FIX}>
               <IoIosFiling size={32} />
             </IconButton>
           </SpeedDialHandler>
-          <SpeedDialContent {...quickFix}>
-            <SpeedDialAction {...quickFix} onClick={() => setTutoOpen(true)}>
+          <SpeedDialContent {...QUICK_FIX}>
+            <SpeedDialAction {...QUICK_FIX} onClick={() => setTutoOpen(true)}>
               <IoMdHelpCircle color='black' />
             </SpeedDialAction>
             { (!isLogged && import.meta.env.VITE_NODE_ENV === 'DEV') && (
-              <SpeedDialAction {...quickFix} onClick={loginButton}>
+              <SpeedDialAction {...QUICK_FIX} onClick={loginButton}>
                 <IoMdKey color='black' />
               </SpeedDialAction>
             )}
             { !isLogged && (
-              <SpeedDialAction {...quickFix} onClick={loginApi}>
+              <SpeedDialAction {...QUICK_FIX} onClick={loginApi}>
                 <IoLogoIonitron color='black' />
               </SpeedDialAction>
             )}
             { isLogged && (
-              <SpeedDialAction {...quickFix} onClick={logout}>
+              <SpeedDialAction {...QUICK_FIX} onClick={logout}>
                 <IoMdLock color='black' />
               </SpeedDialAction>
             )}
-            <SpeedDialAction {...quickFix} onClick={() => router.navigate('/leaderboard')}>
+            <SpeedDialAction {...QUICK_FIX} onClick={() => router.navigate('/leaderboard')}>
               <IoMdPodium color='black' />
             </SpeedDialAction>
-            <SpeedDialAction {...quickFix} onClick={() => router.navigate('/')}>
+            <SpeedDialAction {...QUICK_FIX} onClick={() => router.navigate('/')}>
               <IoMdMap color='black' />
             </SpeedDialAction>
           </SpeedDialContent>
