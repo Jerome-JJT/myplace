@@ -17,7 +17,7 @@ import { useNotification } from 'src/NotificationProvider';
 
 
 export function Place() {
-  const { setPixelInfos } = useUser();
+  const { isLogged, setPixelInfos } = useUser();
   const { addNotif } = useNotification();
   const { pl, board, queryPlace, activePixel, setActivePixel, activeColor, setActiveColor, colors, setBoard, scale } = useCanvas();
 
@@ -76,66 +76,72 @@ export function Place() {
 
   const paintButton = useCallback((e: React.MouseEvent<HTMLElement> | undefined) => {
     e?.currentTarget.blur();
-    if (activePixel.x !== -1 && activePixel.y !== -1) {
-      if (activeColor !== -1) {
-        axios
-          .post('/api/set',
-            {
-              x:     activePixel.x,
-              y:     activePixel.y,
-              color: activeColor,
-            },
-            { withCredentials: true },
-          )
-          .then((res) => {
-            if (res.status === 201) {
-              if (pl.current !== null) {
-                const ctx = pl.current.getContext('2d');
-                if (ctx !== null) {
-                  setBoard((prev) => {
-                    const fut = new Map(prev);
 
-                    const { x, y, ...pixel } = res.data.update as Update;
-                    const color = colors.get(pixel.color_id);
+    if (isLogged) {
+      if (activePixel.x !== -1 && activePixel.y !== -1) {
+        if (activeColor !== -1) {
+          axios
+            .post('/api/set',
+              {
+                x:     activePixel.x,
+                y:     activePixel.y,
+                color: activeColor,
+              },
+              { withCredentials: true },
+            )
+            .then((res) => {
+              if (res.status === 201) {
+                if (pl.current !== null) {
+                  const ctx = pl.current.getContext('2d');
+                  if (ctx !== null) {
+                    setBoard((prev) => {
+                      const fut = new Map(prev);
 
-                    if (color !== undefined && pixel.set_time > (prev.get(`${x}:${y}`)?.set_time || 0)) {
-                      ctx.fillStyle = 'rgb(' + color.color + ')';
-                      ctx.fillRect(x, y, 1, 1);
-                      fut.set(`${x}:${y}`, pixel);
-                    }
-                    return fut;
-                  });
-                  setPixelInfos(res.data.timers);
+                      const { x, y, ...pixel } = res.data.update as Update;
+                      const color = colors.get(pixel.color_id);
+
+                      if (color !== undefined && pixel.set_time > (prev.get(`${x}:${y}`)?.set_time || 0)) {
+                        ctx.fillStyle = 'rgb(' + color.color + ')';
+                        ctx.fillRect(x, y, 1, 1);
+                        fut.set(`${x}:${y}`, pixel);
+                      }
+                      return fut;
+                    });
+                    setPixelInfos(res.data.timers);
+                  }
                 }
               }
-            }
-          })
-          .catch((error) => {
-            if (error.response.status === 425) {
-              setPixelInfos(error.response.data.timers);
-              addNotif('No pixel available to put', 'warning');
-            }
-            else if (error.response.status === 420) {
-              if (error.response.data.interval > 0) {
-                addNotif(`Wait for start in ${error.response.data.interval} seconds`, 'warning');
+            })
+            .catch((error) => {
+              if (error.response.status === 425) {
+                setPixelInfos(error.response.data.timers);
+                addNotif('No pixel available to put', 'warning');
+              }
+              else if (error.response.status === 420) {
+                if (error.response.data.interval > 0) {
+                  addNotif(`Wait for start in ${error.response.data.interval} seconds`, 'warning');
+                }
+                else {
+                  addNotif(`Over since ${error.response.data.interval} seconds`, 'warning');
+                }
               }
               else {
-                addNotif(`Over since ${error.response.data.interval} seconds`, 'warning');
+                addNotif(`${error.response.status} ${error.response.statusText}`, 'error');
               }
-            }
-            else {
-              addNotif(`${error.response.status} ${error.response.statusText}`, 'error');
-            }
-          });
+            });
+        }
+        else {
+          addNotif('Choose a color', 'warning');
+        }
       }
       else {
-        addNotif('Choose a color', 'warning');
+        addNotif('Choose a pixel', 'warning');
       }
     }
     else {
-      addNotif('Choose a pixel', 'warning');
+      addNotif('Login first', 'warning');
     }
-  }, [activeColor, activePixel.x, activePixel.y, addNotif, colors, pl, setBoard, setPixelInfos]);
+  }, [activeColor, activePixel.x, activePixel.y, addNotif, colors, isLogged, pl, setBoard, setPixelInfos]);
 
 
   const shareButton = useCallback(async (e: React.MouseEvent<HTMLElement> | undefined) => {
