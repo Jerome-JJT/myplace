@@ -17,6 +17,7 @@ import {
 // import { IoMdSettings } from 'react-icons/io';
 import { IoIosFiling, IoMdMap, IoMdPodium, IoLogoIonitron, IoMdLock, IoMdKey } from 'react-icons/io';
 import { Leaderboard } from './Leaderboard';
+import { NotificationContainer } from './NotificationContainer';
 
 function App() {
   const { isLogged, getUserData, loginButton, loginApi, logout } = useUser();
@@ -43,6 +44,8 @@ function App() {
       <RouterProvider router={router} />
 
       <LoginBox />
+
+      <NotificationContainer />
 
       <div className="absolute bottom-0 right-0">
         <SpeedDial>

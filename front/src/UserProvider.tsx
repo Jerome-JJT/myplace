@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { useContext, type ReactNode, createContext, useCallback, useState } from 'react';
 import { UserInfos } from './Utils/types';
+import { useNotification } from './NotificationProvider';
 
 interface UserContextProps {
   isLogged: boolean
@@ -23,6 +24,7 @@ export function useUser(): UserContextProps {
 }
 
 export function UserProvider({ children }: { children: ReactNode }): JSX.Element {
+  const { addNotif } = useNotification();
   const [isLogged, setIsLogged] = useState(false);
   const [infos, setInfos] = useState<UserInfos | undefined>();
 
@@ -35,13 +37,15 @@ export function UserProvider({ children }: { children: ReactNode }): JSX.Element
         if (res.status === 200) {
           setIsLogged(true);
           setInfos(res.data.userInfos as UserInfos);
+          addNotif(`Welcome ${(res.data.userInfos as UserInfos).username} !`, 'success');
         }
       })
       .catch(() => {
         setIsLogged(false);
         setInfos({} as UserInfos);
+        // addNotif('Login failed', 'error');
       });
-  }, []);
+  }, [addNotif]);
 
   const setPixelInfos = useCallback((timers: string[]) => {
     if (isLogged) {
@@ -66,11 +70,12 @@ export function UserProvider({ children }: { children: ReactNode }): JSX.Element
         if (res.status === 200) {
           setIsLogged(false);
           setInfos({} as UserInfos);
+          addNotif('Logout success', 'success');
         }
       })
       .catch(() => {
       });
-  }, []);
+  }, [addNotif]);
 
 
   const loginButton = useCallback((e: React.MouseEvent<HTMLElement> | undefined) => {

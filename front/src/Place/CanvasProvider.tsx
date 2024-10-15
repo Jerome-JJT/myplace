@@ -6,6 +6,7 @@ import { objUrlEncode } from 'src/Utils/objUrlEncode';
 import { MIN_SCALE, MAX_SCALE, CANVAS_X, CANVAS_Y } from 'src/Utils/consts';
 import { ColorType, Pixel, Point } from 'src/Utils/types';
 import { map } from 'src/Utils/map';
+import { useNotification } from 'src/NotificationProvider';
 
 interface CanvasContextProps {
   pl: React.MutableRefObject<HTMLCanvasElement | null>,
@@ -56,6 +57,7 @@ export function useCanvas(): CanvasContextProps {
 }
 
 export function CanvasProvider({ children }: { children: ReactNode }): JSX.Element {
+  const { addNotif } = useNotification();
   const pl = useRef<HTMLCanvasElement | null>(null);
 
   const [activePixel, setActivePixel] = useState<Point>({ x: -1, y: -1 });
@@ -154,7 +156,7 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
           .catch((error) => {
             console.log('is too soon', error);
             if (error.response === undefined || error.response.status === 502) {
-              alert('Too soon');
+              addNotif('Too soon, reload in 2 sec', 'info');
             }
             if (cb) {
               cb();

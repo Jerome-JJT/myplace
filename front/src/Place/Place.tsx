@@ -12,11 +12,13 @@ import { BottomMenu } from './BottomMenu';
 import { ZoomBar } from './ZoomBar';
 import { useCanvas } from './CanvasProvider';
 import { DisplayCanvas } from './Canvas';
+import { useNotification } from 'src/NotificationProvider';
 
 
 
 export function Place() {
   const { setPixelInfos } = useUser();
+  const { addNotif } = useNotification();
   const { pl, board, queryPlace, activePixel, setActivePixel, activeColor, setActiveColor, colors, setBoard, scale } = useCanvas();
 
 
@@ -111,28 +113,29 @@ export function Place() {
           .catch((error) => {
             if (error.response.status === 425) {
               setPixelInfos(error.response.data.timers);
+              addNotif('No pixel available to put', 'warning');
             }
             else if (error.response.status === 420) {
               if (error.response.data.interval > 0) {
-                alert(`Wait for start in ${error.response.data.interval} seconds`);
+                addNotif(`Wait for start in ${error.response.data.interval} seconds`, 'warning');
               }
               else {
-                alert(`Over since ${error.response.data.interval} seconds`);
+                addNotif(`Over since ${error.response.data.interval} seconds`, 'warning');
               }
             }
             else {
-              alert(`${error.response.status} ${error.response.statusText}`);
+              addNotif(`${error.response.status} ${error.response.statusText}`, 'error');
             }
           });
       }
       else {
-        alert('Choose a color');
+        addNotif('Choose a color', 'warning');
       }
     }
     else {
-      alert('Choose a pixel');
+      addNotif('Choose a pixel', 'warning');
     }
-  }, [activeColor, activePixel.x, activePixel.y, colors, pl, setBoard, setPixelInfos]);
+  }, [activeColor, activePixel.x, activePixel.y, addNotif, colors, pl, setBoard, setPixelInfos]);
 
 
   const shareButton = useCallback(async (e: React.MouseEvent<HTMLElement> | undefined) => {
@@ -149,12 +152,13 @@ export function Place() {
 
     try {
       await navigator.clipboard.writeText(link);
-      alert('Copied to clipboard');
+      addNotif('Location copied to clipboard', 'info');
     }
-    catch {
-      alert('Unable to copy to clipboard');
+    catch (error) {
+      console.error(error);
+      addNotif('Unable to copy to clipboard', 'error');
     }
-  }, [activePixel.x, activePixel.y, scale]);
+  }, [activePixel.x, activePixel.y, addNotif, scale]);
 
 
   const moveRelative = useCallback((x: number, y: number) => {

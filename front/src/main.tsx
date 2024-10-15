@@ -5,15 +5,18 @@ import './index.css';
 import { ThemeProvider } from '@material-tailwind/react';
 import { UserProvider } from './UserProvider.tsx';
 import { CanvasProvider } from './Place/CanvasProvider.tsx';
+import { NotificationProvider } from './NotificationProvider.tsx';
 
 createRoot(document.getElementById('root')!).render(
   // <StrictMode>
   <ThemeProvider>
-    <UserProvider>
-      <CanvasProvider>
-        <App />
-      </CanvasProvider>
-    </UserProvider>
+    <NotificationProvider>
+      <UserProvider>
+        <CanvasProvider>
+          <App />
+        </CanvasProvider>
+      </UserProvider>
+    </NotificationProvider>
   </ThemeProvider>,
   // </StrictMode>,
 );
