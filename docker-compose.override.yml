@@ -1,0 +1,35 @@
+version: "3.7"
+
+
+services:
+
+  db:
+    restart: "always"
+
+
+  cache:
+    restart: "always"
+
+
+  back:
+    build: 
+      context: .
+      dockerfile: ./_build/node/Dockerfile-prod
+
+    restart: "always"
+
+
+  nginx:
+    build: 
+      context: .
+      dockerfile: ./_build/nginx/Dockerfile-prod
+      args:
+        VITE_NODE_ENV: PROD
+        VITE_CANVAS_X: ${CANVAS_X}
+        VITE_CANVAS_Y: ${CANVAS_Y}
+
+    restart: "always"
+
+    ports:
+     - "8403:80"
+

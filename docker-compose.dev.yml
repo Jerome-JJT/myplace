@@ -17,6 +17,8 @@ services:
 
 
   back:
+    build: ./_build/node
+    
     ports:
       - "8081:8080"
 
@@ -40,8 +42,17 @@ services:
       - ./front:/app
 
     environment:
-      # VITE_NODE_ENV: DEV
+      VITE_NODE_ENV: DEV
       VITE_CANVAS_X: ${CANVAS_X}
       VITE_CANVAS_Y: ${CANVAS_Y}
     
     working_dir: /app
+
+
+  nginx:
+    build: 
+      context: .
+      dockerfile: ./_build/nginx/Dockerfile
+
+    ports:
+     - "7979:80"

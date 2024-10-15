@@ -1,0 +1,11 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY back .
+
+RUN yarn install # --production
+RUN yarn add typescript -g
+RUN yarn build
+
+CMD ["node", "dist/main.js"]
