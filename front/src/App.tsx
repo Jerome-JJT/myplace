@@ -46,7 +46,7 @@ function App() {
       <div className="absolute bottom-0 right-0">
         <SpeedDial>
           <SpeedDialHandler>
-            <IconButton className='w-12 !max-w-12 h-12 max-h-12 bg-gray-600 mb-4 mr-4 rounded-3xl' {...quickFix}>
+            <IconButton className='w-12 !max-w-12 h-12 max-h-12 bg-gray-600 mb-4 mr-4 rounded-full' {...quickFix}>
               {/* <IoMdSettings size={32}/> */}
               <IoIosFiling size={32} />
             </IconButton>

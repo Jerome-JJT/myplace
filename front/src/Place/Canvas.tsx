@@ -1,6 +1,7 @@
 
-import { useCanvas } from './CanvasProvider';
 import { CANVAS_X, CANVAS_Y, MAX_SCALE, MIN_SCALE } from 'src/Utils/consts';
+import { useUser } from 'src/UserProvider';
+import { useCanvas } from './CanvasProvider';
 
 
 export const DisplayCanvas = () => {
@@ -17,6 +18,7 @@ export const DisplayCanvas = () => {
     setIsDragging,
     doZoom,
   } = useCanvas();
+  const { infos } = useUser();
 
 
   return (
@@ -81,6 +83,15 @@ export const DisplayCanvas = () => {
         }}
       >
       </canvas>
+
+      { infos?.soft_is_admin && (
+        <div className='pointer-events-none absolute top-0 left-0 right-0 bottom-0 border-8 border-red-500' />
+      )}
+      { infos?.soft_is_admin && (
+        <div className='pointer-events-none absolute top-0 text-center left-[42%] bg-red-500 p-4 rounded-b-lg'>
+          <b>ADMIN MODE, WARNING</b>
+        </div>
+      )}
     </>
   );
 };

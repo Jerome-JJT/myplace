@@ -83,13 +83,13 @@ const loginUser = async (username: string, res: Response): Promise<boolean> => {
     }
 }
 
-const createUser = async (id: number, username: string, email: string): Promise<boolean> => {
+const createUser = async (id: number, username: string, email: string, admin: boolean): Promise<boolean> => {
     try {
         const result = await pool.query(`
             INSERT INTO users (id, name, email, is_admin) 
             VALUES
-            ($1, $2, $3, FALSE)
-        `, [id, username, email]);
+            ($1, $2, $3, $4)
+        `, [id, username, email, admin]);
     
         return result.rowCount === 1;
     }
@@ -163,7 +163,7 @@ export const apiCallback = async (req: Request, res: Response) => {
                 // return res.status(200).json({ message: 'Login successful' });
             }
             else {
-                if (await createUser(user.data.id, user.data.login, user.data.email)) {
+                if (await createUser(user.data.id, user.data.login, user.data.email, user.data['staff?'])) {
                     if (await loginUser(user.data.login, res)) { 
                         return res.redirect('/')
                         // return res.status(200).json({ message: 'Login successful' });
