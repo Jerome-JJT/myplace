@@ -40,8 +40,9 @@ function App() {
 
   return (
     <>
-      <LoginBox />
       <RouterProvider router={router} />
+
+      <LoginBox />
 
       <div className="absolute bottom-0 right-0">
         <SpeedDial>
