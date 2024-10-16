@@ -151,7 +151,7 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
                 setTimes(undefined);
               }
 
-              if (!Number.isNaN(baseX) && !Number.isNaN(baseY)) {
+              if (time === undefined && !Number.isNaN(baseX) && !Number.isNaN(baseY)) {
                 const setX = Math.max(Math.min(baseX, CANVAS_X - 1), 0);
                 const setY = Math.max(Math.min(baseY, CANVAS_Y - 1), 0);
 

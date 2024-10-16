@@ -9,6 +9,7 @@ import { QUICK_FIX } from 'src/Utils/types';
 import { IconButton } from '@material-tailwind/react';
 import { IoMdBrush, IoIosShareAlt } from 'react-icons/io';
 import useBreakpoint from 'src/Utils/useBreakpoint';
+import { useDebounce } from 'src/Utils/useDebounce';
 
 interface BottomMenuProps {
   shareButton: (e: React.MouseEvent<HTMLElement> | undefined) => void
@@ -19,8 +20,19 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
   const { isLogged, loginApi } = useUser();
   const { queryPlace, activePixel, board, colors, activeColor, setActiveColor, times, activeTime, setActiveTime } = useCanvas();
   const screen = useBreakpoint();
+  const debounceFunction = useDebounce();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isLive, setIsLive] = useState(false);
+  const STEPS = useMemo(() => {
+    return [
+      ['none', undefined],
+      ['hour', 3600],
+      ['minute', 60],
+      ['1/100', (times !== undefined ? (times.max - times.min) : 1) / 100],
+    ];
+  }, [times]);
+  const [stepType, setStepType] = useState<number>(0);
 
   const { minText, currentText, maxText } = useMemo(() => {
     const minDate = times !== undefined && (new Date(times.min * 1000)).toISOString() || '';
@@ -30,9 +42,9 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
     return { minText: dateIsoToNice(minDate), currentText: dateIsoToNice(currentDate), maxText: dateIsoToNice(maxDate) };
   }, [activeTime, times]);
 
-  const setTime = useCallback(() => {
+  const setTime = useCallback((givenTime: number) => {
     setIsLoading(true);
-    const isoTime = (new Date(activeTime * 1000)).toISOString();
+    const isoTime = (new Date(givenTime * 1000)).toISOString();
 
     const params = new URLSearchParams(window.location.search);
     const args = objUrlEncode({
@@ -47,7 +59,7 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
     queryPlace(isoTime, () => {
       setIsLoading(false);
     });
-  }, [activeTime, queryPlace]);
+  }, [queryPlace]);
 
   return (
     <div className='fixed flex bottom-0 text-xs w-[80%] md:w-full md:text-base pointer-events-none'>
@@ -136,26 +148,53 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
                   <div>|</div>
                   <div>{maxText}</div>
                 </div>
-                <input
-                  className={'w-[400px]'}
-                  type={'range'}
-                  min={times.min}
-                  max={times.max}
-                  value={activeTime}
-                  onChange={(e) => {
-                    setActiveTime(parseInt(e.target.value));
-                  }}
-                />
+                <div className='px-4'>
+                  <input
+                    className={'w-full'}
+                    type={'range'}
+                    min={times.min}
+                    max={times.max}
+                    step={STEPS[stepType][1]}
+                    defaultValue={activeTime}
+                    onChange={(e) => {
+                      debounceFunction(() => {
+                        setActiveTime(parseInt(e.target.value));
+                        if (isLive && !isLoading) {
+                          setTime(activeTime);
+                        }
+
+                      }, isLive ? 200 : 0);
+                    }}
+                  />
+                </div>
                 <button
-                  onClick={setTime}
+                  onClick={() => { setTime(activeTime); } }
                   className={classNames(
-                    'w-14 h-8 ml-6 rounded bg-blue-400 border-2 border-black',
+                    'min-w-20 h-8 px-2 mr-4 rounded bg-blue-400 border-2 border-black',
                     isLoading && 'bg-gray-400 pointer-none hover:border-black',
                     !isLoading && 'hover:border-white',
                   )}
                   disabled={isLoading}
                 >
                   View
+                </button>
+                <button
+                  onClick={() => {setStepType((prev) => (prev + 1) % STEPS.length);}}
+                  className={classNames(
+                    'min-w-20 h-8 px-2 ml-4 rounded bg-blue-400 border-2 border-black hover:border-white',
+                    isLive && 'bg-orange-700',
+                  )}
+                >
+                  Step : {STEPS[stepType][0]}
+                </button>
+                <button
+                  onClick={() => {setIsLive((prev) => !prev);}}
+                  className={classNames(
+                    'min-w-20 h-8 px-2 ml-4 rounded bg-blue-400 border-2 border-black hover:border-white',
+                    isLive && 'bg-orange-700',
+                  )}
+                >
+                  {!isLive ? 'Turn on live' : 'Turn off live' }
                 </button>
               </div>
             </div>
