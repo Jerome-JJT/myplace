@@ -3,8 +3,27 @@ import { CANVAS_X, CANVAS_Y, MAX_SCALE, MIN_SCALE } from 'src/Utils/consts';
 import { useUser } from 'src/UserProvider';
 import { baseScale, useCanvas } from './CanvasProvider';
 import { map } from 'src/Utils/map';
+import { useNotification } from 'src/NotificationProvider';
+import { useRef } from 'react';
 
 const canvasMarginTop = `${map(CANVAS_Y, 100, 1000, 500, 20)}px`;
+
+
+const useThrottle = () => {
+  const throttleSeed = useRef<NodeJS.Timeout | null>(null);
+
+  const throttleFunction = useRef((func: any, delay=200) => {
+    if (!throttleSeed.current) {
+      func();
+      throttleSeed.current = setTimeout(() => {
+        throttleSeed.current = null;
+      }, delay);
+    }
+  });
+
+  return throttleFunction.current;
+};
+
 
 export const DisplayCanvas = () => {
   const {
@@ -17,11 +36,16 @@ export const DisplayCanvas = () => {
     canvasMouseMove,
     canvasMouseUp,
     canvasZoomed,
+    canvasClicked,
     setIsDragging,
     doZoom,
+    canvasTouchMove,
+    canvasTouchUp,
   } = useCanvas();
   const { infos } = useUser();
 
+  const { addNotif } = useNotification();
+  const throttleFunction = useThrottle();
 
   return (
     <>
@@ -35,13 +59,14 @@ export const DisplayCanvas = () => {
         ref={pl}
 
         onMouseDown={(e: React.MouseEvent<HTMLCanvasElement>) => {
-          canvasMouseDown(e.pageX, e.pageY);
+          canvasMouseDown(-42, e.pageX, e.pageY);
+          // canvasMouseMove(-42, e.pageX, e.pageY);
         }}
         onMouseMove={(e: React.MouseEvent<HTMLCanvasElement>) => {
-          canvasMouseMove(e.pageX, e.pageY);
+          canvasMouseMove(-42, e.pageX, e.pageY);
         }}
         onMouseUp={(e: React.MouseEvent<HTMLCanvasElement>) => {
-          canvasMouseUp(e.pageX, e.pageY);
+          canvasMouseUp(-42, e.pageX, e.pageY);
         }}
         onWheel={(e: React.WheelEvent<HTMLCanvasElement>) => {
           e.stopPropagation();
@@ -51,24 +76,43 @@ export const DisplayCanvas = () => {
           setIsDragging(0);
         }}
 
-        // onTouchStart={(e) => {
-        //   e.preventDefault();
-        //   console.log('start')
-        //   // console.log('start', e.touches)
-        //   canvasMouseDown(e.touches[0].screenX, e.touches[0].screenY)
-        // }}
-        // onTouchMove={(e) => {
-        //   e.preventDefault();
-        //   console.log('move')
-        //   // console.log('move', e.touches)
-        //   canvasMouseMove(e.touches[0].screenX, e.touches[0].screenY)
-        // }}
-        // onTouchEnd={(e) => {
-        //   // e.preventDefault();
-        //   console.log('end', e.changedTouches[0].screenX, e.changedTouches[0].screenY)
-        //   // console.log('end', e.touches, e)
-        //   // canvasMouseUp(e.changedTouches[0].screenX, e.changedTouches[0].screenY)
-        // }}
+        onTouchStart={(e) => {
+          e.preventDefault();
+          console.log('start', e.changedTouches);
+          if (e.touches.length === 1) {
+            // canvasMouseDown(e.touches[0].identifier, e.touches[0].pageX, e.touches[0].pageY);
+            canvasMouseMove(e.touches[0].identifier, e.touches[0].pageX, e.touches[0].pageY);
+          }
+        }}
+        onTouchMove={(e) => {
+          e.preventDefault();
+          console.log('move', e.changedTouches);
+          // addNotif(`${e.touches.length}`, 'info');
+          if (e.touches.length === 1) {
+            canvasMouseMove(e.touches[0].identifier, e.touches[0].pageX, e.touches[0].pageY);
+          }
+          else if (e.touches.length === 2) {
+
+
+            throttleFunction(() => {canvasTouchMove(e.touches[0], e.touches[1]);}, 50);
+
+          }
+        }}
+        onTouchEnd={(e) => {
+          e.preventDefault();
+          // console.log('end', e);
+          // addNotif(`${e.changedTouches.length}`, 'error');
+          // if (e.changedTouches.length === 1) {
+          canvasMouseUp(e.changedTouches[0].identifier, e.changedTouches[0].pageX, e.changedTouches[0].pageY);
+          // }
+          // else if (e.changedTouches.length === 2) {
+          canvasTouchUp();
+          // }
+        }}
+
+        onTouchCancel={() => {
+          canvasTouchUp();
+        }}
 
         onDoubleClick={(e: React.MouseEvent<HTMLCanvasElement>) => {
           if (scale > (MIN_SCALE + MAX_SCALE) / 2) {
