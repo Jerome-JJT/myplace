@@ -57,30 +57,36 @@ function App() {
               <IoIosFiling size={32} />
             </IconButton>
           </SpeedDialHandler>
-          <SpeedDialContent {...QUICK_FIX}>
-            <SpeedDialAction {...QUICK_FIX} onClick={() => setTutoOpen(true)}>
-              <IoMdHelpCircle color='black' />
+          <SpeedDialContent className='gap-0' {...QUICK_FIX}>
+            <SpeedDialAction className='text-xs w-12 h-12 mb-2 gap-0' {...QUICK_FIX} onClick={() => setTutoOpen(true)}>
+              <IoMdHelpCircle size={20} color='black' />
+              Tuto
             </SpeedDialAction>
             { (!isLogged && import.meta.env.VITE_NODE_ENV === 'DEV') && (
-              <SpeedDialAction {...QUICK_FIX} onClick={loginButton}>
-                <IoMdKey color='black' />
+              <SpeedDialAction className='text-xs w-12 h-12 mb-2  gap-0' {...QUICK_FIX} onClick={loginButton}>
+                <IoMdKey size={20} color='black' />
+                Dev login
               </SpeedDialAction>
             )}
             { !isLogged && (
-              <SpeedDialAction {...QUICK_FIX} onClick={loginApi}>
-                <IoLogoIonitron color='black' />
+              <SpeedDialAction className='text-xs w-12 h-12 mb-2 gap-0' {...QUICK_FIX} onClick={loginApi}>
+                <IoLogoIonitron size={20} color='black' />
+                42 login
               </SpeedDialAction>
             )}
             { isLogged && (
-              <SpeedDialAction {...QUICK_FIX} onClick={logout}>
-                <IoMdLock color='black' />
+              <SpeedDialAction className='text-xs w-12 h-12 mb-2 gap-0' {...QUICK_FIX} onClick={logout}>
+                <IoMdLock size={20} color='black' />
+                Exit
               </SpeedDialAction>
             )}
-            <SpeedDialAction {...QUICK_FIX} onClick={() => router.navigate('/leaderboard')}>
-              <IoMdPodium color='black' />
+            <SpeedDialAction className='text-xs w-12 h-12 mb-2 gap-0' {...QUICK_FIX} onClick={() => router.navigate('/leaderboard')}>
+              <IoMdPodium size={20} color='black' />
+              Stats
             </SpeedDialAction>
-            <SpeedDialAction {...QUICK_FIX} onClick={() => router.navigate('/')}>
-              <IoMdMap color='black' />
+            <SpeedDialAction className='text-xs w-12 h-12 mb-2 gap-0' {...QUICK_FIX} onClick={() => router.navigate('/')}>
+              <IoMdMap size={20} color='black' />
+              Map
             </SpeedDialAction>
           </SpeedDialContent>
         </SpeedDial>
