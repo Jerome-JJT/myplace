@@ -124,7 +124,12 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
                   color: `${c['red']}, ${c['green']}, ${c['blue']}`,
                 });
               });
-              setColors(cols);
+              setColors((prev) => {
+                if (prev.size === cols.size) {
+                  return prev;
+                }
+                return cols;
+              });
 
               const pixs = new Map();
               (res.data.board as Pixel[][]).forEach((column, x) => {
