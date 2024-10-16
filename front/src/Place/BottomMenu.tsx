@@ -97,7 +97,7 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
                 onClick={shareButton}
                 className='w-12 !max-w-12 h-12 !max-h-12 bg-gray-600 rounded-full'
                 {...QUICK_FIX}>
-                <IoIosShareAlt />
+                <IoIosShareAlt size={24} />
               </IconButton>
             ) || (
               <button
