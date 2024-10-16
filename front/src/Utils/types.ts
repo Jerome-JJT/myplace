@@ -14,6 +14,9 @@ export interface Point {
   y: number
 }
 
+export type Vector = Point;
+
+
 export interface ColorType {
     name: string,
     color: string

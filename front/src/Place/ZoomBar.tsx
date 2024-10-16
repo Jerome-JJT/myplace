@@ -25,10 +25,9 @@ export const ZoomBar = () => {
       />
       <p
         className={'w-4'}
-
         style={{
           transform:       'rotate(90deg)',
-          transformOrigin: 'center center',
+          transformOrigin: '30% 33%',
         }}>
         {scale}
       </p>

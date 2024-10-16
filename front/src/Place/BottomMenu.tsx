@@ -50,11 +50,11 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
   }, [activeTime, queryPlace]);
 
   return (
-    <div className='fixed flex bottom-0 w-[80%] text-xs md:w-full md:text-base pointer-events-none  '>
-      <div id='menu' className='mx-auto self-center bg-gray-400/90 pt-2 rounded-tr-lg -md:rounded-t-lg flex flex-col pointer-events-auto'>
-        <div className='self-center w-full pl-4 pr-2 my-4 my-auto items-center flex flex-row gap-2'>
+    <div className='fixed flex bottom-0 text-xs w-[80%] md:w-full md:text-base pointer-events-none'>
+      <div className='mx-auto self-center grow max-w-[550px] bg-gray-400/90 pt-2 rounded-tr-lg md:rounded-t-lg flex flex-col pointer-events-auto'>
+        <div className='text-black self-center w-full pl-2 pr-2 md:px-6 my-4 my-auto items-center flex flex-row gap-2'>
           {activePixel.x !== -1 &&
-            <p className='h-fit'>
+            <p className='h-fit whitespace-nowrap'>
               Set by {board.get(`${activePixel.x}:${activePixel.y}`)?.username} at <br />
               {
                 board.get(`${activePixel.x}:${activePixel.y}`) ?
@@ -84,10 +84,10 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
             )
           ) || (
             <button
-              className={classNames('px-2 h-8 bg-gray-500 rounded border-2 border-black hover:border-white')}
+              className={classNames('px-2 min-h-8 bg-gray-500 rounded border-2 border-black hover:border-white')}
               onClick={loginApi}
             >
-            Login to paint
+              Login to paint
             </button>
           )}
 
@@ -109,26 +109,25 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
             )
           )}
         </div>
-        <div className='self-center w-full p-2 flex flex-row flex-wrap justify-center gap-2 max-w-[550px]'>
-          {
-            times === undefined && (
-              Array.from(colors.entries()).map((v) => {
+        {
+          times === undefined && (
+            <div className='self-center w-full p-2 grid grid-cols-8 justify-center gap-2'>
+              {Array.from(colors.entries()).map((v) => {
                 return (
-                  <div key={v[0]} className='text-center'>
-                    <div
-                      title={v[1].name}
-                      className={classNames('w-8 h-6 md:w-14 md:h-8 rounded border-2 hover:border-white', activeColor === v[0] ? 'border-white' : 'border-black')}
-                      style={{ backgroundColor: 'rgb(' + v[1].color + ')' }}
-                      onClick={() => {
-                        setActiveColor(v[0]);
-                      }}
-                    >
-                    </div>
-                    {/* {v[1].name} */}
+                  <div key={v[0]}
+                    title={v[1].name}
+                    className={classNames('min-w-8 min-h-8 md:min-w-14 md:min-h-8 rounded border-2 hover:border-white', activeColor === v[0] ? 'border-white' : 'border-black')}
+                    style={{ backgroundColor: 'rgb(' + v[1].color + ')' }}
+                    onClick={() => {
+                      setActiveColor(v[0]);
+                    }}
+                  >
                   </div>
                 );
-              })
-            ) || (times !== undefined) && (
+              })}
+            </div>
+          ) || (times !== undefined) && (
+            <div className='self-center w-full p-2 flex flex-row flex-wrap justify-center gap-2'>
               <div className='w-full'>
                 <div className='grid grid-cols-5'>
                   <div>{minText}</div>
@@ -159,9 +158,9 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
                   View
                 </button>
               </div>
-            )
-          }
-        </div>
+            </div>
+          )
+        }
       </div>
     </div>
   );

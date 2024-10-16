@@ -1,5 +1,4 @@
 import jwt from 'jsonwebtoken';
-import https from 'https';
 import { Request, Response } from 'express';
 
 import { PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER } from './consts';

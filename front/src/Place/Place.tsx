@@ -147,8 +147,8 @@ export function Place() {
   const shareButton = useCallback(async (e: React.MouseEvent<HTMLElement> | undefined) => {
     e?.currentTarget.blur();
     const args = objUrlEncode({
-      'x':     activePixel.x,
-      'y':     activePixel.y,
+      'x':     Math.min(Math.max(activePixel.x, 0), CANVAS_X),
+      'y':     Math.min(Math.max(activePixel.y, 0), CANVAS_Y),
       'scale': scale,
     });
 
