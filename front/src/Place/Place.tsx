@@ -119,10 +119,10 @@ export function Place() {
               }
               else if (error.response.status === 420) {
                 if (error.response.data.interval > 0) {
-                  addNotif(`Wait for start in ${error.response.data.interval} seconds`, 'warning');
+                  addNotif(`Wait for start in ${Math.abs(error.response.data.interval)} seconds`, 'warning');
                 }
                 else {
-                  addNotif(`Over since ${error.response.data.interval} seconds`, 'warning');
+                  addNotif(`Over since ${Math.abs(error.response.data.interval)} seconds`, 'warning');
                 }
               }
               else {
