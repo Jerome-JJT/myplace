@@ -4,7 +4,8 @@ declare global {
         NODE_ENV: string;
         JWT_SECRET: string;
         JWT_EXPIRES_IN: string;
-
+        JWT_REFRESH_EXPIRES_IN: string;
+        
         POSTGRES_HOST: string,
         POSTGRES_PORT: string,
         POSTGRES_DB: string,

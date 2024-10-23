@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
 
-import { PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER } from './consts';
+import { JWT_EXPIRES_IN, JWT_REFRESH_EXPIRES_IN, PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER } from './consts';
 import { LoggedRequest, UserInfos } from './types';
 import { pool } from './db';
 import { getLastUserPixels } from './pixels';
@@ -9,8 +9,9 @@ import { objUrlEncode } from './objUrlEncode';
 import axios from 'axios';
 
 
-const checkToken = (req: LoggedRequest, res: Response, next: any, fail: boolean = false) => {
+const checkToken = async (req: LoggedRequest, res: Response, next: any, fail: boolean = false) => {
     const token = req.cookies.token;
+    const refresh = req.cookies.refresh;
     if (!token) {
         if (fail) {
             return res.status(401).json({ message: 'Unauthorized: No token provided' });
@@ -23,13 +24,26 @@ const checkToken = (req: LoggedRequest, res: Response, next: any, fail: boolean 
     else {
         jwt.verify(token, process.env.JWT_SECRET as string, (err: any, decoded: any) => {
             if (err) {
-                if (fail) {
-                    return res.status(403).json({ message: 'Invalid or expired token' });
-                }
-                else {
-                    req.user = undefined;
-                    return next();
-                }
+                jwt.verify(refresh, process.env.JWT_SECRET as string, async (err: any, decoded: any) => {
+                    if (err) {
+                        if (fail) {
+                            return res.status(403).json({ message: 'Invalid or expired token' });
+                        }
+                        else {
+                            req.user = undefined;
+                            return next();
+                        }
+                    }
+                    else {
+                        const logged = await loginUser(decoded.username, res);
+                        if (logged) {
+                            return res.status(426).json({ message: 'Token refreshed' });
+                        }
+                        else {
+                            return res.status(410).json({ message: 'Login failed' });
+                        }
+                    }
+                })
             }
             else 
             {
@@ -40,11 +54,11 @@ const checkToken = (req: LoggedRequest, res: Response, next: any, fail: boolean 
     }
 }
 
-export const queryToken = (req: LoggedRequest, res: Response, next: any) => {
-    return checkToken(req, res, next, false);
+export const queryToken = async (req: LoggedRequest, res: Response, next: any) => {
+    return await checkToken(req, res, next, false);
 }
-export const authenticateToken = (req: LoggedRequest, res: Response, next: any) => {
-    return checkToken(req, res, next, true);
+export const authenticateToken = async (req: LoggedRequest, res: Response, next: any) => {
+    return await checkToken(req, res, next, true);
 }
 
 const loginUser = async (username: string, res: Response): Promise<boolean> => {
@@ -66,14 +80,29 @@ const loginUser = async (username: string, res: Response): Promise<boolean> => {
             } as UserInfos,
             process.env.JWT_SECRET as string, 
             { 
-                expiresIn: process.env.JWT_EXPIRES_IN 
+                expiresIn: JWT_EXPIRES_IN 
+            }
+        );
+        const refresh = jwt.sign(
+            { 
+                id: user.id,
+                username: user.name,
+            } as UserInfos,
+            process.env.JWT_SECRET as string, 
+            { 
+                expiresIn: JWT_REFRESH_EXPIRES_IN 
             }
         );
     
         res.cookie('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            maxAge: 3600000,
+            maxAge: 4 * JWT_EXPIRES_IN * 1000,
+        });
+        res.cookie('refresh', refresh, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 4 * JWT_REFRESH_EXPIRES_IN * 1000,
         });
         return true;
     }

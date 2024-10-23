@@ -1,5 +1,8 @@
 
 
+export const JWT_EXPIRES_IN = parseInt(process.env.JWT_EXPIRES_IN!);
+export const JWT_REFRESH_EXPIRES_IN = parseInt(process.env.JWT_REFRESH_EXPIRES_IN!);
+
 export const PIXEL_BUFFER_SIZE = parseInt(process.env.PIXEL_BUFFER_SIZE!);
 export const PIXEL_MINUTE_TIMER = parseInt(process.env.PIXEL_MINUTE_TIMER!);
 

@@ -1,5 +1,7 @@
-import { useEffect } from 'react';
 import './App.css';
+import { useEffect } from 'react';
+import axios from 'axios';
+
 import { Place } from './Place/Place';
 import { useUser } from './UserProvider';
 import { LoginBox } from './Place/LoginBox';
@@ -39,6 +41,30 @@ function App() {
     },
   ]);
 
+  axios.interceptors.request.use(
+    (req) => {
+      // req.baseURL = '/api';
+      // req.meta.requestStartedAt = new Date().getTime();
+      return req;
+    });
+
+  axios.interceptors.response.use(
+    (response) => {
+      return response;
+    },
+    (error) => {
+      const retries = error.config.retry ?? 0;
+
+      if (error.response.status === 426 && retries === 0) {
+        return axios({ ...error.config, retry: retries + 1 });
+      }
+      else if (error.response.status === 401) {
+        logout();
+      }
+
+      return Promise.reject(error);
+    },
+  );
 
   return (
     <>
