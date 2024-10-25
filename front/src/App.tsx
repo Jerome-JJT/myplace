@@ -4,6 +4,7 @@ import axios from 'axios';
 
 import { Place } from './Place/Place';
 import { useUser } from './UserProvider';
+import { useNotification } from './NotificationProvider';
 import { LoginBox } from './Place/LoginBox';
 import {
   SpeedDial,
@@ -25,6 +26,7 @@ import { QUICK_FIX } from './Utils/types';
 
 function App() {
   const { isLogged, getUserData, loginButton, loginApi, logout, setTutoOpen } = useUser();
+  const { addNotif } = useNotification();
 
   useEffect(() => {
     getUserData();
@@ -53,10 +55,13 @@ function App() {
       return response;
     },
     (error) => {
-      const retries = error.config.retry ?? 0;
+      const retries = error.config?.retry ?? 0;
 
       if (error.response.status === 426 && retries === 0) {
         return axios({ ...error.config, retry: retries + 1 });
+      }
+      else if (error.response.status === 409) {
+        addNotif('Forbidden: Reason: Banned', 'error');
       }
       else if (error.response.status === 401) {
         logout();

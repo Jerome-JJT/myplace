@@ -12,7 +12,7 @@ import axios from 'axios';
 const checkToken = async (req: LoggedRequest, res: Response, next: any, fail: boolean = false) => {
     const token = req.cookies.token;
     const refresh = req.cookies.refresh;
-    if (!token) {
+    if (!token && !refresh) {
         if (fail) {
             return res.status(401).json({ message: 'Unauthorized: No token provided' });
         }
@@ -26,8 +26,10 @@ const checkToken = async (req: LoggedRequest, res: Response, next: any, fail: bo
             if (err) {
                 jwt.verify(refresh, process.env.JWT_SECRET as string, async (err: any, decoded: any) => {
                     if (err) {
+                        res.clearCookie('token');
+                        res.clearCookie('refresh');
                         if (fail) {
-                            return res.status(403).json({ message: 'Invalid or expired token' });
+                            return res.status(401).json({ message: 'Invalid or expired token' });
                         }
                         else {
                             req.user = undefined;
@@ -40,6 +42,8 @@ const checkToken = async (req: LoggedRequest, res: Response, next: any, fail: bo
                             return res.status(426).json({ message: 'Token refreshed' });
                         }
                         else {
+                            res.clearCookie('token');
+                            res.clearCookie('refresh');
                             return res.status(410).json({ message: 'Login failed' });
                         }
                     }
@@ -47,8 +51,13 @@ const checkToken = async (req: LoggedRequest, res: Response, next: any, fail: bo
             }
             else 
             {
-                req.user = decoded;
-                return next();
+                if (decoded.soft_is_banned) {
+                    return res.status(409).json({ message: 'Conflict' });
+                }
+                else {
+                    req.user = decoded;
+                    return next();
+                }
             }
         });
     }
@@ -63,7 +72,7 @@ export const authenticateToken = async (req: LoggedRequest, res: Response, next:
 
 const loginUser = async (username: string, res: Response): Promise<boolean> => {
     const result = await pool.query(`
-        SELECT id, name, email, is_admin
+        SELECT id, name, email, is_admin, banned_at
         FROM users
         WHERE name = $1
         LIMIT 1
@@ -76,7 +85,8 @@ const loginUser = async (username: string, res: Response): Promise<boolean> => {
             { 
                 id: user.id, 
                 username: user.name,
-                soft_is_admin: user.is_admin
+                soft_is_admin: user.is_admin,
+                soft_is_banned: user.banned_at ? true : false,
             } as UserInfos,
             process.env.JWT_SECRET as string, 
             { 
