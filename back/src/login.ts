@@ -106,11 +106,13 @@ const loginUser = async (username: string, res: Response): Promise<boolean> => {
     
         res.cookie('token', token, {
             httpOnly: true,
+            sameSite: "strict",
             secure: process.env.NODE_ENV === 'production',
             maxAge: 4 * JWT_EXPIRES_IN * 1000,
         });
         res.cookie('refresh', refresh, {
             httpOnly: true,
+            sameSite: "strict",
             secure: process.env.NODE_ENV === 'production',
             maxAge: 4 * JWT_REFRESH_EXPIRES_IN * 1000,
         });
