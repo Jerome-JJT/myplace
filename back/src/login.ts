@@ -4,7 +4,7 @@ import { Request, Response } from 'express';
 import { JWT_EXPIRES_IN, JWT_REFRESH_EXPIRES_IN, PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER } from './consts';
 import { LoggedRequest, UserInfos } from './types';
 import { pool } from './db';
-import { getLastUserPixels } from './pixels';
+import { getLastUserPixels } from './pixels_actions';
 import { objUrlEncode } from './objUrlEncode';
 import axios from 'axios';
 
@@ -175,41 +175,48 @@ export const apiLogin = (req: Request, res: Response) => {
 }
 
 export const apiCallback = async (req: Request, res: Response) => {
-    const token = await axios.post('https://api.intra.42.fr/oauth/token', {
-        grant_type: 'authorization_code',
-        client_id: process.env.API_UID,
-        client_secret: process.env.API_SECRET,
-        code: req.query.code,
-        redirect_uri: process.env.API_CALLBACK,
-    }, {})
-
-    if (token.status === 200) {
-        const access_token: string = token.data.access_token;
-
-        const user = await axios.get('https://api.intra.42.fr/v2/me', {
-            headers: {
-                'Authorization': `Bearer ${access_token}`
-            }
-        })
-
-        if (user.status === 200) {
-            if (await loginUser(user.data.login, res)) { 
-                return res.redirect('/')
-                // return res.status(200).json({ message: 'Login successful' });
-            }
-            else {
-                if (await createUser(user.data.id, user.data.login, user.data.email, user.data['staff?'])) {
-                    if (await loginUser(user.data.login, res)) { 
-                        return res.redirect('/')
-                        // return res.status(200).json({ message: 'Login successful' });
+    try {
+        const token = await axios.post('https://api.intra.42.fr/oauth/token', {
+            grant_type: 'authorization_code',
+            client_id: process.env.API_UID,
+            client_secret: process.env.API_SECRET,
+            code: req.query.code,
+            redirect_uri: process.env.API_CALLBACK,
+        }, {})
+    
+        if (token.status === 200) {
+            const access_token: string = token.data.access_token;
+    
+            const user = await axios.get('https://api.intra.42.fr/v2/me', {
+                headers: {
+                    'Authorization': `Bearer ${access_token}`
+                }
+            })
+    
+            if (user.status === 200) {
+                if (await loginUser(user.data.login, res)) { 
+                    return res.redirect('/')
+                    // return res.status(200).json({ message: 'Login successful' });
+                }
+                else {
+                    if (await createUser(user.data.id, user.data.login, user.data.email, user.data['staff?'])) {
+                        if (await loginUser(user.data.login, res)) { 
+                            return res.redirect('/')
+                            // return res.status(200).json({ message: 'Login successful' });
+                        }
+                        else {
+                            return res.status(410).json({ message: 'Login failed' });
+                        }
                     }
                     else {
                         return res.status(410).json({ message: 'Login failed' });
                     }
                 }
-                else {
-                    return res.status(410).json({ message: 'Login failed' });
-                }
+            }
+            else {
+                console.error('LOGIN FAILED');
+                return res.status(410).json({ message: 'Login failed' });
+                // return res.redirect('/')
             }
         }
         else {
@@ -218,10 +225,10 @@ export const apiCallback = async (req: Request, res: Response) => {
             // return res.redirect('/')
         }
     }
-    else {
-        console.error('LOGIN FAILED');
-        return res.status(410).json({ message: 'Login failed' });
-        // return res.redirect('/')
+    catch (e: any) {
+        if (e.status === 401) {
+            return res.status(410).json({ message: 'API login failed' });
+        }
     }
 }
 

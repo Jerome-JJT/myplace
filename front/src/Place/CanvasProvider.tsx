@@ -11,7 +11,7 @@ import { distPoint } from 'src/Utils/mymaths';
 interface CanvasContextProps {
   pl: React.MutableRefObject<HTMLCanvasElement | null>,
 
-  queryPlace: (time: string | undefined, cb: (() => any) | undefined) => void,
+  queryPlace: (time: string | undefined, type: string | undefined, cb: (() => any) | undefined) => void,
 
   activePixel: Point,
   setActivePixel: React.Dispatch<React.SetStateAction<Point>>,
@@ -20,6 +20,7 @@ interface CanvasContextProps {
 
   colors: Map<number, ColorType>,
   board: Map<string, Pixel>,
+  image: string | undefined,
   setBoard: React.Dispatch<React.SetStateAction<Map<string, Pixel>>>,
 
   activeTime: number,
@@ -65,13 +66,16 @@ export const baseScale = Math.round(Math.max(Math.min(1 / ((CANVAS_X + CANVAS_Y)
 export function CanvasProvider({ children }: { children: ReactNode }): JSX.Element {
   const { addNotif } = useNotification();
   const pl = useRef<HTMLCanvasElement | null>(null);
+  // const params = new URLSearchParams(window.location.search);
 
   const [activePixel, setActivePixel] = useState<Point>({ x: -1, y: -1 });
   const [activeColor, setActiveColor] = useState(-1);
 
   const [colors, setColors] = useState<Map<number, ColorType>>(new Map());
   const [board, setBoard] = useState<Map<string, Pixel>>(new Map());
+  const [image, setImage] = useState<string | undefined>(undefined);
 
+  // const startActiveTime = params.get('time') !== null ? ((new Date(params.get('time')).   )) ?? -1
   const [activeTime, setActiveTime] = useState(-1);
   const [times, setTimes] = useState<{ min: number, max: number } | undefined>(undefined);
 
@@ -93,93 +97,106 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
   const [superScale, setSuperScale] = useState(0);
   const [isSuperDragging, setIsSuperDragging] = useState(0);
 
-  const queryPlace = useCallback((time: string | undefined, cb: (() => any) | undefined) => {
+  const queryPlace = useCallback((time: string | undefined, type: string | undefined, cb: (() => any) | undefined) => {
     const params = new URLSearchParams(window.location.search);
     const baseX = parseInt(params.get('x') || '');
     const baseY = parseInt(params.get('y') || '');
     const scale = parseInt(params.get('scale') || '');
 
-    if (pl.current !== null) {
-      const centerX = pl.current.width / 2;
-      const centerY = pl.current.height / 2;
-      const ctx = pl.current.getContext('2d');
 
-      if (ctx !== null) {
 
-        const args = objUrlEncode({
-          'time': time,
-        });
+    const args = objUrlEncode({
+      'time': time,
+      'type': type,
+    });
 
-        axios
-          .get(`/api/get${args.length > 0 ? `?${args}` : ''}`,
-            { withCredentials: true },
-          )
-          .then((res) => {
-            if (res.status === 200) {
+    axios
+      .get(`/api/get${args.length > 0 ? `?${args}` : ''}`,
+        { withCredentials: true },
+      )
+      .then((res) => {
+        if (res.status === 200) {
 
-              const cols = new Map();
-              res.data.colors?.forEach((c: any) => {
-                cols.set(c['id'], {
-                  name:  c['name'],
-                  color: `${c['red']}, ${c['green']}, ${c['blue']}`,
-                });
+          if (res.data.colors !== undefined) {
+            const cols = new Map();
+            res.data.colors.forEach((c: any) => {
+              cols.set(c['id'], {
+                name:  c['name'],
+                color: `${c['red']}, ${c['green']}, ${c['blue']}`,
               });
-              setColors((prev) => {
-                if (prev.size === cols.size) {
-                  return prev;
+            });
+            setColors((prev) => {
+              if (prev.size === cols.size) {
+                return prev;
+              }
+              return cols;
+            });
+
+
+            if (res.data.type === 'image') {
+              setImage(res.data.image);
+            }
+            else {
+
+              if (pl.current !== null) {
+                const centerX = pl.current.width / 2;
+                const centerY = pl.current.height / 2;
+                const ctx = pl.current.getContext('2d');
+
+                if (ctx !== null) {
+                  const pixs = new Map();
+                  (res.data.board as Pixel[][]).forEach((column, x) => {
+                    column.forEach((pixel, y) => {
+                      ctx.fillStyle = 'rgb(' + cols.get(pixel.color_id).color + ')';
+                      ctx.fillRect(x, y, 1, 1);
+                      pixs.set(`${x}:${y}`, pixel);
+                    });
+                  });
+                  setBoard(pixs);
+                  setImage(undefined);
+
+
+                  if (time === undefined && !Number.isNaN(baseX) && !Number.isNaN(baseY)) {
+                    const setX = Math.max(Math.min(baseX, CANVAS_X - 1), 0);
+                    const setY = Math.max(Math.min(baseY, CANVAS_Y - 1), 0);
+
+                    setActivePixel({ x: setX, y: setY });
+                    setScale(Number.isNaN(scale) ? Math.floor(((MIN_SCALE + MAX_SCALE) / 2 + MAX_SCALE) / 2) : scale);
+                    setTranslate({ x: centerX - setX, y: centerY - setY });
+                  }
                 }
-                return cols;
-              });
+              }
+            }
+          }
 
-              const pixs = new Map();
-              (res.data.board as Pixel[][]).forEach((column, x) => {
-                column.forEach((pixel, y) => {
-                  ctx.fillStyle = 'rgb(' + cols.get(pixel.color_id).color + ')';
-                  ctx.fillRect(x, y, 1, 1);
-                  pixs.set(`${x}:${y}`, pixel);
-                });
-              });
-              setBoard(pixs);
-
-              if (res.data.min_time !== undefined && res.data.max_time !== undefined) {
-                setTimes({ min: res.data.min_time, max: res.data.max_time });
-                setActiveTime((prev) => {
-                  if (prev < res.data.min_time || prev > res.data.max_time) {
-                    return res.data.max_time;
-                  }
-                  else {
-                    return prev;
-                  }
-                });
+          if (res.data.min_time !== undefined && res.data.max_time !== undefined) {
+            setTimes({ min: res.data.min_time, max: res.data.max_time });
+            setActiveTime((prev) => {
+              if (prev < res.data.min_time || prev > res.data.max_time) {
+                return res.data.max_time;
               }
               else {
-                setTimes(undefined);
+                return prev;
               }
-
-              if (time === undefined && !Number.isNaN(baseX) && !Number.isNaN(baseY)) {
-                const setX = Math.max(Math.min(baseX, CANVAS_X - 1), 0);
-                const setY = Math.max(Math.min(baseY, CANVAS_Y - 1), 0);
-
-                setActivePixel({ x: setX, y: setY });
-                setScale(Number.isNaN(scale) ? Math.floor(((MIN_SCALE + MAX_SCALE) / 2 + MAX_SCALE) / 2) : scale);
-                setTranslate({ x: centerX - setX, y: centerY - setY });
-              }
-            }
-            if (cb) {
-              cb();
-            }
-          })
-          .catch((error) => {
-            console.log('is too soon', error);
-            if (error.response === undefined || error.response.status === 502) {
-              addNotif('Too soon, server not ready, reload in 2 sec', 'info');
-            }
-            if (cb) {
-              cb();
-            }
-          });
-      }
-    }
+            });
+          }
+          else {
+            setTimes(undefined);
+          }
+        }
+        if (cb) {
+          cb();
+        }
+      })
+      .catch((error) => {
+        console.log('is too soon', error);
+        if (error.response === undefined || error.response.status === 502) {
+          addNotif('Too soon, server not ready, reload in 2 sec', 'info');
+        }
+        if (cb) {
+          cb();
+        }
+      });
   }, [addNotif]);
 
 
@@ -447,6 +464,7 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
 
         colors,
         board,
+        image,
         setBoard,
 
         activeTime,

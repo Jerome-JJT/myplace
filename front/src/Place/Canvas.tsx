@@ -5,11 +5,12 @@ import { baseScale, useCanvas } from './CanvasProvider';
 import { map } from 'src/Utils/map';
 import { useThrottle } from 'src/Utils/useThrottle';
 
-const canvasMarginTop = `${map(CANVAS_Y, 100, 1000, 500, 20)}px`;
+export const canvasMarginTop = `${map(CANVAS_Y, 100, 1000, 500, 20)}px`;
 
 export const DisplayCanvas = () => {
   const {
     pl,
+    image,
     activePixel,
     overlayStyle,
     translate,
@@ -30,11 +31,13 @@ export const DisplayCanvas = () => {
   return (
     <>
       <canvas
+        className='canvas_display'
         width={`${CANVAS_X}px`}
         height={`${CANVAS_Y}px`}
         style={{
           transform: `scale(${scale}) translate(${translate.x}px, ${translate.y}px)`,
           marginTop: canvasMarginTop,
+          display:   (image === undefined ? 'block' : 'none'),
         }}
         ref={pl}
 

@@ -10,9 +10,11 @@ app.use(cookieParser());
 
 
 const { queryToken, authenticateToken, profile } = require('./login');
-const { getPixels, setPixel } = require('./pixels');
+const { getPixels, getImage } = require('./pixels');
+const { setPixel } = require('./pixels_actions');
 
 app.get('/get', queryToken, getPixels);
+app.get('/getimage', authenticateToken, getImage);
 app.post('/set', authenticateToken, setPixel);
 
 

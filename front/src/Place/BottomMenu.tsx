@@ -21,9 +21,11 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
   const { queryPlace, activePixel, board, colors, activeColor, setActiveColor, times, activeTime, setActiveTime } = useCanvas();
   const screen = useBreakpoint();
   const debounceFunction = useDebounce();
+  const params = new URLSearchParams(window.location.search);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isLive, setIsLive] = useState(false);
+  const [isImage, setIsImage] = useState(params.get('type') === 'image');
   const STEPS = useMemo(() => {
     return [
       ['none', undefined],
@@ -56,7 +58,27 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
     const link = `${base}?${args}`;
     window.history.replaceState(null, '', link);
 
-    queryPlace(isoTime, () => {
+    queryPlace(isoTime, params.get('type') ?? 'board', () => {
+      setIsLoading(false);
+    });
+  }, [queryPlace]);
+
+  const switchIsImage = useCallback((localIsImage: boolean) => {
+    setIsLoading(true);
+    const localType = !localIsImage ? 'image' : 'board';
+    setIsImage((prev) => !prev);
+
+    const params = new URLSearchParams(window.location.search);
+    const args = objUrlEncode({
+      ...Object.fromEntries(params),
+      'type': localType,
+    });
+
+    const base = `${window.location.origin}${window.location.pathname}`;
+    const link = `${base}?${args}`;
+    window.history.replaceState(null, '', link);
+
+    queryPlace(params.get('time') ?? undefined, localType, () => {
       setIsLoading(false);
     });
   }, [queryPlace]);
@@ -178,6 +200,18 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
                 >
                   View
                 </button>
+
+                <button
+                  onClick={() => {switchIsImage(isImage); } }
+                  className={classNames(
+                    'min-w-20 h-8 px-2 mr-4 rounded bg-blue-400 border-2 border-black',
+                    isLoading && 'bg-gray-400 pointer-none hover:border-black',
+                    !isLoading && 'hover:border-white',
+                  )}
+                >
+                  {!isImage ? 'Switch to image' : 'Switch to canvas' }
+                </button>
+
                 <button
                   onClick={() => {setStepType((prev) => (prev + 1) % STEPS.length);}}
                   className={classNames(
@@ -187,6 +221,7 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
                 >
                   Step : {STEPS[stepType][0]}
                 </button>
+
                 <button
                   onClick={() => {setIsLive((prev) => !prev);}}
                   className={classNames(

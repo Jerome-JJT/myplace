@@ -11,7 +11,7 @@ import { PaintBar } from './PaintBar';
 import { BottomMenu } from './BottomMenu';
 import { ZoomBar } from './ZoomBar';
 import { useCanvas } from './CanvasProvider';
-import { DisplayCanvas } from './Canvas';
+import { canvasMarginTop, DisplayCanvas } from './Canvas';
 import { useNotification } from 'src/NotificationProvider';
 
 
@@ -19,7 +19,7 @@ import { useNotification } from 'src/NotificationProvider';
 export function Place() {
   const { isLogged, setPixelInfos } = useUser();
   const { addNotif } = useNotification();
-  const { pl, board, queryPlace, activePixel, setActivePixel, activeColor, setActiveColor, colors, setBoard, scale } = useCanvas();
+  const { pl, board, image, queryPlace, activePixel, setActivePixel, activeColor, setActiveColor, colors, setBoard, scale } = useCanvas();
 
 
   useEffect(() => {
@@ -71,7 +71,7 @@ export function Place() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    queryPlace(params.get('time') || undefined, undefined);
+    queryPlace(params.get('time') ?? undefined, params.get('type') ?? 'board', undefined);
   }, [board.size, queryPlace]);
 
   const paintButton = useCallback((e: React.MouseEvent<HTMLElement> | undefined) => {
@@ -203,6 +203,16 @@ export function Place() {
     <>
       <Controls onMove={moveRelative} onAction={paintButton} onNumeric={numericAction} />
 
+      <img
+        className='canvas_display'
+        width={`${CANVAS_X}px`}
+        height={`${CANVAS_Y}px`}
+        style={{
+          transform: `scale(${scale})`,
+          marginTop: canvasMarginTop,
+          display:   (image !== undefined ? 'block' : 'none'),
+        }}
+        src={`data:image/png;base64,${image}`} />
       <DisplayCanvas />
 
       <ZoomBar />
