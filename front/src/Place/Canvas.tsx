@@ -26,6 +26,7 @@ export const DisplayCanvas = () => {
   } = useCanvas();
   const { infos } = useUser();
   const throttleFunction = useThrottle();
+  const params = new URLSearchParams(window.location.search);
 
 
   return (
@@ -94,16 +95,21 @@ export const DisplayCanvas = () => {
       >
       </canvas>
 
-      {activePixel.x !== -1 && <div id="overlay" style={overlayStyle}></div>}
-
-      { infos?.soft_is_admin && (
-        <div className='pointer-events-none absolute top-0 left-0 right-0 bottom-0 border-8 border-red-500' />
-      )}
-      { infos?.soft_is_admin && (
-        <div className='pointer-events-none absolute top-0 text-center left-[20%] md:left-[42%] bg-red-500 p-4 rounded-b-lg'>
-          <b>ADMIN MODE, WARNING</b>
-        </div>
-      )}
+      {
+        params.get('view') == null && activePixel.x !== -1 && (
+          <>
+            <div id="overlay" style={overlayStyle}></div>
+            { infos?.soft_is_admin && (
+              <div className='pointer-events-none absolute top-0 left-0 right-0 bottom-0 border-8 border-red-500' />
+            )}
+            { infos?.soft_is_admin && (
+              <div className='pointer-events-none absolute top-0 text-center left-[20%] md:left-[42%] bg-red-500 p-4 rounded-b-lg'>
+                <b>ADMIN MODE, WARNING</b>
+              </div>
+            )}
+          </>
+        )
+      }
     </>
   );
 };

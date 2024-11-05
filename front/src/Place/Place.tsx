@@ -20,6 +20,7 @@ export function Place() {
   const { isLogged, setPixelInfos } = useUser();
   const { addNotif } = useNotification();
   const { pl, board, image, queryPlace, activePixel, setActivePixel, activeColor, setActiveColor, colors, setBoard, scale } = useCanvas();
+  const params = new URLSearchParams(window.location.search);
 
 
   useEffect(() => {
@@ -201,7 +202,9 @@ export function Place() {
 
   return (
     <>
-      <Controls onMove={moveRelative} onAction={paintButton} onNumeric={numericAction} />
+      { params.get('view') == null && (
+        <Controls onMove={moveRelative} onAction={paintButton} onNumeric={numericAction} />
+      )}
 
       <img
         className='canvas_display'
@@ -215,14 +218,20 @@ export function Place() {
         src={`data:image/png;base64,${image}`} />
       <DisplayCanvas />
 
-      <ZoomBar />
+      {
+        params.get('view') == null && (
+          <>
+            <ZoomBar />
 
-      <PaintBar />
+            <PaintBar />
 
-      <BottomMenu
-        shareButton={shareButton}
-        paintButton={paintButton}
-      />
+            <BottomMenu
+              shareButton={shareButton}
+              paintButton={paintButton}
+            />
+          </>
+        )
+      }
     </>
   );
 }

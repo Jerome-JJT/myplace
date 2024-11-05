@@ -104,7 +104,6 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
     const scale = parseInt(params.get('scale') || '');
 
 
-
     const args = objUrlEncode({
       'time': time,
       'type': type,
@@ -161,8 +160,10 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
                     const setY = Math.max(Math.min(baseY, CANVAS_Y - 1), 0);
 
                     setActivePixel({ x: setX, y: setY });
-                    setScale(Number.isNaN(scale) ? Math.floor(((MIN_SCALE + MAX_SCALE) / 2 + MAX_SCALE) / 2) : scale);
                     setTranslate({ x: centerX - setX, y: centerY - setY });
+                  }
+                  if (time === undefined) {
+                    setScale(Number.isNaN(scale) ? Math.floor(((MIN_SCALE + MAX_SCALE) / 2 + MAX_SCALE) / 2) : scale);
                   }
                 }
               }
