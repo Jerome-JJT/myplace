@@ -1,7 +1,7 @@
 
 import { CANVAS_X, CANVAS_Y, MAX_SCALE, MIN_SCALE } from 'src/Utils/consts';
 import { useUser } from 'src/UserProvider';
-import { baseScale, useCanvas } from './CanvasProvider';
+import { initScale, useCanvas } from './CanvasProvider';
 import { map } from 'src/Utils/map';
 import { useThrottle } from 'src/Utils/useThrottle';
 
@@ -86,7 +86,7 @@ export const DisplayCanvas = () => {
 
         onDoubleClick={(e: React.MouseEvent<HTMLCanvasElement>) => {
           if (scale > (MIN_SCALE + MAX_SCALE) / 2) {
-            doZoom(e.pageX, e.pageY, baseScale);
+            doZoom(e.pageX, e.pageY, initScale);
           }
           else {
             doZoom(e.pageX, e.pageY, MAX_SCALE);

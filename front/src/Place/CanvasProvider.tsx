@@ -61,7 +61,7 @@ export function useCanvas(): CanvasContextProps {
   return context;
 }
 
-export const baseScale = Math.round(Math.max(Math.min(1 / ((CANVAS_X + CANVAS_Y) / 2) * 800, MAX_SCALE), MIN_SCALE));
+export const initScale = Math.round(Math.max(Math.min(1 / ((CANVAS_X + CANVAS_Y) / 2) * 800, MAX_SCALE), MIN_SCALE));
 
 export function CanvasProvider({ children }: { children: ReactNode }): JSX.Element {
   const { addNotif } = useNotification();
@@ -79,7 +79,7 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
   const [activeTime, setActiveTime] = useState(-1);
   const [times, setTimes] = useState<{ min: number, max: number } | undefined>(undefined);
 
-  const [scale, setScale] = useState(baseScale);
+  const [scale, setScale] = useState(initScale);
   const [translate, setTranslate] = useState<Point>({ x: 0, y: 0 });
   const [overlayStyle, setOverlayStyle] = useState({
     width:  `${scale - 2}px`,
@@ -101,7 +101,7 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
     const params = new URLSearchParams(window.location.search);
     const baseX = parseInt(params.get('x') || '');
     const baseY = parseInt(params.get('y') || '');
-    const scale = parseInt(params.get('scale') || '');
+    const baseScale = parseInt(params.get('scale') || '');
 
 
     const args = objUrlEncode({
@@ -162,8 +162,8 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
                     setActivePixel({ x: setX, y: setY });
                     setTranslate({ x: centerX - setX, y: centerY - setY });
                   }
-                  if (time === undefined) {
-                    setScale(Number.isNaN(scale) ? Math.floor(((MIN_SCALE + MAX_SCALE) / 2 + MAX_SCALE) / 2) : scale);
+                  if (time === undefined && !Number.isNaN(baseScale)) {
+                    setScale(baseScale);
                   }
                 }
               }
