@@ -64,7 +64,7 @@ function App() {
       else if (error.response.status === 409) {
         addNotif('Forbidden: Reason: Banned', 'error');
       }
-      else if (error.response.status === 401) {
+      else if (error.response.status === 401 && isLogged) {
         logout();
       }
 
