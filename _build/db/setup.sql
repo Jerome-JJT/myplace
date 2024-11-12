@@ -1,12 +1,12 @@
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50),
     email VARCHAR(250),
     is_admin BOOLEAN DEFAULT FALSE,
-    banned_at TIMESTAMP DEFAULT NULL,
+    banned_at TIMESTAMP DEFAULT NULL
 );
 
-CREATE TABLE colors (
+CREATE TABLE IF NOT EXISTS colors (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50),
     red INT CHECK (red >= 0 AND red <= 255),
@@ -15,7 +15,7 @@ CREATE TABLE colors (
     corder INT
 );
 
-CREATE TABLE board (
+CREATE TABLE IF NOT EXISTS board (
     x INT NOT NULL,
     y INT NOT NULL,
     color_id INT REFERENCES colors(id) ON DELETE SET NULL,
@@ -25,17 +25,17 @@ CREATE TABLE board (
 );
 
 
-INSERT INTO colors (id, name, red, green, blue) VALUES 
-    (1, 'white', 236, 240, 241),
-    (2, 'black', 44, 62, 80),
-    (3, 'red', 231, 76, 60),
-    (4, 'indigo', 52, 152, 219),
-    (5, 'yellow', 241, 196, 15),
-    (6, 'lime', 46, 204, 113),
-    (7, 'orange', 230, 126, 34),
-    (8, 'purple', 155, 89, 182)
-    ON CONFLICT DO NOTHING
-;
+-- INSERT INTO colors (id, name, red, green, blue) VALUES 
+--     (1, 'white', 236, 240, 241),
+--     (2, 'black', 44, 62, 80),
+--     (3, 'red', 231, 76, 60),
+--     (4, 'indigo', 52, 152, 219),
+--     (5, 'yellow', 241, 196, 15),
+--     (6, 'lime', 46, 204, 113),
+--     (7, 'orange', 230, 126, 34),
+--     (8, 'purple', 155, 89, 182)
+--     ON CONFLICT DO NOTHING
+-- ;
 
 
 
