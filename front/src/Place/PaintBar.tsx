@@ -43,7 +43,7 @@ export const PaintBar = () => {
       <div className='fixed flex flex-col md:justify-center top-[50px] md:top-0 right-4 h-[100%] w-6 md:w-12 pointer-events-none'>
         <div className='p-1 rounded bg-gray-400/90'>
           <div className='whitespace-nowrap'>{infos && (infos.pixel_buffer - infos.timers.length)}</div>
-          <div className='text-sm'>{nextPixelSeconds !== -1 && (
+          <div className='text-xs'>{nextPixelSeconds !== -1 && (
             nextPixelSeconds < 60 ? `${Math.round(nextPixelSeconds)}s` : `${Math.round((nextPixelSeconds / 60) * 10) / 10}m`
           )}</div>
 

@@ -55,7 +55,7 @@ export const setPixel = async (req: LoggedRequest, res: Response) => {
                     });
                 }
                 else {
-                    return res.status(417).send('Strange insertion error append');
+                    return res.status(417).send('Strange insertion error appened');
                 }
             } //
             catch (err) {
