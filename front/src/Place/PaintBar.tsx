@@ -43,14 +43,20 @@ export const PaintBar = () => {
       <div className='fixed flex flex-col md:justify-center top-[50px] md:top-0 right-4 h-[100%] w-6 md:w-12 pointer-events-none'>
         <div className='p-1 rounded bg-gray-400/90'>
           <div className='whitespace-nowrap'>{infos && (infos.pixel_buffer - infos.timers.length)}</div>
-          <div>{nextPixelSeconds !== -1 && `${Math.round(nextPixelSeconds)}s`}</div>
+          <div className='text-sm'>{nextPixelSeconds !== -1 && (
+            nextPixelSeconds < 60 ? `${Math.round(nextPixelSeconds)}s` : `${Math.round((nextPixelSeconds / 60) * 10) / 10}m`
+          )}</div>
 
-          <div className='flex flex-col bg-red-500 h-40 md:h-80'>
+          <div className='flex flex-col h-40 md:h-80' style={{
+            backgroundColor: 'rgb(128,0,0)',
+            backgroundImage: 'linear-gradient(180deg, rgba(128,0,0,1) 0%, rgba(204,0,0,1) 50%)',
+          }}>
             <div className='grow' />
             <div
-              className='bg-cyan-500'
               style={{
                 height: `${infos && (100 - infos.timers.length / infos.pixel_buffer * 100)}%`,
+                backgroundColor: 'rgb(87,226,235)',
+                backgroundImage: 'linear-gradient(180deg, rgba(87,226,235,1) 0%, rgba(0,128,128,1) 100%)',
               }}>
             </div>
           </div>
