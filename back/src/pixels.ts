@@ -70,20 +70,26 @@ async function initializeBoard() {
     return board;
 }
 
-async function viewTimedBoard(time: string) {
+async function viewTimedBoard(time: string, {user_id = null}: {user_id?: string | null}) {
     const board: (Pixel | null)[][] = [];
     
+    console.log('22222', user_id);
     const result = await pool.query(`
         SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.name, ranked_board.set_time::TIMESTAMPTZ
         FROM (
             SELECT x, y, user_id, color_id, set_time,
                 ROW_NUMBER() OVER (PARTITION BY x, y ORDER BY set_time DESC) as rn
             FROM board
-            WHERE board.set_time < $1
+            JOIN users ON users.id = board.user_id
+            WHERE board.set_time < $1 AND
+            ($2 IS NULL OR 
+                (CAST($2 AS INTEGER) IS NOT NULL AND users.id = $2) OR
+                (CAST($2 AS VARCHAR) IS NOT NULL AND users.name = $2)
+            )
         ) as ranked_board
         LEFT JOIN users ON users.id = ranked_board.user_id
         WHERE rn = 1
-    `, [time]);
+    `, [time, user_id]);
     const mapResults = new Map();
     result.rows.forEach((v) => {
         mapResults.set(`${v.x}:${v.y}`, v)
@@ -108,19 +114,24 @@ async function viewTimedBoard(time: string) {
 }
 
 
-async function createBoardImage(time: string, scale: number = 1, transparent: boolean = false) {
+async function createBoardImage(time: string, {scale = 1, transparent = false, user_id = null}: {scale?: number, transparent?: boolean, user_id?: string | null}) {
     const result = await pool.query(`
         SELECT ranked_board.x, ranked_board.y, users.name, ranked_board.set_time::TIMESTAMPTZ, colors.red, colors.green, colors.blue
         FROM (
             SELECT x, y, user_id, color_id, set_time,
                 ROW_NUMBER() OVER (PARTITION BY x, y ORDER BY set_time DESC) as rn
             FROM board
-            WHERE board.set_time < $1
+            JOIN users ON users.id = board.user_id
+            WHERE board.set_time < $1 AND
+            ($2 IS NULL OR 
+                (CAST($2 AS INTEGER) IS NOT NULL AND users.id = $2) OR
+                (CAST($2 AS VARCHAR) IS NOT NULL AND users.name = $2)
+            )
         ) as ranked_board
         LEFT JOIN users ON users.id = ranked_board.user_id
         JOIN colors ON colors.id = ranked_board.color_id
         WHERE rn = 1
-    `, [time]);
+    `, [time, user_id]);
     const mapResults = new Map();
     result.rows.forEach((v) => {
         mapResults.set(`${v.x}:${v.y}`, v)
@@ -196,9 +207,13 @@ export const getPixels = async (req: LoggedRequest, res: Response) => {
         if (req.query.time !== undefined && (req.user?.soft_is_admin === true && await checkAdmin(req.user?.id))) {
             const {min_time, max_time} = await getTimes();
 
+            console.log(req.query, typeof(req.query.user_id))
+
             if (req.query.type === 'image') {
 
-                const {canvas} = await createBoardImage(new Date(req.query.time as string).toISOString());
+                const {canvas} = await createBoardImage(new Date(req.query.time as string).toISOString(), {
+                    user_id: req.query.user_id as string || null
+                });
 
                 const buffer = canvas.toBuffer('image/png');
                 const image = buffer.toString('base64');
@@ -213,7 +228,9 @@ export const getPixels = async (req: LoggedRequest, res: Response) => {
 
             }
             else {
-                const {board} = await viewTimedBoard(new Date(req.query.time as string).toISOString());
+                const {board} = await viewTimedBoard(new Date(req.query.time as string).toISOString(), {
+                    user_id: req.query.user_id as string || null
+                });
                 
                 return res.status(200).json({
                     colors: colors, 
@@ -249,7 +266,11 @@ export const getImage = async (req: LoggedRequest, res: Response) => {
             const time = askedTime !== undefined ? new Date(askedTime as string) : new Date();
             const scale = !Number.isNaN(askedScale) ? askedScale : 8;
 
-            const {canvas} = await createBoardImage(time.toISOString(), scale, req.query.transparent !== undefined);
+            const {canvas} = await createBoardImage(time.toISOString(), {
+                scale: scale, 
+                transparent: req.query.transparent !== undefined,
+                user_id: req.query.user_id as string || null
+            });
 
             res.setHeader('Content-Type', 'image/png');
             return canvas.pngStream().pipe(res);
