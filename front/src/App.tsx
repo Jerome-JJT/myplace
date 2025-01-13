@@ -77,6 +77,28 @@ function App() {
       <RouterProvider router={router} />
 
       {
+        params.get('ads') != null && (
+          <>
+            <div className='absolute top-0 text-center left-[20%] md:left-[32%] bg-white text-blue-400 text-6xl p-6 rounded-b-lg'>
+              <u>https://ftplace.42lwatch.ch</u>
+            </div>
+            <div className='absolute top-0 left-0'>
+              <img src="/qr.jpg" width="300px" />
+            </div>
+            <div className='absolute bottom-0 left-0'>
+              <img src="/qr.jpg" width="300px" />
+            </div>
+            <div className='absolute top-0 right-0'>
+              <img src="/qr.jpg" width="300px" />
+            </div>
+            <div className='absolute bottom-0 right-0'>
+              <img src="/qr.jpg" width="300px" />
+            </div>
+          </>
+        )
+      }
+
+      {
         params.get('view') == null && (
           <>
             <LoginBox />

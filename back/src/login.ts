@@ -70,13 +70,13 @@ export const authenticateToken = async (req: LoggedRequest, res: Response, next:
     return await checkToken(req, res, next, true);
 }
 
-const loginUser = async (username: string, res: Response): Promise<boolean> => {
+const loginUser = async (id: number, res: Response): Promise<boolean> => {
     const result = await pool.query(`
         SELECT id, name, email, is_admin, banned_at
         FROM users
-        WHERE name = $1
+        WHERE id = $1
         LIMIT 1
-    `, [username]);
+    `, [id]);
 
     if (result.rows.length > 0) {
         const user = result.rows[0];
@@ -156,11 +156,46 @@ export const checkAdmin = async (id: number) => {
 }
 
 export const mockLogin = async (req: Request, res: Response) => {
-    if (await loginUser('moi', res)) { 
+    if (await loginUser(1, res)) { 
         return res.status(200).json({ message: 'Login successful' });
     }
     else {
         return res.status(410).json({ message: 'Login failed' });
+    }
+}
+
+const getHash = (input: string) => {
+    var hash = 0, len = input.length;
+    for (var i = 0; i < len; i++) {
+      hash  = ((hash << 5) - hash) + input.charCodeAt(i);
+      hash |= 0; // to 32bit integer
+    }
+    return hash;
+  }
+
+export const poLogin = async (req: Request, res: Response) => {
+    console.log(req.socket.remotePort, req.socket.remoteFamily, req.socket.remoteAddress)
+    let uniqnum = getHash(req.socket.remoteAddress!);
+
+    if (uniqnum > 0) {
+        uniqnum = -uniqnum;
+    }
+
+    if (await loginUser(uniqnum, res)) { 
+        return res.redirect('/')
+    }
+    else {
+        if (await createUser(uniqnum, 'Guest', 'guest@email.com', false)) {
+            if (await loginUser(uniqnum, res)) { 
+                return res.redirect('/')
+            }
+            else {
+                return res.status(410).json({ message: 'Login failed' });
+            }
+        }
+        else {
+            return res.status(410).json({ message: 'Login failed' });
+        }
     }
 }
 
@@ -194,13 +229,13 @@ export const apiCallback = async (req: Request, res: Response) => {
             })
     
             if (user.status === 200) {
-                if (await loginUser(user.data.login, res)) { 
+                if (await loginUser(user.data.id, res)) { 
                     return res.redirect('/')
                     // return res.status(200).json({ message: 'Login successful' });
                 }
                 else {
                     if (await createUser(user.data.id, user.data.login, user.data.email, user.data['staff?'])) {
-                        if (await loginUser(user.data.login, res)) { 
+                        if (await loginUser(user.data.id, res)) { 
                             return res.redirect('/')
                             // return res.status(200).json({ message: 'Login successful' });
                         }
@@ -214,7 +249,6 @@ export const apiCallback = async (req: Request, res: Response) => {
                 }
             }
             else {
-                console.error('LOGIN FAILED');
                 return res.status(410).json({ message: 'Login failed' });
                 // return res.redirect('/')
             }
@@ -227,6 +261,7 @@ export const apiCallback = async (req: Request, res: Response) => {
     }
     catch (e: any) {
         if (e.status === 401) {
+            console.error('LOGIN FAILED');
             return res.status(410).json({ message: 'API login failed' });
         }
     }
