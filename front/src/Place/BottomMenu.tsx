@@ -103,7 +103,7 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
             (
               ['xs', 'sm'].includes(screen) && (
                 <IconButton
-                  onClick={shareButton}
+                  onClick={paintButton}
                   className='w-12 !max-w-12 h-12 !max-h-12 bg-gray-600 rounded-full'
                   {...QUICK_FIX}>
                   <IoMdBrush size={24} />
