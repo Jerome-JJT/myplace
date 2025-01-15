@@ -37,7 +37,7 @@ const checkToken = async (req: LoggedRequest, res: Response, next: any, fail: bo
                         }
                     }
                     else {
-                        const logged = await loginUser(decoded.username, res);
+                        const logged = await loginUser(decoded.id, res);
                         if (logged) {
                             return res.status(426).json({ message: 'Token refreshed' });
                         }
@@ -174,12 +174,14 @@ const getHash = (input: string) => {
   }
 
 export const poLogin = async (req: Request, res: Response) => {
-    console.log(req.socket.remotePort, req.socket.remoteFamily, req.socket.remoteAddress)
-    let uniqnum = getHash(req.socket.remoteAddress!);
+    let uniqid = `${req.socket.remoteAddress}_${req.headers['x-forwarded-for']}_${req.headers['user-agent']}`;
+    console.log('GUEST', uniqid)
+    let uniqnum = getHash(uniqid);
 
     if (uniqnum > 0) {
         uniqnum = -uniqnum;
     }
+    uniqnum = (uniqnum % 1000000000)  - 1
 
     if (await loginUser(uniqnum, res)) { 
         return res.redirect('/')
@@ -269,6 +271,7 @@ export const apiCallback = async (req: Request, res: Response) => {
 
 export const logout = (req: Request, res: Response) => {
     res.clearCookie('token');
+    res.clearCookie('refresh');
     return res.status(200).json({ message: 'Logged out successfully' });
 }
 
