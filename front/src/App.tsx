@@ -91,19 +91,19 @@ function App() {
             <div className='absolute top-0 text-center left-[42%] md:left-[28%] bg-white text-blue-400 text-6xl p-6 rounded-b-lg'>
               <u>https://ftplace.42lwatch.ch</u>
             </div>
-            <div className='absolute bg-white text-2xl p-1 top-0 left-0'>
+            <div className='absolute bg-white text-black text-2xl p-1 top-0 left-0'>
               <img src="/qr.png" width="300px" />
               Participate !
             </div>
-            <div className='absolute bg-white text-2xl p-1 bottom-0 left-0'>
+            <div className='absolute bg-white text-black text-2xl p-1 bottom-0 left-0'>
               Participate !
               <img src="/qr.png" width="300px" />
             </div>
-            <div className='absolute bg-white text-2xl p-1 top-0 right-0'>
+            <div className='absolute bg-white text-black text-2xl p-1 top-0 right-0'>
               <img src="/qr.png" width="300px" />
               Participate !
             </div>
-            <div className='absolute bg-white text-2xl p-1 bottom-0 right-0'>
+            <div className='absolute bg-white text-black text-2xl p-1 bottom-0 right-0'>
               Participate !
               <img src="/qr.png" width="300px" />
             </div>
