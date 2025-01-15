@@ -88,7 +88,7 @@ function App() {
       {
         params.get('ads') != null && (
           <>
-            <div className='absolute top-0 text-center left-[20%] md:left-[28%] bg-white text-blue-400 text-6xl p-6 rounded-b-lg'>
+            <div className='absolute top-0 text-center left-[42%] md:left-[28%] bg-white text-blue-400 text-6xl p-6 rounded-b-lg'>
               <u>https://ftplace.42lwatch.ch</u>
             </div>
             <div className='absolute bg-white text-2xl p-1 top-0 left-0'>
