@@ -15,3 +15,9 @@ export const sendUpdates = (wss: WebSocket.Server) => {
         updates.splice(0, updates.length);
     }
 }
+
+export const sendPing = (wss: WebSocket.Server) => {
+    wss.clients.forEach((client) => {
+        client.send('ping');
+    });
+}

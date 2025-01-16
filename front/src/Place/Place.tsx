@@ -32,6 +32,10 @@ export function Place() {
     };
 
     socket.onmessage = (event) => {
+      if (event.data === 'ping') {
+        console.log('pong');
+        return;
+      }
       const incoming = JSON.parse(event.data) as Update[];
       console.log('Received updates:', incoming);
 
@@ -63,6 +67,10 @@ export function Place() {
           });
         }
       }
+    };
+
+    socket.onclose = () => {
+      console.log('WEBSOCKET CLOSED');
     };
 
     return () => {
