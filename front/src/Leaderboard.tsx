@@ -9,8 +9,8 @@ import {
 import { QUICK_FIX } from './Utils/types';
 
 interface leaderboards {
-    placed: { name: string, count: number }[] | undefined
-    inPlace: { name: string, count: number }[] | undefined
+    placed: { id: number, name: string, count: number }[] | undefined
+    inPlace: { id: number, name: string, count: number }[] | undefined
 }
 
 export const Leaderboard = () => {
@@ -57,8 +57,8 @@ export const Leaderboard = () => {
   }, []);
 
   return (
-    <div className='rounded-md mx-auto w-fit mt-[5vh] bg-orange-400'>
-      <Tabs value={menus[0].id} className='w-96'>
+    <div className='rounded-md ml-[10vw] md:mx-auto w-min mt-[5vh] bg-orange-400'>
+      <Tabs value={menus[0].id} className='w-[80vw] md:max-w-[500px]'>
         <TabsHeader {...QUICK_FIX}>
           {
             menus.map((v) => {
@@ -72,8 +72,8 @@ export const Leaderboard = () => {
         </TabsHeader>
       </Tabs>
 
-      <div className='min-h-[40vh] max-h-[70vh] pr-4'>
-        <div className='grid grid-cols-2 overflow-y-auto'>
+      <div className='min-h-[40vh] h-[70vh] max-h-[70vh] pr-4 overflow-y-scroll'>
+        <div className='grid grid-cols-2'>
 
           <div><b>Name</b></div>
           <div><b>Count</b></div>
@@ -86,7 +86,7 @@ export const Leaderboard = () => {
                 : 'py-2 break-all border-b border-dark-red';
 
               return (
-                <div key={v.name} className='contents'>
+                <div key={v.id} className='contents'>
                   <div className={classes}>{v.name}</div>
                   <div className={classes}>{v.count}</div>
                 </div>

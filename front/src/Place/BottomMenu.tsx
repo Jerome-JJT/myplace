@@ -83,13 +83,20 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
     });
   }, [queryPlace]);
 
+  const usernameDisplay = (username: string | undefined) => {
+    if (username === undefined || ['null', 'Welcome', 'Guest'].includes(username)) {
+      return username;
+    }
+    return <a href={`https://profile.intra.42.fr/users/${username}`}><u>{username}</u></a>;
+  };
+
   return (
     <div className='fixed flex bottom-0 text-xs w-[80%] md:w-full md:text-base pointer-events-none'>
       <div className='mx-auto self-center grow max-w-[550px] bg-gray-400/90 pt-2 rounded-tr-lg md:rounded-t-lg flex flex-col pointer-events-auto'>
         <div className='text-black self-center w-full pl-2 pr-2 md:px-6 my-4 my-auto items-center flex flex-row gap-2'>
           {activePixel.x !== -1 &&
             <p className='h-fit whitespace-nowrap'>
-              Set by {board.get(`${activePixel.x}:${activePixel.y}`)?.username} at <br />
+              {activePixel.x}:{activePixel.y} set by {usernameDisplay(board.get(`${activePixel.x}:${activePixel.y}`)?.username)} at <br />
               {
                 board.get(`${activePixel.x}:${activePixel.y}`) ?
                   dateIsoToNice((new Date(board.get(`${activePixel.x}:${activePixel.y}`)?.set_time || '')).toISOString()) :
@@ -103,7 +110,7 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
             (
               ['xs', 'sm'].includes(screen) && (
                 <IconButton
-                  onClick={shareButton}
+                  onClick={paintButton}
                   className='w-12 !max-w-12 h-12 !max-h-12 bg-gray-600 rounded-full'
                   {...QUICK_FIX}>
                   <IoMdBrush size={24} />
@@ -145,12 +152,12 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
         </div>
         {
           times === undefined && (
-            <div className='self-center w-full p-2 grid grid-cols-8 justify-center gap-2'>
+            <div className='self-center w-full p-2 grid grid-cols-9 justify-center gap-2'>
               {Array.from(colors.entries()).map((v) => {
                 return (
                   <div key={v[0]}
                     title={v[1].name}
-                    className={classNames('min-w-8 min-h-8 md:min-w-14 md:min-h-8 rounded border-2 hover:border-white', activeColor === v[0] ? 'border-white' : 'border-black')}
+                    className={classNames('min-w-6 min-h-6 md:min-w-14 md:min-h-8 rounded border-2 hover:border-white', activeColor === v[0] ? 'border-white' : 'border-black')}
                     style={{ backgroundColor: 'rgb(' + v[1].color + ')' }}
                     onClick={() => {
                       setActiveColor(v[0]);

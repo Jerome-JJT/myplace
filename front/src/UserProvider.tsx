@@ -13,6 +13,7 @@ interface UserContextProps {
   logout: () => void
   loginButton: (e: React.MouseEvent<HTMLElement> | undefined) => void
   loginApi: (e: React.MouseEvent<HTMLElement> | undefined) => void
+  loginPo: (e: React.MouseEvent<HTMLElement> | undefined) => void
 }
 
 const UserContext = createContext<UserContextProps | undefined>(undefined);
@@ -117,6 +118,11 @@ export function UserProvider({ children }: { children: ReactNode }): JSX.Element
     window.location.href = '/api/login/api';
   }, []);
 
+  const loginPo = useCallback((e: React.MouseEvent<HTMLElement> | undefined) => {
+    e?.currentTarget.blur();
+    window.location.href = '/api/login/po';
+  }, []);
+
   return (
     <UserContext.Provider
       value={{
@@ -129,6 +135,7 @@ export function UserProvider({ children }: { children: ReactNode }): JSX.Element
         logout,
         loginButton,
         loginApi,
+        loginPo,
       }}
     >
       {children}

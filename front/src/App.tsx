@@ -23,6 +23,7 @@ import { Leaderboard } from './Leaderboard';
 import { NotificationContainer } from './NotificationContainer';
 import { Tutorial } from './Place/Tutorial';
 import { QUICK_FIX } from './Utils/types';
+import { LoginPo } from './LoginPo';
 
 function App() {
   const { isLogged, getUserData, loginButton, loginApi, logout, setTutoOpen } = useUser();
@@ -41,6 +42,14 @@ function App() {
     {
       path:    '/leaderboard/',
       element: <Leaderboard />,
+    },
+    {
+      path:    '/loginpo/',
+      element: <LoginPo />,
+    },
+    {
+      path:    '/pologin/',
+      element: <LoginPo />,
     },
   ]);
 
@@ -77,7 +86,33 @@ function App() {
       <RouterProvider router={router} />
 
       {
-        params.get('view') == null && (
+        params.get('ads') != null && (
+          <>
+            <div className='absolute top-0 text-center left-[42%] md:left-[28%] bg-white text-blue-400 text-6xl p-6 rounded-b-lg'>
+              <u>https://ftplace.42lwatch.ch</u>
+            </div>
+            <div className='absolute bg-white text-black text-2xl p-1 top-0 left-0'>
+              <img src="/qr.png" width="300px" />
+              Participate !
+            </div>
+            <div className='absolute bg-white text-black text-2xl p-1 bottom-0 left-0'>
+              Participate !
+              <img src="/qr.png" width="300px" />
+            </div>
+            <div className='absolute bg-white text-black text-2xl p-1 top-0 right-0'>
+              <img src="/qr.png" width="300px" />
+              Participate !
+            </div>
+            <div className='absolute bg-white text-black text-2xl p-1 bottom-0 right-0'>
+              Participate !
+              <img src="/qr.png" width="300px" />
+            </div>
+          </>
+        )
+      }
+
+      {
+        (params.get('view') == null && !window.location.href.includes('loginpo')) && (
           <>
             <LoginBox />
 

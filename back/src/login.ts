@@ -37,7 +37,7 @@ const checkToken = async (req: LoggedRequest, res: Response, next: any, fail: bo
                         }
                     }
                     else {
-                        const logged = await loginUser(decoded.username, res);
+                        const logged = await loginUser(decoded.id, res);
                         if (logged) {
                             return res.status(426).json({ message: 'Token refreshed' });
                         }
@@ -70,13 +70,13 @@ export const authenticateToken = async (req: LoggedRequest, res: Response, next:
     return await checkToken(req, res, next, true);
 }
 
-const loginUser = async (username: string, res: Response): Promise<boolean> => {
+const loginUser = async (id: number, res: Response): Promise<boolean> => {
     const result = await pool.query(`
         SELECT id, name, email, is_admin, banned_at
         FROM users
-        WHERE name = $1
+        WHERE id = $1
         LIMIT 1
-    `, [username]);
+    `, [id]);
 
     if (result.rows.length > 0) {
         const user = result.rows[0];
@@ -156,11 +156,48 @@ export const checkAdmin = async (id: number) => {
 }
 
 export const mockLogin = async (req: Request, res: Response) => {
-    if (await loginUser('moi', res)) { 
+    if (await loginUser(1, res)) { 
         return res.status(200).json({ message: 'Login successful' });
     }
     else {
         return res.status(410).json({ message: 'Login failed' });
+    }
+}
+
+const getHash = (input: string) => {
+    var hash = 0, len = input.length;
+    for (var i = 0; i < len; i++) {
+      hash  = ((hash << 5) - hash) + input.charCodeAt(i);
+      hash |= 0; // to 32bit integer
+    }
+    return hash;
+  }
+
+export const poLogin = async (req: Request, res: Response) => {
+    let uniqid = `${req.socket.remoteAddress}_${req.headers['x-forwarded-for']}_${req.headers['user-agent']}`;
+    console.log('GUEST', uniqid)
+    let uniqnum = getHash(uniqid);
+
+    if (uniqnum > 0) {
+        uniqnum = -uniqnum;
+    }
+    uniqnum = (uniqnum % 1000000000)  - 1
+
+    if (await loginUser(uniqnum, res)) { 
+        return res.redirect('/')
+    }
+    else {
+        if (await createUser(uniqnum, 'Guest', 'guest@email.com', false)) {
+            if (await loginUser(uniqnum, res)) { 
+                return res.redirect('/')
+            }
+            else {
+                return res.status(410).json({ message: 'Login failed' });
+            }
+        }
+        else {
+            return res.status(410).json({ message: 'Login failed' });
+        }
     }
 }
 
@@ -194,13 +231,13 @@ export const apiCallback = async (req: Request, res: Response) => {
             })
     
             if (user.status === 200) {
-                if (await loginUser(user.data.login, res)) { 
+                if (await loginUser(user.data.id, res)) { 
                     return res.redirect('/')
                     // return res.status(200).json({ message: 'Login successful' });
                 }
                 else {
                     if (await createUser(user.data.id, user.data.login, user.data.email, user.data['staff?'])) {
-                        if (await loginUser(user.data.login, res)) { 
+                        if (await loginUser(user.data.id, res)) { 
                             return res.redirect('/')
                             // return res.status(200).json({ message: 'Login successful' });
                         }
@@ -214,7 +251,6 @@ export const apiCallback = async (req: Request, res: Response) => {
                 }
             }
             else {
-                console.error('LOGIN FAILED');
                 return res.status(410).json({ message: 'Login failed' });
                 // return res.redirect('/')
             }
@@ -227,6 +263,7 @@ export const apiCallback = async (req: Request, res: Response) => {
     }
     catch (e: any) {
         if (e.status === 401) {
+            console.error('LOGIN FAILED');
             return res.status(410).json({ message: 'API login failed' });
         }
     }
@@ -234,6 +271,7 @@ export const apiCallback = async (req: Request, res: Response) => {
 
 export const logout = (req: Request, res: Response) => {
     res.clearCookie('token');
+    res.clearCookie('refresh');
     return res.status(200).json({ message: 'Logged out successfully' });
 }
 

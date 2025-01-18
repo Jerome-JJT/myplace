@@ -1,6 +1,6 @@
 import { Response } from 'express';
 
-import { PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER, redisTimeout, UTC_TIME_END, UTC_TIME_START } from './consts';
+import { CANVAS_X, CANVAS_Y, PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER, redisTimeout, UTC_TIME_END, UTC_TIME_START } from './consts';
 import { LoggedRequest, Pixel } from './types';
 import { redisClient } from './redis';
 import { pool } from './db';
@@ -32,11 +32,15 @@ export const setPixel = async (req: LoggedRequest, res: Response) => {
 
     if ((UTC_TIME_START < actualDate && actualDate < UTC_TIME_END) || (user.soft_is_admin === true && (await checkAdmin(user.id)))) {
         if (timers.length < PIXEL_BUFFER_SIZE || (user.soft_is_admin === true && (await checkAdmin(user.id)))) {
+            if (x < 0 || y < 0 || x >= CANVAS_X || y >= CANVAS_Y || color == null || color == undefined) {
+                return res.status(406).send('Bad payload');
+            }
             try {
                 const ret = await pool.query(`
                     INSERT INTO board (x, y, color_id, user_id)
                     VALUES ($1, $2, $3, $4)
-                    RETURNING x, y, color_id, (set_time + INTERVAL '1 minute' * $5)::TIMESTAMPTZ AS set_time
+                    RETURNING x, y, color_id, set_time::TIMESTAMPTZ AS set_time, 
+                    (set_time + INTERVAL '1 minute' * $5)::TIMESTAMPTZ AS cd_time
                     `, [x, y, color, user.id, PIXEL_MINUTE_TIMER]);
                     
                 const inserted = ret.rows.length === 1 ? ret.rows[0] : null;
@@ -48,7 +52,7 @@ export const setPixel = async (req: LoggedRequest, res: Response) => {
                     await redisClient.set(key, JSON.stringify(p), 'EX', redisTimeout());
 
                     updates.push({ ...p, x: inserted.x, y: inserted.y });
-                    timers.unshift(inserted.set_time);
+                    timers.unshift(inserted.cd_time);
                     return res.status(201).send({
                         update: { ...p, x: inserted.x, y: inserted.y },
                         timers: timers
