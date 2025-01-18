@@ -89,7 +89,7 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
         <div className='text-black self-center w-full pl-2 pr-2 md:px-6 my-4 my-auto items-center flex flex-row gap-2'>
           {activePixel.x !== -1 &&
             <p className='h-fit whitespace-nowrap'>
-              Set by {board.get(`${activePixel.x}:${activePixel.y}`)?.username} at <br />
+              {activePixel.x}:{activePixel.y} set by {board.get(`${activePixel.x}:${activePixel.y}`)?.username} at <br />
               {
                 board.get(`${activePixel.x}:${activePixel.y}`) ?
                   dateIsoToNice((new Date(board.get(`${activePixel.x}:${activePixel.y}`)?.set_time || '')).toISOString()) :
