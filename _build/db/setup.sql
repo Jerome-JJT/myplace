@@ -69,8 +69,8 @@ INSERT INTO colors (id, corder, name, red, green, blue) VALUES
 (14, 140, 'indigo', 0, 65, 176),
 (15, 150, 'magenta', 207, 110, 228),
 (16, 160, 'purple', 155, 28, 182),
-(17, 160, 'beige', 255, 224, 180),
-(18, 160, 'darkred', 190, 0, 57)
+(17, 85, 'beige', 255, 224, 180),
+(18, 55, 'darkred', 190, 0, 57)
 ON CONFLICT (id) DO UPDATE SET
 name = EXCLUDED.name,
 corder = EXCLUDED.corder,
