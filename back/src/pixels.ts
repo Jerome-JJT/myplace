@@ -73,7 +73,6 @@ async function initializeBoard() {
 async function viewTimedBoard(time: string, {user_id = null}: {user_id?: string | null}) {
     const board: (Pixel | null)[][] = [];
     
-    console.log('22222', user_id);
     const result = await pool.query(`
         SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.name, ranked_board.set_time::TIMESTAMPTZ
         FROM (
@@ -82,9 +81,9 @@ async function viewTimedBoard(time: string, {user_id = null}: {user_id?: string 
             FROM board
             JOIN users ON users.id = board.user_id
             WHERE board.set_time < $1 AND
-            ($2 IS NULL OR 
-                (CAST($2 AS INTEGER) IS NOT NULL AND users.id = $2) OR
-                (CAST($2 AS VARCHAR) IS NOT NULL AND users.name = $2)
+            (
+                CAST(users.id AS VARCHAR) = CAST($2 AS VARCHAR) OR
+                CAST(users.name AS VARCHAR) = CAST($2 AS VARCHAR)
             )
         ) as ranked_board
         LEFT JOIN users ON users.id = ranked_board.user_id
@@ -123,9 +122,9 @@ async function createBoardImage(time: string, {scale = 1, transparent = false, u
             FROM board
             JOIN users ON users.id = board.user_id
             WHERE board.set_time < $1 AND
-            ($2 IS NULL OR 
-                (CAST($2 AS INTEGER) IS NOT NULL AND users.id = $2) OR
-                (CAST($2 AS VARCHAR) IS NOT NULL AND users.name = $2)
+            (
+                CAST(users.id AS VARCHAR) = CAST($2 AS VARCHAR) OR
+                CAST(users.name AS VARCHAR) = CAST($2 AS VARCHAR)
             )
         ) as ranked_board
         LEFT JOIN users ON users.id = ranked_board.user_id
@@ -206,8 +205,6 @@ export const getPixels = async (req: LoggedRequest, res: Response) => {
         const colors = await getColors();
         if (req.query.time !== undefined && (req.user?.soft_is_admin === true && await checkAdmin(req.user?.id))) {
             const {min_time, max_time} = await getTimes();
-
-            console.log(req.query, typeof(req.query.user_id))
 
             if (req.query.type === 'image') {
 
