@@ -9,8 +9,8 @@ import {
 import { QUICK_FIX } from './Utils/types';
 
 interface leaderboards {
-    placed: { name: string, count: number }[] | undefined
-    inPlace: { name: string, count: number }[] | undefined
+    placed: { id: number, name: string, count: number }[] | undefined
+    inPlace: { id: number, name: string, count: number }[] | undefined
 }
 
 export const Leaderboard = () => {
@@ -86,7 +86,7 @@ export const Leaderboard = () => {
                 : 'py-2 break-all border-b border-dark-red';
 
               return (
-                <div key={v.name} className='contents'>
+                <div key={v.id} className='contents'>
                   <div className={classes}>{v.name}</div>
                   <div className={classes}>{v.count}</div>
                 </div>
