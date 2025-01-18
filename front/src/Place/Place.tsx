@@ -24,7 +24,7 @@ export function Place() {
 
 
   useEffect(() => {
-    const socket = new WebSocket('/ws/');
+    const socket = new WebSocket(`${document.location.protocol.includes('https') ? 'wss' : 'ws'}://${document.location.host}/ws/`);
     const updates: Update[] = [];
 
     socket.onopen = () => {
