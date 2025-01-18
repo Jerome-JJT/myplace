@@ -39,7 +39,8 @@ export const setPixel = async (req: LoggedRequest, res: Response) => {
                 const ret = await pool.query(`
                     INSERT INTO board (x, y, color_id, user_id)
                     VALUES ($1, $2, $3, $4)
-                    RETURNING x, y, color_id, (set_time + INTERVAL '1 minute' * $5)::TIMESTAMPTZ AS set_time
+                    RETURNING x, y, color_id, set_time::TIMESTAMPTZ AS set_time, 
+                    (set_time + INTERVAL '1 minute' * $5)::TIMESTAMPTZ AS cd_time
                     `, [x, y, color, user.id, PIXEL_MINUTE_TIMER]);
                     
                 const inserted = ret.rows.length === 1 ? ret.rows[0] : null;
@@ -51,7 +52,7 @@ export const setPixel = async (req: LoggedRequest, res: Response) => {
                     await redisClient.set(key, JSON.stringify(p), 'EX', redisTimeout());
 
                     updates.push({ ...p, x: inserted.x, y: inserted.y });
-                    timers.unshift(inserted.set_time);
+                    timers.unshift(inserted.cd_time);
                     return res.status(201).send({
                         update: { ...p, x: inserted.x, y: inserted.y },
                         timers: timers

@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS colors (
 CREATE TABLE IF NOT EXISTS board (
     x INT NOT NULL,
     y INT NOT NULL,
-    color_id INT REFERENCES colors(id) ON DELETE SET NULL,
+    color_id INT REFERENCES colors(id) NOT NULL,
     user_id INT REFERENCES users(id),
     set_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (x, y, set_time)
@@ -68,7 +68,9 @@ INSERT INTO colors (id, corder, name, red, green, blue) VALUES
 (13, 130, 'blue', 0, 152, 255),
 (14, 140, 'indigo', 0, 65, 176),
 (15, 150, 'magenta', 207, 110, 228),
-(16, 160, 'purple', 155, 28, 182)
+(16, 160, 'purple', 155, 28, 182),
+(17, 160, 'beige', 255, 224, 180),
+(18, 160, 'darkred', 190, 0, 57)
 ON CONFLICT (id) DO UPDATE SET
 name = EXCLUDED.name,
 corder = EXCLUDED.corder,
