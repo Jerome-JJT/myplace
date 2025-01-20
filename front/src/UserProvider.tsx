@@ -5,6 +5,8 @@ import { useNotification } from './NotificationProvider';
 
 interface UserContextProps {
   isLogged: boolean
+  isConnected: boolean
+  setIsConnected: React.Dispatch<React.SetStateAction<boolean>>
   tutoOpen: boolean
   setTutoOpen: React.Dispatch<React.SetStateAction<boolean>>
   infos: UserInfos | undefined
@@ -40,6 +42,7 @@ const baseTutoState = () => {
 export function UserProvider({ children }: { children: ReactNode }): JSX.Element {
   const { addNotif } = useNotification();
   const [isLogged, setIsLogged] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
   const [tutoOpen, setTutoOpen] = useState(baseTutoState);
   const [infos, setInfos] = useState<UserInfos | undefined>();
 
@@ -127,6 +130,8 @@ export function UserProvider({ children }: { children: ReactNode }): JSX.Element
     <UserContext.Provider
       value={{
         isLogged,
+        isConnected,
+        setIsConnected,
         tutoOpen,
         setTutoOpen,
         infos,

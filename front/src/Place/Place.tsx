@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import { CANVAS_X, CANVAS_Y } from 'src/Utils/consts';
 import { Update } from 'src/Utils/types';
@@ -17,18 +17,23 @@ import { useNotification } from 'src/NotificationProvider';
 
 
 export function Place() {
-  const { isLogged, setPixelInfos } = useUser();
+  const { isLogged, setPixelInfos, setIsConnected } = useUser();
   const { addNotif } = useNotification();
   const { pl, board, image, queryPlace, activePixel, setActivePixel, activeColor, setActiveColor, colors, setBoard, scale } = useCanvas();
   const params = new URLSearchParams(window.location.search);
-
+  const paramView = params.get('view') !== null;
+  const paramType = params.get('type');
+  const paramTime = params.get('time');
 
   useEffect(() => {
     const socket = new WebSocket(`${document.location.protocol.includes('https') ? 'wss' : 'ws'}://${document.location.host}/ws/`);
+    const sockId = Math.round(Math.random() * 10000);
     const updates: Update[] = [];
+    let interval: NodeJS.Timeout | undefined = undefined;
 
     socket.onopen = () => {
-      console.log('WebSocket connected.');
+      console.log(`WebSocket ${sockId} connected.`);
+      setIsConnected((_prev) => true);
     };
 
     socket.onmessage = (event) => {
@@ -37,7 +42,7 @@ export function Place() {
         return;
       }
       const incoming = JSON.parse(event.data) as Update[];
-      console.log('Received updates:', incoming);
+      console.log(`${sockId} Received updates:`, incoming);
 
       incoming.forEach((u) => updates.push(u));
 
@@ -69,19 +74,35 @@ export function Place() {
       }
     };
 
-    socket.onclose = () => {
-      console.log('WEBSOCKET CLOSED');
+    socket.onclose = (event) => {
+      setIsConnected((_prev) => false);
+      console.log(`WebSocket ${sockId} closed type ${event.code}.`);
+
+      if (event.code === 1006 && paramView) {
+        console.log('Reloading in 10s');
+
+        interval = setTimeout(() => {
+          console.log('send query');
+          queryPlace(paramTime ?? undefined, paramType ?? 'board', undefined);
+          // window.location.reload();
+        }, 10000);
+      }
     };
 
     return () => {
-      socket.close();
+      if (interval !== undefined) {
+        clearInterval(interval);
+      }
+      if (!([socket.CLOSED, socket.CLOSING] as number[]).includes(socket.readyState)) {
+        socket.close();
+      }
     };
-  }, [colors, pl, setBoard]);
+  }, [colors, pl, setBoard, setIsConnected, paramView, queryPlace, paramTime, paramType]);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    queryPlace(params.get('time') ?? undefined, params.get('type') ?? 'board', undefined);
-  }, [board.size, queryPlace]);
+    // const params = new URLSearchParams(window.location.search);
+    queryPlace(paramTime ?? undefined, paramType ?? 'board', undefined);
+  }, [board.size, paramTime, paramType, queryPlace]);
 
   const paintButton = useCallback((e: React.MouseEvent<HTMLElement> | undefined) => {
     e?.currentTarget.blur();

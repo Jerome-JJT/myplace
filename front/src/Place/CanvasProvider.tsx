@@ -106,9 +106,9 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
 
 
     const args = objUrlEncode({
-      'time': time,
-      'type': type,
-      'user_id': baseUserId
+      'time':    time,
+      'type':    type,
+      'user_id': baseUserId,
     });
 
     axios
@@ -193,7 +193,7 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
       })
       .catch((error) => {
         console.log('is too soon', error);
-        if (error.response === undefined || error.response.status === 502) {
+        if (error?.response === undefined || error.response.status === 502) {
           addNotif('Too soon, server not ready, reload in 2 sec', 'info');
         }
         if (cb) {
