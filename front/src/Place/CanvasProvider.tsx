@@ -102,11 +102,13 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
     const baseX = parseInt(params.get('x') || '');
     const baseY = parseInt(params.get('y') || '');
     const baseScale = parseInt(params.get('scale') || '');
+    const baseUserId = params.get('user_id') || undefined;
 
 
     const args = objUrlEncode({
       'time': time,
       'type': type,
+      'user_id': baseUserId
     });
 
     axios
