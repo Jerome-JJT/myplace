@@ -1,7 +1,7 @@
 export interface Pixel {
     username: string,
     color_id: number,
-    set_time: string
+    set_time: number
 }
 
 export interface Update extends Pixel {
