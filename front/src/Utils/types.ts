@@ -18,8 +18,9 @@ export type Vector = Point;
 
 
 export interface ColorType {
-    name: string,
-    color: string
+  name: string,
+  color: string,
+  corder: number
 }
 
 export interface UserInfos {

@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useState, useEffect, useCallback } from 'react';
 
 import { CANVAS_X, CANVAS_Y } from 'src/Utils/consts';
-import { Update } from 'src/Utils/types';
+import { ColorType, Update } from 'src/Utils/types';
 import { useUser } from 'src/UserProvider';
 import { objUrlEncode } from 'src/Utils/objUrlEncode';
 
@@ -223,11 +223,21 @@ export function Place() {
 
     if (rel !== undefined) {
       setActiveColor((prev) => {
-        const next = (prev - 1 + rel + colors.size) % colors.size + 1;
-        if (colors.has(next)) {
-          return next;
+        const prevCid = colors.get(prev)?.corder || 0;
+
+        const next = Array.from(colors.entries()).reduce((acc: [number, ColorType] | undefined, [k, v]: [number, ColorType]) => {
+          if (v.corder > prevCid && (acc === undefined || v.corder < acc[1].corder)) {
+            return [k, v];
+          }
+          return acc;
+        }, undefined) ;
+        
+        if (next !== undefined) {
+          return next[0];
         }
-        return prev;
+        else {
+          return colors.keys().next().value || 1;
+        }
       });
     }
   }, [colors, setActiveColor]);

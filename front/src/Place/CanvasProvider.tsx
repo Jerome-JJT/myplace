@@ -124,6 +124,7 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
               cols.set(c['id'], {
                 name:  c['name'],
                 color: `${c['red']}, ${c['green']}, ${c['blue']}`,
+                corder: c['corder']
               });
             });
             setColors((prev) => {
