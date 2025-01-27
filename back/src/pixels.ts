@@ -11,7 +11,7 @@ async function initializeBoard() {
     const board: (Pixel | null)[][] = [];
 
     const result = await pool.query(`
-        SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.name, ranked_board.set_time::TIMESTAMPTZ
+        SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.name, EXTRACT(EPOCH FROM ranked_board.set_time)::BIGINT * 1000 AS set_time
         FROM (
             SELECT x, y, user_id, color_id, set_time,
                 ROW_NUMBER() OVER (PARTITION BY x, y ORDER BY set_time DESC) as rn
@@ -50,11 +50,11 @@ async function initializeBoard() {
 
                 const cell = mapResults.get(`${x}:${y}`);
                 if (cell !== undefined) {
-                    const p: Pixel = { color_id: cell.color_id, username: cell.name, set_time: cell.set_time }
+                    const p: Pixel = { color_id: cell.color_id, username: cell.name, set_time: parseInt(cell.set_time) }
                     board[x][y] = p;
                 } //
                 else {
-                    const p: Pixel = { color_id: 1, username: 'null', set_time: '1900-01-01T00:00:00.000Z' }
+                    const p: Pixel = { color_id: 1, username: 'null', set_time: 0 }
                     board[x][y] = p;
                 }
 
@@ -74,7 +74,7 @@ async function viewTimedBoard(time: string, {user_id = null}: {user_id?: string 
     const board: (Pixel | null)[][] = [];
     
     const result = await pool.query(`
-        SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.name, ranked_board.set_time::TIMESTAMPTZ
+        SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.name, EXTRACT(EPOCH FROM ranked_board.set_time)::BIGINT * 1000 AS set_time
         FROM (
             SELECT x, y, user_id, color_id, set_time,
                 ROW_NUMBER() OVER (PARTITION BY x, y ORDER BY set_time DESC) as rn
@@ -82,6 +82,7 @@ async function viewTimedBoard(time: string, {user_id = null}: {user_id?: string 
             JOIN users ON users.id = board.user_id
             WHERE board.set_time < $1 AND
             (
+                CAST($2 AS VARCHAR) IS NULL OR
                 CAST(users.id AS VARCHAR) = CAST($2 AS VARCHAR) OR
                 CAST(users.name AS VARCHAR) = CAST($2 AS VARCHAR)
             )
@@ -104,7 +105,7 @@ async function viewTimedBoard(time: string, {user_id = null}: {user_id?: string 
                 board[x][y] = p;
             }
             else {
-                const p: Pixel = { color_id: 1, username: 'null', set_time: '1900-01-01T00:00:00.000Z' }
+                const p: Pixel = { color_id: 1, username: 'null', set_time: 0 }
                 board[x][y] = p;
             }
         }
@@ -115,7 +116,7 @@ async function viewTimedBoard(time: string, {user_id = null}: {user_id?: string 
 
 async function createBoardImage(time: string, {scale = 1, transparent = false, user_id = null}: {scale?: number, transparent?: boolean, user_id?: string | null}) {
     const result = await pool.query(`
-        SELECT ranked_board.x, ranked_board.y, users.name, ranked_board.set_time::TIMESTAMPTZ, colors.red, colors.green, colors.blue
+        SELECT ranked_board.x, ranked_board.y, users.name, EXTRACT(EPOCH FROM ranked_board.set_time)::BIGINT * 1000 AS set_time, colors.red, colors.green, colors.blue
         FROM (
             SELECT x, y, user_id, color_id, set_time,
                 ROW_NUMBER() OVER (PARTITION BY x, y ORDER BY set_time DESC) as rn
@@ -178,23 +179,23 @@ async function getColors(): Promise<Color[]> {
     return result.rows;
 }
 
-async function getTimes(): Promise<{min_time: string, max_time: string}> {
+async function getTimes(): Promise<{min_time: number, max_time: number}> {
     const times = {
-        min_time: '',
-        max_time: ''
+        min_time: 0,
+        max_time: 0
     }
 
     const time_result = await pool.query(`
         SELECT 
-        MIN((EXTRACT(EPOCH FROM board.set_time))::INTEGER) AS min_time, 
-        MAX((EXTRACT(EPOCH FROM board.set_time))::INTEGER) AS max_time
+        MIN((EXTRACT(EPOCH FROM board.set_time))::BIGINT * 1000) AS min_time, 
+        MAX((EXTRACT(EPOCH FROM board.set_time))::BIGINT * 1000) AS max_time
         FROM board
         LIMIT 1
     `, []);
     if (time_result.rows.length > 0) {
         const cell = time_result.rows[0];
-        times.min_time = cell.min_time;
-        times.max_time = cell.max_time;
+        times.min_time = parseInt(cell.min_time);
+        times.max_time = parseInt(cell.max_time);
     }
 
     return times;

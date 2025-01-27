@@ -37,16 +37,16 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
   const [stepType, setStepType] = useState<number>(0);
 
   const { minText, currentText, maxText } = useMemo(() => {
-    const minDate = times !== undefined && (new Date(times.min * 1000)).toISOString() || '';
-    const currentDate = (new Date(activeTime * 1000)).toISOString();
-    const maxDate = times !== undefined && (new Date(times.max * 1000)).toISOString() || '';
+    const minDate = times !== undefined && times.min || 0;
+    const currentDate = activeTime;
+    const maxDate = times !== undefined && times.max || 0;
 
     return { minText: dateIsoToNice(minDate), currentText: dateIsoToNice(currentDate), maxText: dateIsoToNice(maxDate) };
   }, [activeTime, times]);
 
   const setTime = useCallback((givenTime: number) => {
     setIsLoading(true);
-    const isoTime = (new Date(givenTime * 1000)).toISOString();
+    const isoTime = (new Date(givenTime)).toISOString();
 
     const params = new URLSearchParams(window.location.search);
     const args = objUrlEncode({
@@ -99,7 +99,7 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
               {activePixel.x}:{activePixel.y} set by {usernameDisplay(board.get(`${activePixel.x}:${activePixel.y}`)?.username)} at <br />
               {
                 board.get(`${activePixel.x}:${activePixel.y}`) ?
-                  dateIsoToNice((new Date(board.get(`${activePixel.x}:${activePixel.y}`)?.set_time || '')).toISOString()) :
+                  dateIsoToNice(board.get(`${activePixel.x}:${activePixel.y}`)?.set_time || 0) :
                   ''
               }
             </p>

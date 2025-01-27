@@ -1,5 +1,5 @@
 
-function toLocalIso(input: string): string {
+function toLocalIso(input: string | number): string {
   const date = new Date(input);
   // const tzo = -date.getTimezoneOffset();
   // const dif = tzo >= 0 ? '+' : '-';
@@ -13,10 +13,11 @@ function toLocalIso(input: string): string {
       'T' + pad(date.getHours()) +
       ':' + pad(date.getMinutes()) +
       ':' + pad(date.getSeconds()) +
-      '.' + date.getMilliseconds() + 'Z';
+      '.' + pad(date.getMilliseconds()) + 'Z';
 }
 
-export function dateIsoToNice(isoDate: string): string {
-  return toLocalIso(isoDate).substring(0, isoDate.length - 5).replace('T', ' ');
+export function dateIsoToNice(isoDate: string | number): string {
+  const loc = toLocalIso(isoDate);
+  return loc.substring(0, loc.indexOf('.')).replace('T', ' ');
 }
 
