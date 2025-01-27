@@ -28,7 +28,7 @@ export interface UserInfos {
   soft_is_admin: boolean
   soft_is_banned: boolean
 
-  timers: string[]
+  timers: number[]
   pixel_buffer: number
   pixel_timer: number
 }

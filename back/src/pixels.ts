@@ -11,7 +11,7 @@ async function initializeBoard() {
     const board: (Pixel | null)[][] = [];
 
     const result = await pool.query(`
-        SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.name, EXTRACT(EPOCH FROM ranked_board.set_time)::BIGINT * 1000 AS set_time
+        SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.name, (EXTRACT(EPOCH FROM ranked_board.set_time) * 1000)::BIGINT AS set_time
         FROM (
             SELECT x, y, user_id, color_id, set_time,
                 ROW_NUMBER() OVER (PARTITION BY x, y ORDER BY set_time DESC) as rn
@@ -74,7 +74,7 @@ async function viewTimedBoard(time: string, {user_id = null}: {user_id?: string 
     const board: (Pixel | null)[][] = [];
     
     const result = await pool.query(`
-        SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.name, EXTRACT(EPOCH FROM ranked_board.set_time)::BIGINT * 1000 AS set_time
+        SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.name, (EXTRACT(EPOCH FROM ranked_board.set_time) * 1000)::BIGINT AS set_time
         FROM (
             SELECT x, y, user_id, color_id, set_time,
                 ROW_NUMBER() OVER (PARTITION BY x, y ORDER BY set_time DESC) as rn
@@ -116,7 +116,7 @@ async function viewTimedBoard(time: string, {user_id = null}: {user_id?: string 
 
 async function createBoardImage(time: string, {scale = 1, transparent = false, user_id = null}: {scale?: number, transparent?: boolean, user_id?: string | null}) {
     const result = await pool.query(`
-        SELECT ranked_board.x, ranked_board.y, users.name, EXTRACT(EPOCH FROM ranked_board.set_time)::BIGINT * 1000 AS set_time, colors.red, colors.green, colors.blue
+        SELECT ranked_board.x, ranked_board.y, users.name, (EXTRACT(EPOCH FROM ranked_board.set_time) * 1000)::BIGINT AS set_time, colors.red, colors.green, colors.blue
         FROM (
             SELECT x, y, user_id, color_id, set_time,
                 ROW_NUMBER() OVER (PARTITION BY x, y ORDER BY set_time DESC) as rn

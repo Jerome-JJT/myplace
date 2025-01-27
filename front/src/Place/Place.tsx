@@ -24,8 +24,12 @@ export function Place() {
   const paramView = params.get('view') !== null;
   const paramType = params.get('type');
   const paramTime = params.get('time');
+  const [reloadId, setReloadId] = useState(0);
 
   useEffect(() => {
+    if (paramTime !== null) {
+      return ;
+    }
     const socket = new WebSocket(`${document.location.protocol.includes('https') ? 'wss' : 'ws'}://${document.location.host}/ws/`);
     const sockId = Math.round(Math.random() * 10000);
     const updates: Update[] = [];
@@ -79,25 +83,25 @@ export function Place() {
       console.log(`WebSocket ${sockId} closed type ${event.code}.`);
 
       if (event.code === 1006 && paramView) {
-        console.log('Reloading in 10s');
+        console.log('Auto reloading in 30s');
 
         interval = setTimeout(() => {
           console.log('send query');
           queryPlace(paramTime ?? undefined, paramType ?? 'board', undefined);
-          // window.location.reload();
-        }, 10000);
+          setReloadId((prev) => prev + 1);
+        }, 30000);
       }
     };
 
     return () => {
       if (interval !== undefined) {
-        clearInterval(interval);
+        clearTimeout(interval);
       }
       if (!([socket.CLOSED, socket.CLOSING] as number[]).includes(socket.readyState)) {
         socket.close();
       }
     };
-  }, [colors, pl, setBoard, setIsConnected, paramView, queryPlace, paramTime, paramType]);
+  }, [colors, pl, setBoard, setIsConnected, paramView, queryPlace, paramTime, paramType, reloadId]);
 
   useEffect(() => {
     // const params = new URLSearchParams(window.location.search);

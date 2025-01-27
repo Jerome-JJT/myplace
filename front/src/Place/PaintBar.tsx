@@ -10,8 +10,8 @@ export const PaintBar = () => {
     const interval = setInterval(() => {
       if (infos !== undefined && infos.timers !== undefined && infos.timers.length > 0) {
 
-        const now = (new Date()).toISOString();
-        const nextClearPixel = infos.timers.reduce<string | undefined>((prev, v) => {
+        const now = (new Date()).getTime();
+        const nextClearPixel = infos.timers.reduce<number | undefined>((prev, v) => {
           if (v > now && (prev === undefined || v < prev)) {
             return v;
           }

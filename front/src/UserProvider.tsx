@@ -11,7 +11,7 @@ interface UserContextProps {
   setTutoOpen: React.Dispatch<React.SetStateAction<boolean>>
   infos: UserInfos | undefined
   getUserData: () => void
-  setPixelInfos: (timers: string[]) => void
+  setPixelInfos: (timers: number[]) => void
   logout: () => void
   loginButton: (e: React.MouseEvent<HTMLElement> | undefined) => void
   loginApi: (e: React.MouseEvent<HTMLElement> | undefined) => void
@@ -65,7 +65,7 @@ export function UserProvider({ children }: { children: ReactNode }): JSX.Element
       });
   }, [addNotif]);
 
-  const setPixelInfos = useCallback((timers: string[]) => {
+  const setPixelInfos = useCallback((timers: number[]) => {
     if (isLogged) {
       setInfos((prev) => {
         if (prev) {

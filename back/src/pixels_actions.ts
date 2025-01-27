@@ -7,10 +7,10 @@ import { pool } from './db';
 import { updates } from './ws';
 import { checkAdmin } from './login';
 
-export const getLastUserPixels = async (user_id: number): Promise<string[]> => {
+export const getLastUserPixels = async (user_id: number): Promise<number[]> => {
 
     const result = await pool.query(`
-        SELECT (set_time + INTERVAL '1 minute' * $2)::TIMESTAMPTZ AS set_time
+        SELECT (EXTRACT(EPOCH FROM (set_time + INTERVAL '1 minute' * $2)) * 1000)::BIGINT AS set_time
         FROM board
         WHERE user_id = $1 AND 
         (set_time + INTERVAL '1 minute' * $2) > NOW()
@@ -18,7 +18,7 @@ export const getLastUserPixels = async (user_id: number): Promise<string[]> => {
         LIMIT $3
     `, [user_id, PIXEL_MINUTE_TIMER, PIXEL_BUFFER_SIZE]);
 
-    return result.rows.map((r: {set_time: string}) => r.set_time);
+    return result.rows.map((r: {set_time: string}) => parseInt(r.set_time));
 }
 
 export const setPixel = async (req: LoggedRequest, res: Response) => {
@@ -39,20 +39,20 @@ export const setPixel = async (req: LoggedRequest, res: Response) => {
                 const ret = await pool.query(`
                     INSERT INTO board (x, y, color_id, user_id)
                     VALUES ($1, $2, $3, $4)
-                    RETURNING x, y, color_id, set_time::TIMESTAMPTZ AS set_time, 
-                    (set_time + INTERVAL '1 minute' * $5)::TIMESTAMPTZ AS cd_time
+                    RETURNING x, y, color_id, (EXTRACT(EPOCH FROM set_time) * 1000)::BIGINT AS set_time, 
+                    (EXTRACT(EPOCH FROM (set_time + INTERVAL '1 minute' * $5)) * 1000)::BIGINT AS cd_time
                     `, [x, y, color, user.id, PIXEL_MINUTE_TIMER]);
                     
                 const inserted = ret.rows.length === 1 ? ret.rows[0] : null;
         
                 if (inserted !== null) {
                     const key = `${inserted.x}:${inserted.y}`;
-                    const p: Pixel = { username: user.username, color_id: inserted.color_id, set_time: inserted.set_time }
+                    const p: Pixel = { username: user.username, color_id: inserted.color_id, set_time: parseInt(inserted.set_time) }
             
                     await redisClient.set(key, JSON.stringify(p), 'EX', redisTimeout());
 
                     updates.push({ ...p, x: inserted.x, y: inserted.y });
-                    timers.unshift(inserted.cd_time);
+                    timers.unshift(parseInt(inserted.cd_time));
                     return res.status(201).send({
                         update: { ...p, x: inserted.x, y: inserted.y },
                         timers: timers

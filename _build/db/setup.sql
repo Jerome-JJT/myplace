@@ -3,7 +3,9 @@ CREATE TABLE IF NOT EXISTS users (
     name VARCHAR(50),
     email VARCHAR(250),
     is_admin BOOLEAN DEFAULT FALSE,
-    banned_at TIMESTAMP DEFAULT NULL
+    banned_at TIMESTAMP DEFAULT NULL,
+
+    token_seq INTEGER DEFAULT 1
 );
 
 CREATE TABLE IF NOT EXISTS colors (
