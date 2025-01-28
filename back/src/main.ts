@@ -2,7 +2,7 @@ import express, { Request, Response, NextFunction } from "express";
 import WebSocket from "ws";
 import cookieParser from 'cookie-parser';
 
-import { sendUpdates, sendPing } from "./ws";
+import { sendUpdates, sendPing, sendConnecteds } from "./ws";
 
 const app = express();
 app.use(express.json());
@@ -48,8 +48,11 @@ app.get('/leaderboards', getLeaderboards);
 setInterval(() => {
     sendUpdates(wss);
 }, 500);
+// setInterval(() => {
+//     sendPing(wss);
+// }, 10000);
 setInterval(() => {
-    sendPing(wss);
+    sendConnecteds(wss);
 }, 10000);
 
 
@@ -58,3 +61,11 @@ const server = app.listen(8080, () => {
 });
 
 const wss = new WebSocket.Server({ server: server });
+wss.on('connection', (client) => {
+    const str = JSON.stringify({
+        type: 'connecteds',
+        nbConnecteds: wss.clients.size
+    });
+
+    client.send(str);
+});

@@ -6,9 +6,14 @@ export const updates: Update[] = [];
 
 export const sendUpdates = (wss: WebSocket.Server) => {
     if (updates.length > 0) {
+        const str = JSON.stringify({
+            type: 'updates',
+            updates: updates,
+        });
+
         wss.clients.forEach((client) => {
             if (client.readyState === WebSocket.OPEN) {
-                client.send(JSON.stringify(updates));
+                client.send(str);
             }
         });
 
@@ -17,7 +22,22 @@ export const sendUpdates = (wss: WebSocket.Server) => {
 }
 
 export const sendPing = (wss: WebSocket.Server) => {
+    const str = JSON.stringify({
+        type: 'ping'
+    });
+
     wss.clients.forEach((client) => {
-        client.send('ping');
+        client.send(str);
+    });
+}
+
+export const sendConnecteds = (wss: WebSocket.Server) => {
+    const str = JSON.stringify({
+        type: 'connecteds',
+        nbConnecteds: wss.clients.size
+    });
+
+    wss.clients.forEach((client) => {
+        client.send(str);
     });
 }

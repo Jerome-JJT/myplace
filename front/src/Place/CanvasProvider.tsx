@@ -27,6 +27,9 @@ interface CanvasContextProps {
   setActiveTime: React.Dispatch<React.SetStateAction<number>>,
   times: { min: number, max: number } | undefined,
 
+  nbConnecteds: number,
+  setNbConnecteds: React.Dispatch<React.SetStateAction<number>>,
+
   scale: number,
   setScale: React.Dispatch<React.SetStateAction<number>>,
   translate: Point,
@@ -78,6 +81,8 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
   // const startActiveTime = params.get('time') !== null ? ((new Date(params.get('time')).   )) ?? -1
   const [activeTime, setActiveTime] = useState(-1);
   const [times, setTimes] = useState<{ min: number, max: number } | undefined>(undefined);
+
+  const [nbConnecteds, setNbConnecteds] = useState<number>(-1);
 
   const [scale, setScale] = useState(initScale);
   const [translate, setTranslate] = useState<Point>({ x: 0, y: 0 });
@@ -474,6 +479,9 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
         activeTime,
         setActiveTime,
         times,
+
+        nbConnecteds,
+        setNbConnecteds,
 
         scale,
         setScale,
