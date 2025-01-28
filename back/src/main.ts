@@ -19,7 +19,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction): any => {
 
 
 const { queryToken, authenticateToken, profile } = require('./login');
-const { getPixels, getImage } = require('./pixels');
+const { getPixels, getImage, getMyBoard } = require('./pixels');
 const { setPixel } = require('./pixels_actions');
 
 app.get('/get', queryToken, getPixels);
@@ -27,7 +27,7 @@ app.get('/getimage', authenticateToken, getImage);
 app.post('/set', authenticateToken, setPixel);
 
 
-const { mockLogin, poLogin, apiLogin, apiCallback, logout } = require('./login');
+const { mockLogin, poLogin, apiLogin, apiCallback, logout, rotate_tokens } = require('./login');
 
 if (process.env.NODE_ENV === 'DEV') {
     app.get('/login/mock', mockLogin);
@@ -38,6 +38,9 @@ app.get('/login/api', apiLogin);
 app.get('/login/callback', apiCallback);
 app.get('/logout', logout);
 app.get('/profile', authenticateToken, profile);
+
+app.get('/myboard', authenticateToken, getMyBoard);
+app.get('/rotate_tokens', authenticateToken, rotate_tokens);
 
 
 const { getLeaderboards } = require('./leaderboard');

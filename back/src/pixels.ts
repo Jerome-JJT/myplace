@@ -1,6 +1,6 @@
 import { Response } from 'express';
 
-import { CANVAS_X, CANVAS_Y, redisTimeout, } from './consts';
+import { CANVAS_X, CANVAS_Y, redisTimeout, UTC_TIME_END } from './consts';
 import { Color, LoggedRequest, Pixel } from './types';
 import { redisClient } from './redis';
 import { pool } from './db';
@@ -275,6 +275,39 @@ export const getImage = async (req: LoggedRequest, res: Response) => {
         }
         else {
             return res.status(403).json('Forbidden');
+        }
+    } //
+    catch (err) {
+        console.error(err);
+        return res.status(500).send('Error fetching board data.');
+    }
+}
+
+export const getMyBoard = async (req: LoggedRequest, res: Response) => {
+    try {
+        const user = req.user!;
+        const actualDate = Date.now();
+
+        if ((actualDate > UTC_TIME_END) || (user.soft_is_admin === true && (await checkAdmin(user.id)))) {
+
+            const time = new Date();
+            const scale = 8;
+
+            const {canvas} = await createBoardImage(time.toISOString(), {
+                scale: scale, 
+                transparent: req.query.transparent !== undefined,
+                user_id: `${user.id}`
+            });
+
+            res.setHeader('Content-Type', 'image/png');
+            res.setHeader('Content-Disposition', `attachment; filename=myboard.png`);
+            return canvas.pngStream().pipe(res);
+
+        }
+        else {
+            return res.status(420).send({
+                message: 'Enhance your hype',
+            });
         }
     } //
     catch (err) {

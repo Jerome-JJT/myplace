@@ -5,6 +5,7 @@ export interface UserInfos {
     username: string
     soft_is_admin: boolean,
     soft_is_banned: boolean,
+    token_seq: number
 }
 export interface LoggedRequest extends Request {
   user: UserInfos | undefined
