@@ -22,9 +22,9 @@ const checkToken = async (req: LoggedRequest, res: Response, next: any, fail: bo
         }
     }
     else {
-        jwt.verify(token, process.env.JWT_SECRET as string, (err: any, decoded: any) => {
+        jwt.verify(token, process.env.JWT_SECRET as string, (err: any, decoded_t: any) => {
             if (err) {
-                jwt.verify(refresh, process.env.JWT_SECRET as string, async (err: any, decoded: any) => {
+                jwt.verify(refresh, process.env.JWT_SECRET as string, async (err: any, decoded_r: any) => {
                     if (err) {
                         res.clearCookie('token');
                         res.clearCookie('refresh');
@@ -37,7 +37,7 @@ const checkToken = async (req: LoggedRequest, res: Response, next: any, fail: bo
                         }
                     }
                     else {
-                        const logged = await loginUser(decoded.id, res);
+                        const logged = await loginUser(decoded_r.id, res, decoded_r.token_seq);
                         if (logged) {
                             return res.status(426).json({ message: 'Token refreshed' });
                         }
@@ -51,11 +51,11 @@ const checkToken = async (req: LoggedRequest, res: Response, next: any, fail: bo
             }
             else 
             {
-                if (decoded.soft_is_banned) {
+                if (decoded_t.soft_is_banned) {
                     return res.status(409).json({ message: 'Conflict' });
                 }
                 else {
-                    req.user = decoded;
+                    req.user = decoded_t;
                     return next();
                 }
             }
@@ -70,9 +70,9 @@ export const authenticateToken = async (req: LoggedRequest, res: Response, next:
     return await checkToken(req, res, next, true);
 }
 
-const loginUser = async (id: number, res: Response): Promise<boolean> => {
+const loginUser = async (id: number, res: Response, verify_seq: number | undefined = undefined): Promise<boolean> => {
     const result = await pool.query(`
-        SELECT id, name, email, is_admin, banned_at
+        SELECT id, name, email, is_admin, banned_at, token_seq
         FROM users
         WHERE id = $1
         LIMIT 1
@@ -80,6 +80,10 @@ const loginUser = async (id: number, res: Response): Promise<boolean> => {
 
     if (result.rows.length > 0) {
         const user = result.rows[0];
+
+        if (verify_seq !== undefined && verify_seq !== user.token_seq) {
+            return false;
+        }
 
         const token = jwt.sign(
             { 
@@ -97,6 +101,7 @@ const loginUser = async (id: number, res: Response): Promise<boolean> => {
             { 
                 id: user.id,
                 username: user.name,
+                token_seq: user.token_seq,
             } as UserInfos,
             process.env.JWT_SECRET as string, 
             { 
@@ -171,7 +176,7 @@ const getHash = (input: string) => {
       hash |= 0; // to 32bit integer
     }
     return hash;
-  }
+}
 
 export const poLogin = async (req: Request, res: Response) => {
     let uniqid = `${req.socket.remoteAddress}_${req.headers['x-forwarded-for']}_${req.headers['user-agent']}`;
@@ -289,3 +294,21 @@ export const profile = async (req: LoggedRequest, res: Response) => {
         }
     });
 };
+
+
+export const rotate_tokens = async (req: LoggedRequest, res: Response) => {
+    const user = req.user!;
+
+    const result = await pool.query(`
+        UPDATE users 
+        SET token_seq = token_seq + 1
+        WHERE id = $1
+    `, [user.id]);
+
+    if (result.rowCount === 1) {
+        return res.status(200).json({ message: 'Success' });
+    }
+    else {
+        return res.status(417).json({ message: 'Preconfition failed' });
+    }
+}

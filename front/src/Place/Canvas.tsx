@@ -24,7 +24,7 @@ export const DisplayCanvas = () => {
     canvasTouchMove,
     canvasTouchUp,
   } = useCanvas();
-  const { infos } = useUser();
+  const { infos, isConnected } = useUser();
   const throttleFunction = useThrottle();
   const params = new URLSearchParams(window.location.search);
 
@@ -108,6 +108,14 @@ export const DisplayCanvas = () => {
               </div>
             )}
           </>
+        )
+      }
+
+      {
+        isConnected === false && (
+          <div className='pointer-events-none absolute top-0 left-14 text-sm bg-orange-500 p-1 rounded-b-lg'>
+            <b>WS disconnected</b>
+          </div>
         )
       }
     </>

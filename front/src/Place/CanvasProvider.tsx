@@ -27,6 +27,9 @@ interface CanvasContextProps {
   setActiveTime: React.Dispatch<React.SetStateAction<number>>,
   times: { min: number, max: number } | undefined,
 
+  nbConnecteds: number,
+  setNbConnecteds: React.Dispatch<React.SetStateAction<number>>,
+
   scale: number,
   setScale: React.Dispatch<React.SetStateAction<number>>,
   translate: Point,
@@ -79,6 +82,8 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
   const [activeTime, setActiveTime] = useState(-1);
   const [times, setTimes] = useState<{ min: number, max: number } | undefined>(undefined);
 
+  const [nbConnecteds, setNbConnecteds] = useState<number>(-1);
+
   const [scale, setScale] = useState(initScale);
   const [translate, setTranslate] = useState<Point>({ x: 0, y: 0 });
   const [overlayStyle, setOverlayStyle] = useState({
@@ -106,9 +111,9 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
 
 
     const args = objUrlEncode({
-      'time': time,
-      'type': type,
-      'user_id': baseUserId
+      'time':    time,
+      'type':    type,
+      'user_id': baseUserId,
     });
 
     axios
@@ -124,6 +129,7 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
               cols.set(c['id'], {
                 name:  c['name'],
                 color: `${c['red']}, ${c['green']}, ${c['blue']}`,
+                corder: c['corder']
               });
             });
             setColors((prev) => {
@@ -193,7 +199,7 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
       })
       .catch((error) => {
         console.log('is too soon', error);
-        if (error.response === undefined || error.response.status === 502) {
+        if (error?.response === undefined || error.response.status === 502) {
           addNotif('Too soon, server not ready, reload in 2 sec', 'info');
         }
         if (cb) {
@@ -473,6 +479,9 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
         activeTime,
         setActiveTime,
         times,
+
+        nbConnecteds,
+        setNbConnecteds,
 
         scale,
         setScale,

@@ -1,5 +1,3 @@
-version: "3.7"
-
 
 services:
 
@@ -54,5 +52,16 @@ services:
       context: .
       dockerfile: ./_build/nginx/Dockerfile
 
+    depends_on:
+      - front
+      - back
+
+    networks:
+      - front
+      - back
+
     ports:
      - "7979:80"
+     
+networks:
+  front:

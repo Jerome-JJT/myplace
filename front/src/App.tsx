@@ -17,13 +17,13 @@ import {
   createBrowserRouter,
   RouterProvider,
 } from 'react-router-dom';
-// import { IoMdSettings } from 'react-icons/io';
-import { IoIosFiling, IoMdMap, IoMdPodium, IoLogoIonitron, IoMdLock, IoMdKey, IoMdHelpCircle } from 'react-icons/io';
-import { Leaderboard } from './Leaderboard';
+import { IoIosFiling, IoMdMap, IoMdPodium, IoLogoIonitron, IoMdLock, IoMdKey, IoMdHelpCircle, IoMdPerson } from 'react-icons/io';
 import { NotificationContainer } from './NotificationContainer';
 import { Tutorial } from './Place/Tutorial';
 import { QUICK_FIX } from './Utils/types';
 import { LoginPo } from './LoginPo';
+import { Account } from './Account';
+import { Leaderboard } from './Leaderboard';
 
 function App() {
   const { isLogged, getUserData, loginButton, loginApi, logout, setTutoOpen } = useUser();
@@ -38,6 +38,10 @@ function App() {
     {
       path:    '/',
       element: <Place />,
+    },
+    {
+      path:    '/account/',
+      element: <Account />,
     },
     {
       path:    '/leaderboard/',
@@ -148,6 +152,12 @@ function App() {
                     <SpeedDialAction className='text-black text-xs w-12 h-12 mb-2 gap-0' {...QUICK_FIX} onClick={logout}>
                       <IoMdLock size={20} color='black' />
                       Exit
+                    </SpeedDialAction>
+                  )}
+                  { isLogged && (
+                    <SpeedDialAction className='text-black text-xs w-12 h-12 mb-2 gap-0' {...QUICK_FIX} onClick={() => router.navigate('/account')}>
+                      <IoMdPerson size={20} color='black' />
+                      Account
                     </SpeedDialAction>
                   )}
                   <SpeedDialAction className='text-black text-xs w-12 h-12 mb-2 gap-0' {...QUICK_FIX} onClick={() => router.navigate('/leaderboard')}>

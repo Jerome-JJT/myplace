@@ -152,12 +152,12 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
         </div>
         {
           times === undefined && (
-            <div className='self-center w-full p-2 grid grid-cols-9 justify-center gap-2'>
+            <div className='self-center w-full p-2 grid grid-cols-9 auto-cols-[minmax(0,1fr)] justify-center gap-1'>
               {Array.from(colors.entries()).map((v) => {
                 return (
                   <div key={v[0]}
                     title={v[1].name}
-                    className={classNames('min-w-6 min-h-6 md:min-w-14 md:min-h-8 rounded border-2 hover:border-white', activeColor === v[0] ? 'border-white' : 'border-black')}
+                    className={classNames('w-full min-h-6 md:min-h-8 rounded border-2 hover:border-white', activeColor === v[0] ? 'border-white' : 'border-black')}
                     style={{ backgroundColor: 'rgb(' + v[1].color + ')' }}
                     onClick={() => {
                       setActiveColor(v[0]);

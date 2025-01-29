@@ -1,6 +1,6 @@
 import { Response } from 'express';
 
-import { CANVAS_X, CANVAS_Y, redisTimeout, } from './consts';
+import { CANVAS_X, CANVAS_Y, redisTimeout, UTC_TIME_END } from './consts';
 import { Color, LoggedRequest, Pixel } from './types';
 import { redisClient } from './redis';
 import { pool } from './db';
@@ -11,7 +11,7 @@ async function initializeBoard() {
     const board: (Pixel | null)[][] = [];
 
     const result = await pool.query(`
-        SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.name, EXTRACT(EPOCH FROM ranked_board.set_time)::BIGINT * 1000 AS set_time
+        SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.name, (EXTRACT(EPOCH FROM ranked_board.set_time) * 1000)::BIGINT AS set_time
         FROM (
             SELECT x, y, user_id, color_id, set_time,
                 ROW_NUMBER() OVER (PARTITION BY x, y ORDER BY set_time DESC) as rn
@@ -74,21 +74,21 @@ async function viewTimedBoard(time: string, {user_id = null}: {user_id?: string 
     const board: (Pixel | null)[][] = [];
     
     const result = await pool.query(`
-        SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.name, EXTRACT(EPOCH FROM ranked_board.set_time)::BIGINT * 1000 AS set_time
+        SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.name, (EXTRACT(EPOCH FROM ranked_board.set_time) * 1000)::BIGINT AS set_time
         FROM (
             SELECT x, y, user_id, color_id, set_time,
                 ROW_NUMBER() OVER (PARTITION BY x, y ORDER BY set_time DESC) as rn
             FROM board
             JOIN users ON users.id = board.user_id
-            WHERE board.set_time < $1 AND
-            (
-                CAST($2 AS VARCHAR) IS NULL OR
-                CAST(users.id AS VARCHAR) = CAST($2 AS VARCHAR) OR
-                CAST(users.name AS VARCHAR) = CAST($2 AS VARCHAR)
-            )
+            WHERE board.set_time < $1
         ) as ranked_board
         LEFT JOIN users ON users.id = ranked_board.user_id
-        WHERE rn = 1
+        WHERE rn = 1 AND
+        (
+            CAST($2 AS VARCHAR) IS NULL OR
+            CAST(users.id AS VARCHAR) = CAST($2 AS VARCHAR) OR
+            CAST(users.name AS VARCHAR) = CAST($2 AS VARCHAR)
+        )
     `, [time, user_id]);
     const mapResults = new Map();
     result.rows.forEach((v) => {
@@ -116,21 +116,21 @@ async function viewTimedBoard(time: string, {user_id = null}: {user_id?: string 
 
 async function createBoardImage(time: string, {scale = 1, transparent = false, user_id = null}: {scale?: number, transparent?: boolean, user_id?: string | null}) {
     const result = await pool.query(`
-        SELECT ranked_board.x, ranked_board.y, users.name, EXTRACT(EPOCH FROM ranked_board.set_time)::BIGINT * 1000 AS set_time, colors.red, colors.green, colors.blue
+        SELECT ranked_board.x, ranked_board.y, users.name, (EXTRACT(EPOCH FROM ranked_board.set_time) * 1000)::BIGINT AS set_time, colors.red, colors.green, colors.blue
         FROM (
             SELECT x, y, user_id, color_id, set_time,
                 ROW_NUMBER() OVER (PARTITION BY x, y ORDER BY set_time DESC) as rn
             FROM board
             JOIN users ON users.id = board.user_id
-            WHERE board.set_time < $1 AND
-            (
-                CAST(users.id AS VARCHAR) = CAST($2 AS VARCHAR) OR
-                CAST(users.name AS VARCHAR) = CAST($2 AS VARCHAR)
-            )
+            WHERE board.set_time < $1
         ) as ranked_board
         LEFT JOIN users ON users.id = ranked_board.user_id
         JOIN colors ON colors.id = ranked_board.color_id
-        WHERE rn = 1
+        WHERE rn = 1 AND (
+            CAST($2 AS VARCHAR) IS NULL OR
+            CAST(users.id AS VARCHAR) = CAST($2 AS VARCHAR) OR
+            CAST(users.name AS VARCHAR) = CAST($2 AS VARCHAR)
+        )
     `, [time, user_id]);
     const mapResults = new Map();
     result.rows.forEach((v) => {
@@ -171,7 +171,7 @@ async function createBoardImage(time: string, {scale = 1, transparent = false, u
 
 async function getColors(): Promise<Color[]> {
     const result = await pool.query(`
-        SELECT id, name, red, green, blue
+        SELECT id, name, red, green, blue, corder
         FROM colors
         ORDER BY corder ASC
     `);
@@ -275,6 +275,39 @@ export const getImage = async (req: LoggedRequest, res: Response) => {
         }
         else {
             return res.status(403).json('Forbidden');
+        }
+    } //
+    catch (err) {
+        console.error(err);
+        return res.status(500).send('Error fetching board data.');
+    }
+}
+
+export const getMyBoard = async (req: LoggedRequest, res: Response) => {
+    try {
+        const user = req.user!;
+        const actualDate = Date.now();
+
+        if ((actualDate > UTC_TIME_END) || (user.soft_is_admin === true && (await checkAdmin(user.id)))) {
+
+            const time = new Date();
+            const scale = 8;
+
+            const {canvas} = await createBoardImage(time.toISOString(), {
+                scale: scale, 
+                transparent: req.query.transparent !== undefined,
+                user_id: `${user.id}`
+            });
+
+            res.setHeader('Content-Type', 'image/png');
+            res.setHeader('Content-Disposition', `attachment; filename=myboard_${req.query.transparent !== undefined ? 'transparent' : 'white'}.png`);
+            return canvas.pngStream().pipe(res);
+
+        }
+        else {
+            return res.status(420).send({
+                message: 'Enhance your hype',
+            });
         }
     } //
     catch (err) {

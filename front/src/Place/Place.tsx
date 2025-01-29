@@ -1,8 +1,8 @@
 import axios from 'axios';
-import { useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import { CANVAS_X, CANVAS_Y } from 'src/Utils/consts';
-import { Update } from 'src/Utils/types';
+import { ColorType, Update } from 'src/Utils/types';
 import { useUser } from 'src/UserProvider';
 import { objUrlEncode } from 'src/Utils/objUrlEncode';
 
@@ -17,71 +17,108 @@ import { useNotification } from 'src/NotificationProvider';
 
 
 export function Place() {
-  const { isLogged, setPixelInfos } = useUser();
+  const { isLogged, setPixelInfos, setIsConnected } = useUser();
   const { addNotif } = useNotification();
-  const { pl, board, image, queryPlace, activePixel, setActivePixel, activeColor, setActiveColor, colors, setBoard, scale } = useCanvas();
+  const { pl, board, image, queryPlace, activePixel, setActivePixel, activeColor, setActiveColor, colors, setBoard, scale, setNbConnecteds } = useCanvas();
   const params = new URLSearchParams(window.location.search);
-
+  const paramView = params.get('view') !== null;
+  const paramType = params.get('type');
+  const paramTime = params.get('time');
+  const [reloadId, setReloadId] = useState(0);
 
   useEffect(() => {
+    if (paramTime !== null) {
+      return ;
+    }
     const socket = new WebSocket(`${document.location.protocol.includes('https') ? 'wss' : 'ws'}://${document.location.host}/ws/`);
+    const sockId = Math.round(Math.random() * 10000);
     const updates: Update[] = [];
+    let interval: NodeJS.Timeout | undefined = undefined;
 
     socket.onopen = () => {
-      console.log('WebSocket connected.');
+      console.log(`WebSocket ${sockId} connected.`);
+      setIsConnected((_prev) => true);
     };
 
     socket.onmessage = (event) => {
-      if (event.data === 'ping') {
-        console.log('pong');
+
+      const message = JSON.parse(event.data);
+      if (message.type === undefined) {
         return;
       }
-      const incoming = JSON.parse(event.data) as Update[];
-      console.log('Received updates:', incoming);
 
-      incoming.forEach((u) => updates.push(u));
+      else if (message.type === 'ping') {
+        console.log('pong');
+      }
 
-      if (pl.current !== null) {
-        const ctx = pl.current.getContext('2d');
-        if (ctx !== null) {
+      else if (message.type === 'connecteds') {
+        setNbConnecteds(message.nbConnecteds);
+      }
 
-          setBoard((prev) => {
-            const fut = new Map(prev);
+      else if (message.type === 'updates') {
+        const incoming = JSON.parse(message.updates) as Update[];
+        console.log(`${sockId} Received updates:`, incoming);
 
-            while (updates.length > 0) {
-              const up = updates.shift()!;
+        incoming.forEach((u) => updates.push(u));
 
-              const { x, y, ...pixel } = up;
-              const color = colors.get(pixel.color_id);
+        if (pl.current !== null) {
+          const ctx = pl.current.getContext('2d');
+          if (ctx !== null) {
 
-              if (color !== undefined && pixel.set_time > (prev.get(`${x}:${y}`)?.set_time || 0)) {
-                ctx.fillStyle = 'rgb(' + color.color + ')';
-                ctx.fillRect(x, y, 1, 1);
-                fut.set(`${x}:${y}`, pixel);
+            setBoard((prev) => {
+              const fut = new Map(prev);
+
+              while (updates.length > 0) {
+                const up = updates.shift()!;
+
+                const { x, y, ...pixel } = up;
+                const color = colors.get(pixel.color_id);
+
+                if (color !== undefined && pixel.set_time > (prev.get(`${x}:${y}`)?.set_time || 0)) {
+                  ctx.fillStyle = 'rgb(' + color.color + ')';
+                  ctx.fillRect(x, y, 1, 1);
+                  fut.set(`${x}:${y}`, pixel);
+                }
+                else {
+                  console.log('No need to set', pixel, prev.get(`${x}:${y}`));
+                }
               }
-              else {
-                console.log('No need to set', pixel, prev.get(`${x}:${y}`));
-              }
-            }
-            return fut;
-          });
+              return fut;
+            });
+          }
         }
       }
     };
 
-    socket.onclose = () => {
-      console.log('WEBSOCKET CLOSED');
+    socket.onclose = (event) => {
+      setIsConnected((_prev) => false);
+      console.log(`WebSocket ${sockId} closed type ${event.code}.`);
+
+      if (event.code === 1006 && paramView) {
+        console.log('Auto reloading in 30s');
+
+        interval = setTimeout(() => {
+          console.log('send query');
+          queryPlace(paramTime ?? undefined, paramType ?? 'board', undefined);
+          setReloadId((prev) => prev + 1);
+        }, 30000);
+      }
     };
 
     return () => {
-      socket.close();
+      if (interval !== undefined) {
+        clearTimeout(interval);
+      }
+      if (!([socket.CLOSED, socket.CLOSING] as number[]).includes(socket.readyState)) {
+        socket.close();
+      }
     };
-  }, [colors, pl, setBoard]);
+  }, [colors, pl, setBoard, setIsConnected, paramView, queryPlace, paramTime, paramType, reloadId]);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    queryPlace(params.get('time') ?? undefined, params.get('type') ?? 'board', undefined);
-  }, [board.size, queryPlace]);
+    // const params = new URLSearchParams(window.location.search);
+    queryPlace(paramTime ?? undefined, paramType ?? 'board', undefined);
+  }, [board.size, paramTime, paramType, queryPlace]);
 
   const paintButton = useCallback((e: React.MouseEvent<HTMLElement> | undefined) => {
     e?.currentTarget.blur();
@@ -198,11 +235,21 @@ export function Place() {
 
     if (rel !== undefined) {
       setActiveColor((prev) => {
-        const next = (prev - 1 + rel + colors.size) % colors.size + 1;
-        if (colors.has(next)) {
-          return next;
+        const prevCid = colors.get(prev)?.corder || 0;
+
+        const next = Array.from(colors.entries()).reduce((acc: [number, ColorType] | undefined, [k, v]: [number, ColorType]) => {
+          if (v.corder > prevCid && (acc === undefined || v.corder < acc[1].corder)) {
+            return [k, v];
+          }
+          return acc;
+        }, undefined) ;
+        
+        if (next !== undefined) {
+          return next[0];
         }
-        return prev;
+        else {
+          return colors.keys().next().value || 1;
+        }
       });
     }
   }, [colors, setActiveColor]);
@@ -223,7 +270,8 @@ export function Place() {
           marginTop: canvasMarginTop,
           display:   (image !== undefined ? 'block' : 'none'),
         }}
-        src={`data:image/png;base64,${image}`} />
+        src={`data:image/png;base64,${image}`} 
+      />
       <DisplayCanvas />
 
       {
