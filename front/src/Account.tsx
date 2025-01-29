@@ -38,7 +38,14 @@ const invalidateButton = useCallback((e: React.MouseEvent<HTMLElement> | undefin
           className={classNames('ml-1 px-1 bg-gray-700/90 rounded border-2 border-black text-white hover:text-white hover:border-white')}
           onClick={() => window.location.href='/api/myboard'}
         >
-          Download
+          Download white background
+        </button>
+
+        <button
+          className={classNames('ml-1 px-1 bg-gray-700/90 rounded border-2 border-black text-white hover:text-white hover:border-white')}
+          onClick={() => window.location.href='/api/myboard?transparent=true'}
+        >
+          Download transparent
         </button>
       </div>
 

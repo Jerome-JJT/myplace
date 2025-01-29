@@ -80,15 +80,15 @@ async function viewTimedBoard(time: string, {user_id = null}: {user_id?: string 
                 ROW_NUMBER() OVER (PARTITION BY x, y ORDER BY set_time DESC) as rn
             FROM board
             JOIN users ON users.id = board.user_id
-            WHERE board.set_time < $1 AND
-            (
-                CAST($2 AS VARCHAR) IS NULL OR
-                CAST(users.id AS VARCHAR) = CAST($2 AS VARCHAR) OR
-                CAST(users.name AS VARCHAR) = CAST($2 AS VARCHAR)
-            )
+            WHERE board.set_time < $1
         ) as ranked_board
         LEFT JOIN users ON users.id = ranked_board.user_id
-        WHERE rn = 1
+        WHERE rn = 1 AND
+        (
+            CAST($2 AS VARCHAR) IS NULL OR
+            CAST(users.id AS VARCHAR) = CAST($2 AS VARCHAR) OR
+            CAST(users.name AS VARCHAR) = CAST($2 AS VARCHAR)
+        )
     `, [time, user_id]);
     const mapResults = new Map();
     result.rows.forEach((v) => {
@@ -122,15 +122,15 @@ async function createBoardImage(time: string, {scale = 1, transparent = false, u
                 ROW_NUMBER() OVER (PARTITION BY x, y ORDER BY set_time DESC) as rn
             FROM board
             JOIN users ON users.id = board.user_id
-            WHERE board.set_time < $1 AND
-            (
-                CAST(users.id AS VARCHAR) = CAST($2 AS VARCHAR) OR
-                CAST(users.name AS VARCHAR) = CAST($2 AS VARCHAR)
-            )
+            WHERE board.set_time < $1
         ) as ranked_board
         LEFT JOIN users ON users.id = ranked_board.user_id
         JOIN colors ON colors.id = ranked_board.color_id
-        WHERE rn = 1
+        WHERE rn = 1 AND (
+            CAST($2 AS VARCHAR) IS NULL OR
+            CAST(users.id AS VARCHAR) = CAST($2 AS VARCHAR) OR
+            CAST(users.name AS VARCHAR) = CAST($2 AS VARCHAR)
+        )
     `, [time, user_id]);
     const mapResults = new Map();
     result.rows.forEach((v) => {
@@ -300,7 +300,7 @@ export const getMyBoard = async (req: LoggedRequest, res: Response) => {
             });
 
             res.setHeader('Content-Type', 'image/png');
-            res.setHeader('Content-Disposition', `attachment; filename=myboard.png`);
+            res.setHeader('Content-Disposition', `attachment; filename=myboard_${req.query.transparent !== undefined ? 'transparent' : 'white'}.png`);
             return canvas.pngStream().pipe(res);
 
         }
