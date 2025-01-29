@@ -101,7 +101,7 @@ async function viewTimedBoard(time: string, {user_id = null}: {user_id?: string 
 
             const cell = mapResults.get(`${x}:${y}`);
             if (cell !== undefined) {
-                const p: Pixel = { color_id: cell.color_id, username: cell.name, set_time: cell.set_time }
+                const p: Pixel = { color_id: cell.color_id, username: cell.name, set_time: parseInt(cell.set_time) }
                 board[x][y] = p;
             }
             else {
