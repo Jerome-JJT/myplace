@@ -270,10 +270,30 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
       const mouseX = ((pageX - offsetX) - centerX) / scale;
       const mouseY = ((pageY - offsetY) - centerY) / scale;
 
-      setTranslate((prev) => ({
-        x: ((mouseX + prev.x * 2) * (scale / newScale)) - (mouseX + translate.x),
-        y: ((mouseY + prev.y * 2) * (scale / newScale)) - (mouseY + translate.y),
-      }));
+      setTranslate((prev) => {
+        const params = new URLSearchParams(window.location.search);
+
+        const calcNewX = ((mouseX + prev.x * 2) * (scale / newScale)) - (mouseX + translate.x);
+        const calcNewY = ((mouseY + prev.y * 2) * (scale / newScale)) - (mouseY + translate.y);
+
+        if (params.get('view') !== null) {
+          const args = objUrlEncode({
+            ...Object.fromEntries(params),
+            'x': Math.round(calcNewX),
+            'y': Math.round(calcNewY),
+            'scale': newScale,
+          });
+
+          const base = `${window.location.origin}${window.location.pathname}`;
+          const link = `${base}?${args}`;
+          window.history.replaceState(null, '', link);
+        }
+
+        return {
+          x: calcNewX,
+          y: calcNewY,
+        }
+      });
 
       setScale(newScale);
     }
@@ -365,11 +385,14 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
         setTranslate((prev) => {
           const params = new URLSearchParams(window.location.search);
 
+          const calcNewX = prev.x - (dragStart.x - mouseX);
+          const calcNewY = prev.y - (dragStart.y - mouseY);
+
           if (params.get('view') !== null) {
             const args = objUrlEncode({
               ...Object.fromEntries(params),
-              'x':     Math.round(prev.x - (dragStart.x - mouseX)),
-              'y':     Math.round(prev.y - (dragStart.y - mouseY)),
+              'x':     Math.round(calcNewX),
+              'y':     Math.round(calcNewY),
               'scale': scale,
             });
     
@@ -379,8 +402,8 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
           }
           
           return {
-            x: prev.x - (dragStart.x - mouseX),
-            y: prev.y - (dragStart.y - mouseY),
+            x: calcNewX,
+            y: calcNewY,
           };
         });
 
