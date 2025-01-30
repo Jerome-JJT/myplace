@@ -56,7 +56,7 @@ export function Place() {
       }
 
       else if (message.type === 'updates') {
-        const incoming = JSON.parse(message.updates) as Update[];
+        const incoming = message.updates as Update[];
         console.log(`${sockId} Received updates:`, incoming);
 
         incoming.forEach((u) => updates.push(u));
