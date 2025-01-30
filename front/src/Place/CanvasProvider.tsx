@@ -108,7 +108,7 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
     const baseY = parseInt(params.get('y') || '');
     const baseScale = parseInt(params.get('scale') || '');
     const baseUserId = params.get('user_id') || undefined;
-
+    const baseView = params.get('view') !== null;
 
     const args = objUrlEncode({
       'time':    time,
@@ -167,8 +167,13 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
                     const setX = Math.max(Math.min(baseX, CANVAS_X - 1), 0);
                     const setY = Math.max(Math.min(baseY, CANVAS_Y - 1), 0);
 
-                    setActivePixel({ x: setX, y: setY });
-                    setTranslate({ x: centerX - setX, y: centerY - setY });
+                    if (baseView === false) {
+                      setActivePixel({ x: setX, y: setY });
+                      setTranslate({ x: centerX - setX, y: centerY - setY });
+                    }
+                    else {
+                      setTranslate({ x: baseX, y: baseY });
+                    }
                   }
                   if (time === undefined && !Number.isNaN(baseScale)) {
                     setScale(baseScale);
@@ -295,16 +300,19 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
         setActivePixel({ x: clickedX, y: clickedY });
 
         const params = new URLSearchParams(window.location.search);
-        const args = objUrlEncode({
-          ...Object.fromEntries(params),
-          'x':     Math.min(Math.max(clickedX, 0), CANVAS_X),
-          'y':     Math.min(Math.max(clickedY, 0), CANVAS_Y),
-          'scale': scale,
-        });
 
-        const base = `${window.location.origin}${window.location.pathname}`;
-        const link = `${base}?${args}`;
-        window.history.replaceState(null, '', link);
+        if (params.get('view') === null) {
+          const args = objUrlEncode({
+            ...Object.fromEntries(params),
+            'x':     Math.min(Math.max(clickedX, 0), CANVAS_X),
+            'y':     Math.min(Math.max(clickedY, 0), CANVAS_Y),
+            'scale': scale,
+          });
+  
+          const base = `${window.location.origin}${window.location.pathname}`;
+          const link = `${base}?${args}`;
+          window.history.replaceState(null, '', link);
+        }
       }
       else {
         setActivePixel({ x: -1, y: -1 });
@@ -355,6 +363,21 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
         const mouseY = ((pageY - offsetY) - centerY) / scale;
 
         setTranslate((prev) => {
+          const params = new URLSearchParams(window.location.search);
+
+          if (params.get('view') !== null) {
+            const args = objUrlEncode({
+              ...Object.fromEntries(params),
+              'x':     Math.round(prev.x - (dragStart.x - mouseX)),
+              'y':     Math.round(prev.y - (dragStart.y - mouseY)),
+              'scale': scale,
+            });
+    
+            const base = `${window.location.origin}${window.location.pathname}`;
+            const link = `${base}?${args}`;
+            window.history.replaceState(null, '', link);
+          }
+          
           return {
             x: prev.x - (dragStart.x - mouseX),
             y: prev.y - (dragStart.y - mouseY),
