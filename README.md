@@ -44,3 +44,6 @@ https://github.com/aschmelyun/laraplace
 
 #### RPlace atlas
 https://2022.place-atlas.stefanocoding.me/#//59/442/4
+
+## View/Example
+<img src="https://jerome-jjt.github.io/images/projects/ftplace/ftplace_view.png" alt="preview" width="700"/>
