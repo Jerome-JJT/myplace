@@ -89,14 +89,23 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
     if (pixel !== undefined) {
       let displayUsername = pixel.username;
 
-      return (
-        <p className='h-fit whitespace-nowrap'>
-          {activePixel.x}:{activePixel.y} set by {displayUsername} at <br />
-          {
-              dateIsoToNice(pixel.set_time)
-          }
-        </p>
-      );
+      if (displayUsername === 'null') {
+        return (
+          <p className='h-fit whitespace-nowrap'>
+            {activePixel.x}:{activePixel.y} never set
+          </p>
+        );
+      }
+      else {
+        return (
+          <p className='h-fit whitespace-nowrap'>
+            {activePixel.x}:{activePixel.y} set by {displayUsername} at <br />
+            {
+                dateIsoToNice(pixel.set_time)
+            }
+          </p>
+        );
+      }
     }
     else {
       return <></>
