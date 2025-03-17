@@ -9,6 +9,8 @@ export const isTrue = (src: any) => {
     return false;
 }
 
+export const DEV_MODE = process.env.NODE_ENV === 'DEV';
+
 export const CANVAS_X = parseInt(process.env.CANVAS_X!);
 export const CANVAS_Y = parseInt(process.env.CANVAS_Y!);
 
@@ -38,7 +40,7 @@ export const JWT_REFRESH_EXPIRES_IN = parseInt(process.env.JWT_REFRESH_EXPIRES_I
 
 export const ENABLE_GUEST_LOGIN = isTrue(process.env.ENABLE_GUEST_LOGIN);
 
-export const ENABLE_OAUTH2_LOGIN = isTrue(process.env.ENABLE_GUEST_LOGIN);
+export const ENABLE_OAUTH2_LOGIN = isTrue(process.env.ENABLE_OAUTH2_LOGIN);
 export const OAUTH2_UID = ENABLE_OAUTH2_LOGIN ? process.env.OAUTH2_UID! : undefined;
 export const OAUTH2_SECRET = ENABLE_OAUTH2_LOGIN ? process.env.OAUTH2_SECRET! : undefined;
 
@@ -47,6 +49,6 @@ export const OAUTH2_TOKEN_URL = ENABLE_OAUTH2_LOGIN ? process.env.OAUTH2_TOKEN_U
 export const OAUTH2_CALLBACK_URL = ENABLE_OAUTH2_LOGIN ? process.env.OAUTH2_CALLBACK_URL! : undefined;
 export const OAUTH2_INFO_URL = ENABLE_OAUTH2_LOGIN ? process.env.OAUTH2_INFO_URL! : undefined;
 
-export const OAUTH2_ID_FIELD = ENABLE_OAUTH2_LOGIN ? process.env.OAUTH2_INFO_URL! : undefined;
-export const OAUTH2_USERNAME_FIELD = ENABLE_OAUTH2_LOGIN ? process.env.OAUTH2_INFO_URL! : undefined;
+export const OAUTH2_ID_FIELD = ENABLE_OAUTH2_LOGIN ? process.env.OAUTH2_ID_FIELD! : undefined;
+export const OAUTH2_USERNAME_FIELD = ENABLE_OAUTH2_LOGIN ? process.env.OAUTH2_USERNAME_FIELD! : undefined;
 export const OAUTH2_EMAIL_FIELD = ENABLE_OAUTH2_LOGIN ? process.env.OAUTH2_EMAIL_FIELD! : undefined;

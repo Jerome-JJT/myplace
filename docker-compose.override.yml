@@ -29,6 +29,8 @@ services:
         VITE_CANVAS_X: ${CANVAS_X}
         VITE_CANVAS_Y: ${CANVAS_Y}
 
+        VITE_OAUTH2_DISPLAY_NAME: ${OAUTH2_DISPLAY_NAME}
+
     restart: "always"
 
     ports:

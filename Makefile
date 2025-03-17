@@ -1,4 +1,3 @@
-
 include .env
 
 APP_NAME	= place
@@ -22,10 +21,6 @@ all:		start
 
 build:
 			${DOCKER} build
-
-testenv:
-		@echo $(hostname)
-		@echo ${DOCKER}
 
 start:
 			${DOCKER} up -d --build
@@ -98,6 +93,11 @@ re:
 					${MAKE} all
 					sleep 4
 					${MAKE} migrate
+
+
+stats:
+			\wc -l front/src/*.tsx front/src/*/*.tsx front/src/*/*.ts
+			\wc -l back/src/*.ts
 
 
 .PHONY:		all build start ps logs flogs run api down clean re

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useUser } from './UserProvider';
 import classNames from 'classnames';
+import { OAUTH2_DISPLAY_NAME } from './Utils/consts';
 
 export const LoginPo = () => {
   const { isLogged, loginApi, loginPo } = useUser();
@@ -37,7 +38,7 @@ export const LoginPo = () => {
         )}
         onClick={loginApi}
       >
-        Login 42
+        {OAUTH2_DISPLAY_NAME}
       </button>
     </div>
   );

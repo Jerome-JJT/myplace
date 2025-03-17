@@ -8,7 +8,8 @@ import {
     PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER, 
     JWT_SECRET,
     OAUTH2_UID,
-    OAUTH2_SECRET
+    OAUTH2_SECRET,
+    DEV_MODE
 } from './consts';
 import { LoggedRequest, UserInfos } from './types';
 import { pool } from './db';
@@ -79,7 +80,7 @@ export const authenticateToken = async (req: LoggedRequest, res: Response, next:
 
 const loginUser = async (id: number, res: Response, verify_seq: number | undefined = undefined): Promise<boolean> => {
     const result = await pool.query(`
-        SELECT id, name, email, is_admin, banned_at, token_seq
+        SELECT id, username, email, is_admin, banned_at, token_seq
         FROM users
         WHERE id = $1
         LIMIT 1
@@ -95,7 +96,7 @@ const loginUser = async (id: number, res: Response, verify_seq: number | undefin
         const token = jwt.sign(
             { 
                 id: user.id, 
-                username: user.name,
+                username: user.username,
                 soft_is_admin: user.is_admin,
                 soft_is_banned: user.banned_at ? true : false,
             } as UserInfos,
@@ -107,7 +108,7 @@ const loginUser = async (id: number, res: Response, verify_seq: number | undefin
         const refresh = jwt.sign(
             { 
                 id: user.id,
-                username: user.name,
+                username: user.username,
                 token_seq: user.token_seq,
             } as UserInfos,
             JWT_SECRET, 
@@ -119,13 +120,13 @@ const loginUser = async (id: number, res: Response, verify_seq: number | undefin
         res.cookie('token', token, {
             httpOnly: true,
             sameSite: "strict",
-            secure: process.env.NODE_ENV === 'production',
+            secure: DEV_MODE === false,
             maxAge: 4 * JWT_EXPIRES_IN * 1000,
         });
         res.cookie('refresh', refresh, {
             httpOnly: true,
             sameSite: "strict",
-            secure: process.env.NODE_ENV === 'production',
+            secure: DEV_MODE === false,
             maxAge: 4 * JWT_REFRESH_EXPIRES_IN * 1000,
         });
         return true;
@@ -138,7 +139,7 @@ const loginUser = async (id: number, res: Response, verify_seq: number | undefin
 const createUser = async (id: number, username: string, email: string | null, admin: boolean): Promise<boolean> => {
     try {
         const result = await pool.query(`
-            INSERT INTO users (id, name, email, is_admin) 
+            INSERT INTO users (id, username, email, is_admin) 
             VALUES
             ($1, $2, $3, $4)
         `, [id, username, email, admin]);
@@ -257,29 +258,54 @@ export const apiCallback = async (req: Request, res: Response) => {
                             // return res.status(200).json({ message: 'Login successful' });
                         }
                         else {
-                            return res.status(410).json({ message: 'Login failed' });
+                            if (DEV_MODE) {
+                                return res.status(410).json({ message: 'Login failed', dev_reason: 'Login after create failed' });
+                            }
+                            else {
+                                return res.status(410).json({ message: 'Login failed' });
+                            }
                         }
                     }
                     else {
-                        return res.status(410).json({ message: 'Login failed' });
+                        if (DEV_MODE) {
+                            return res.status(410).json({ message: 'Login failed', dev_reason: 'Create fail' });
+                        }
+                        else {
+                            return res.status(410).json({ message: 'Login failed' });
+                        }
                     }
                 }
             }
             else {
-                return res.status(410).json({ message: 'Login failed' });
+                if (DEV_MODE) {
+                    return res.status(410).json({ message: 'Login failed', dev_reason: 'Not 200 from api info', url: userInfos });
+                }
+                else {
+                    return res.status(410).json({ message: 'Login failed' });
+                }
                 // return res.redirect('/')
             }
         }
         else {
-            console.error('LOGIN FAILED');
-            return res.status(410).json({ message: 'Login failed' });
+            if (DEV_MODE) {
+                console.error('LOGIN FAILED');
+                return res.status(410).json({ message: 'Login failed', dev_reason: 'Not 200 from api info', url: token });
+            }
+            else {
+                return res.status(410).json({ message: 'Login failed' });
+            }
             // return res.redirect('/')
         }
     }
     catch (e: any) {
         if (e.status === 401) {
-            console.error('LOGIN FAILED');
-            return res.status(410).json({ message: 'API login failed' });
+            if (DEV_MODE) {
+                console.error('LOGIN FAILED');
+                return res.status(410).json({ message: 'API login failed', dev_reason: 'Received 401', url: e });
+            }
+            else {
+                return res.status(410).json({ message: 'API login failed' });
+            }
         }
     }
 }

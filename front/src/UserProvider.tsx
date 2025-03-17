@@ -98,22 +98,19 @@ export function UserProvider({ children }: { children: ReactNode }): JSX.Element
 
   const loginButton = useCallback((e: React.MouseEvent<HTMLElement> | undefined) => {
     e?.currentTarget.blur();
-    const username = prompt('Username');
 
-    if (username && username.length > 3) {
-      axios
-        .post('/api/login/mock',
-          {
-            username: username,
-          },
-          { withCredentials: true },
-        )
-        .then(() => {
-          getUserData();
-        })
-        .catch(() => {
-        });
-    }
+    axios
+      .post('/api/login/mock',
+        {},
+        { withCredentials: true },
+      )
+      .then(() => {
+        getUserData();
+        addNotif('Mock login success', 'success');
+      })
+      .catch(() => {
+        addNotif('Mock login error', 'error');
+      });
   }, [getUserData]);
 
   const loginApi = useCallback((e: React.MouseEvent<HTMLElement> | undefined) => {

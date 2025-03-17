@@ -11,7 +11,7 @@ async function initializeBoard() {
     const board: (Pixel | null)[][] = [];
 
     const result = await pool.query(`
-        SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.name, (EXTRACT(EPOCH FROM ranked_board.set_time) * 1000)::BIGINT AS set_time
+        SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.username, (EXTRACT(EPOCH FROM ranked_board.set_time) * 1000)::BIGINT AS set_time
         FROM (
             SELECT x, y, user_id, color_id, set_time,
                 ROW_NUMBER() OVER (PARTITION BY x, y ORDER BY set_time DESC) as rn
@@ -50,7 +50,7 @@ async function initializeBoard() {
 
                 const cell = mapResults.get(`${x}:${y}`);
                 if (cell !== undefined) {
-                    const p: Pixel = { color_id: cell.color_id, username: cell.name, set_time: parseInt(cell.set_time) }
+                    const p: Pixel = { color_id: cell.color_id, username: cell.username, set_time: parseInt(cell.set_time) }
                     board[x][y] = p;
                 } //
                 else {
@@ -74,7 +74,7 @@ async function viewTimedBoard(time: string, {user_id = null}: {user_id?: string 
     const board: (Pixel | null)[][] = [];
     
     const result = await pool.query(`
-        SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.name, (EXTRACT(EPOCH FROM ranked_board.set_time) * 1000)::BIGINT AS set_time
+        SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.username, (EXTRACT(EPOCH FROM ranked_board.set_time) * 1000)::BIGINT AS set_time
         FROM (
             SELECT x, y, user_id, color_id, set_time,
                 ROW_NUMBER() OVER (PARTITION BY x, y ORDER BY set_time DESC) as rn
@@ -87,7 +87,7 @@ async function viewTimedBoard(time: string, {user_id = null}: {user_id?: string 
         (
             CAST($2 AS VARCHAR) IS NULL OR
             CAST(users.id AS VARCHAR) = CAST($2 AS VARCHAR) OR
-            CAST(users.name AS VARCHAR) = CAST($2 AS VARCHAR)
+            CAST(users.username AS VARCHAR) = CAST($2 AS VARCHAR)
         )
     `, [time, user_id]);
     const mapResults = new Map();
@@ -101,7 +101,7 @@ async function viewTimedBoard(time: string, {user_id = null}: {user_id?: string 
 
             const cell = mapResults.get(`${x}:${y}`);
             if (cell !== undefined) {
-                const p: Pixel = { color_id: cell.color_id, username: cell.name, set_time: parseInt(cell.set_time) }
+                const p: Pixel = { color_id: cell.color_id, username: cell.username, set_time: parseInt(cell.set_time) }
                 board[x][y] = p;
             }
             else {
@@ -116,7 +116,7 @@ async function viewTimedBoard(time: string, {user_id = null}: {user_id?: string 
 
 async function createBoardImage(time: string, {scale = 1, transparent = false, user_id = null}: {scale?: number, transparent?: boolean, user_id?: string | null}) {
     const result = await pool.query(`
-        SELECT ranked_board.x, ranked_board.y, users.name, (EXTRACT(EPOCH FROM ranked_board.set_time) * 1000)::BIGINT AS set_time, colors.red, colors.green, colors.blue
+        SELECT ranked_board.x, ranked_board.y, users.username, (EXTRACT(EPOCH FROM ranked_board.set_time) * 1000)::BIGINT AS set_time, colors.red, colors.green, colors.blue
         FROM (
             SELECT x, y, user_id, color_id, set_time,
                 ROW_NUMBER() OVER (PARTITION BY x, y ORDER BY set_time DESC) as rn
@@ -129,7 +129,7 @@ async function createBoardImage(time: string, {scale = 1, transparent = false, u
         WHERE rn = 1 AND (
             CAST($2 AS VARCHAR) IS NULL OR
             CAST(users.id AS VARCHAR) = CAST($2 AS VARCHAR) OR
-            CAST(users.name AS VARCHAR) = CAST($2 AS VARCHAR)
+            CAST(users.username AS VARCHAR) = CAST($2 AS VARCHAR)
         )
     `, [time, user_id]);
     const mapResults = new Map();

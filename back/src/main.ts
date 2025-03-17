@@ -3,7 +3,7 @@ import WebSocket from "ws";
 import cookieParser from 'cookie-parser';
 
 import { sendUpdates, sendPing, sendConnecteds } from "./ws";
-import { ENABLE_GUEST_LOGIN, ENABLE_OAUTH2_LOGIN } from "./consts";
+import { DEV_MODE, ENABLE_GUEST_LOGIN, ENABLE_OAUTH2_LOGIN } from "./consts";
 
 const app = express();
 app.use(express.json());
@@ -30,7 +30,7 @@ app.post('/set', authenticateToken, setPixel);
 
 const { mockLogin, guestLogin, apiLogin, apiCallback, logout, rotate_tokens } = require('./login');
 
-if (process.env.NODE_ENV === 'DEV') {
+if (DEV_MODE === true) {
     app.get('/login/mock', mockLogin);
     app.post('/login/mock', mockLogin);
 }
