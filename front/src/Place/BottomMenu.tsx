@@ -83,27 +83,44 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
     });
   }, [queryPlace]);
 
-  const usernameDisplay = (username: string | undefined) => {
-    if (username === undefined || ['null', 'Welcome', 'Guest'].includes(username)) {
-      return username;
+  const pixelInfos = () => {
+    const pixel = board.get(`${activePixel.x}:${activePixel.y}`);
+
+    if (pixel !== undefined) {
+      if (pixel.username === 'null') {
+        return (
+          <p className='h-fit whitespace-nowrap'>
+            {activePixel.x}:{activePixel.y} never set
+          </p>
+        );
+      }
+      else {
+        let displayUsername = <>{pixel.username}</>;
+
+        if (!['null', 'Welcome', 'Guest',  'FinalClean'].includes(pixel.username)) {
+          displayUsername = <a href={`https://profile.intra.42.fr/users/${pixel.username}`}><u>{pixel.username}</u></a>;
+        }
+
+        return (
+          <p className='h-fit whitespace-nowrap'>
+            {activePixel.x}:{activePixel.y} set by {displayUsername} at <br />
+            {
+                dateIsoToNice(pixel.set_time)
+            }
+          </p>
+        );
+      }
     }
-    return <a href={`https://profile.intra.42.fr/users/${username}`}><u>{username}</u></a>;
+    else {
+      return <></>
+    }
   };
 
   return (
     <div className='fixed flex bottom-0 text-xs w-[80%] md:w-full md:text-base pointer-events-none'>
       <div className='mx-auto self-center grow max-w-[550px] bg-gray-400/90 pt-2 rounded-tr-lg md:rounded-t-lg flex flex-col pointer-events-auto'>
         <div className='text-black self-center w-full pl-2 pr-2 md:px-6 my-4 my-auto items-center flex flex-row gap-2'>
-          {activePixel.x !== -1 &&
-            <p className='h-fit whitespace-nowrap'>
-              {activePixel.x}:{activePixel.y} set by {usernameDisplay(board.get(`${activePixel.x}:${activePixel.y}`)?.username)} at <br />
-              {
-                board.get(`${activePixel.x}:${activePixel.y}`) ?
-                  dateIsoToNice(board.get(`${activePixel.x}:${activePixel.y}`)?.set_time || 0) :
-                  ''
-              }
-            </p>
-          }
+          {pixelInfos()}
           <div className='grow' />
 
           {isLogged && (
