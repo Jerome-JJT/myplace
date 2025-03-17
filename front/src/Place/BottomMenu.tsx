@@ -87,7 +87,7 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
     if (username === undefined || ['null', 'Welcome', 'Guest'].includes(username)) {
       return username;
     }
-    return username;
+    return <a href={`https://profile.intra.42.fr/users/${username}`}><u>{username}</u></a>;
   };
 
   return (
