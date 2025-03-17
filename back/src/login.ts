@@ -80,7 +80,7 @@ export const authenticateToken = async (req: LoggedRequest, res: Response, next:
 
 const loginUser = async (id: number, res: Response, verify_seq: number | undefined = undefined): Promise<boolean> => {
     const result = await pool.query(`
-        SELECT id, username, email, is_admin, banned_at, token_seq
+        SELECT id, username, email, is_admin, banned_at, token_seq, campus_name
         FROM users
         WHERE id = $1
         LIMIT 1
@@ -99,6 +99,7 @@ const loginUser = async (id: number, res: Response, verify_seq: number | undefin
                 username: user.username,
                 soft_is_admin: user.is_admin,
                 soft_is_banned: user.banned_at ? true : false,
+                campus_name: user.campus_name
             } as UserInfos,
             JWT_SECRET, 
             { 
@@ -136,13 +137,13 @@ const loginUser = async (id: number, res: Response, verify_seq: number | undefin
     }
 }
 
-const createUser = async (id: number, username: string, email: string | null, admin: boolean): Promise<boolean> => {
+const createUser = async (id: number, username: string, email: string | null, admin: boolean, campus_name?: string): Promise<boolean> => {
     try {
         const result = await pool.query(`
-            INSERT INTO users (id, username, email, is_admin) 
+            INSERT INTO users (id, username, email, is_admin, campus_name) 
             VALUES
-            ($1, $2, $3, $4)
-        `, [id, username, email, admin]);
+            ($1, $2, $3, $4, $5)
+        `, [id, username, email, admin, campus_name]);
     
         return result.rowCount === 1;
     }
@@ -252,7 +253,11 @@ export const apiCallback = async (req: Request, res: Response) => {
                     // return res.status(200).json({ message: 'Login successful' });
                 }
                 else {
-                    if (await createUser(userId, userUsername, userEmail, false)) {
+                    const userPrimaryCampus = (userInfos.data.campus_users as any[]).filter((v) => v.is_primary);
+                    const userCampus = userPrimaryCampus.length === 1 ? (userInfos.data.campus as any[]).filter((v) => v.id === userPrimaryCampus[0].campus_id) : [];
+                    const userCampusName = userCampus.length === 1 ? userCampus[0].name : undefined;
+
+                    if (await createUser(userId, userUsername, userEmail, false, userCampusName)) {
                         if (await loginUser(userId, res)) { 
                             return res.redirect('/')
                             // return res.status(200).json({ message: 'Login successful' });

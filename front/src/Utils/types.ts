@@ -1,6 +1,7 @@
 export interface Pixel {
   color_id: number,
   username: string,
+  campus_name: string | undefined
   set_time: number
 }
 

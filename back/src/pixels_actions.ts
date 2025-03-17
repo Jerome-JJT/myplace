@@ -47,7 +47,7 @@ export const setPixel = async (req: LoggedRequest, res: Response) => {
         
                 if (inserted !== null) {
                     const key = `${inserted.x}:${inserted.y}`;
-                    const p: Pixel = { username: user.username, color_id: inserted.color_id, set_time: parseInt(inserted.set_time) }
+                    const p: Pixel = { username: user.username, campus_name: user.campus_name, color_id: inserted.color_id, set_time: parseInt(inserted.set_time) }
             
                     await redisClient.set(key, JSON.stringify(p), 'EX', redisTimeout());
 

@@ -10,6 +10,7 @@ import { IconButton } from '@material-tailwind/react';
 import { IoMdBrush, IoIosShareAlt } from 'react-icons/io';
 import useBreakpoint from 'src/Utils/useBreakpoint';
 import { useDebounce } from 'src/Utils/useDebounce';
+import Flag from 'react-world-flags'
 
 interface BottomMenuProps {
   shareButton: (e: React.MouseEvent<HTMLElement> | undefined) => void
@@ -83,6 +84,10 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
     });
   }, [queryPlace]);
 
+  const matchCampus: { [key: string]: { countryCode: string } } = {
+    'Lausanne': { countryCode: 'ch' },
+  }
+
   const pixelInfos = () => {
     const pixel = board.get(`${activePixel.x}:${activePixel.y}`);
 
@@ -96,16 +101,26 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
       }
       else {
         let displayUsername = <>{pixel.username}</>;
+        let displayFlag = (
+          <>
+            <Flag 
+              className='inline mx-1'
+              width='16px'
+              code={matchCampus[pixel.campus_name!]?.countryCode} 
+              title={pixel.campus_name} 
+              fallback={ <span>{pixel.campus_name ? `[${pixel.campus_name}]` : ''}</span> }
+            />
+          </>);
 
-        if (!['null', 'Welcome', 'Guest',  'FinalClean'].includes(pixel.username)) {
+        if (!['null', 'Welcome', 'Guest', 'FinalClean'].includes(pixel.username)) {
           displayUsername = <a href={`https://profile.intra.42.fr/users/${pixel.username}`}><u>{pixel.username}</u></a>;
         }
 
         return (
           <p className='h-fit whitespace-nowrap'>
-            {activePixel.x}:{activePixel.y} set by {displayUsername} at <br />
+            {activePixel.x}:{activePixel.y} set by {displayFlag} {displayUsername} at <br />
             {
-                dateIsoToNice(pixel.set_time)
+              dateIsoToNice(pixel.set_time)
             }
           </p>
         );
@@ -141,13 +156,13 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
                 </button>)
             )
           ) || (
-            <button
-              className={classNames('px-2 min-h-8 bg-gray-500 rounded border-2 border-black hover:border-white')}
-              onClick={loginApi}
-            >
-              Login to paint
-            </button>
-          )}
+              <button
+                className={classNames('px-2 min-h-8 bg-gray-500 rounded border-2 border-black hover:border-white')}
+                onClick={loginApi}
+              >
+                Login to paint
+              </button>
+            )}
 
           {activePixel.x !== -1 && (
             ['xs', 'sm'].includes(screen) && (

@@ -5,6 +5,8 @@ CREATE TABLE IF NOT EXISTS users (
     is_admin BOOLEAN DEFAULT FALSE,
     banned_at TIMESTAMP DEFAULT NULL,
 
+    campus_name VARCHAR(250) DEFAULT NULL,
+
     token_seq INTEGER DEFAULT 1
 );
 

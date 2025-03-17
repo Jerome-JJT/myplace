@@ -11,7 +11,7 @@ async function initializeBoard() {
     const board: (Pixel | null)[][] = [];
 
     const result = await pool.query(`
-        SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.username, (EXTRACT(EPOCH FROM ranked_board.set_time) * 1000)::BIGINT AS set_time
+        SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.username, users.campus_name, (EXTRACT(EPOCH FROM ranked_board.set_time) * 1000)::BIGINT AS set_time
         FROM (
             SELECT x, y, user_id, color_id, set_time,
                 ROW_NUMBER() OVER (PARTITION BY x, y ORDER BY set_time DESC) as rn
@@ -50,11 +50,11 @@ async function initializeBoard() {
 
                 const cell = mapResults.get(`${x}:${y}`);
                 if (cell !== undefined) {
-                    const p: Pixel = { color_id: cell.color_id, username: cell.username, set_time: parseInt(cell.set_time) }
+                    const p: Pixel = { color_id: cell.color_id, username: cell.username, campus_name: cell.campus_name, set_time: parseInt(cell.set_time) }
                     board[x][y] = p;
                 } //
                 else {
-                    const p: Pixel = { color_id: 1, username: 'null', set_time: 0 }
+                    const p: Pixel = { color_id: 1, username: 'null', campus_name: undefined, set_time: 0 }
                     board[x][y] = p;
                 }
 
@@ -74,7 +74,7 @@ async function viewTimedBoard(time: string, {user_id = null}: {user_id?: string 
     const board: (Pixel | null)[][] = [];
     
     const result = await pool.query(`
-        SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.username, (EXTRACT(EPOCH FROM ranked_board.set_time) * 1000)::BIGINT AS set_time
+        SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.username, users.campus_name, (EXTRACT(EPOCH FROM ranked_board.set_time) * 1000)::BIGINT AS set_time
         FROM (
             SELECT x, y, user_id, color_id, set_time,
                 ROW_NUMBER() OVER (PARTITION BY x, y ORDER BY set_time DESC) as rn
@@ -101,11 +101,11 @@ async function viewTimedBoard(time: string, {user_id = null}: {user_id?: string 
 
             const cell = mapResults.get(`${x}:${y}`);
             if (cell !== undefined) {
-                const p: Pixel = { color_id: cell.color_id, username: cell.username, set_time: parseInt(cell.set_time) }
+                const p: Pixel = { color_id: cell.color_id, username: cell.username, campus_name: cell.campus_name, set_time: parseInt(cell.set_time) }
                 board[x][y] = p;
             }
             else {
-                const p: Pixel = { color_id: 1, username: 'null', set_time: 0 }
+                const p: Pixel = { color_id: 1, username: 'null', campus_name: undefined, set_time: 0 }
                 board[x][y] = p;
             }
         }
