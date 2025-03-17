@@ -3,6 +3,7 @@ import WebSocket from "ws";
 import cookieParser from 'cookie-parser';
 
 import { sendUpdates, sendPing, sendConnecteds } from "./ws";
+import { ENABLE_GUEST_LOGIN, ENABLE_OAUTH2_LOGIN } from "./consts";
 
 const app = express();
 app.use(express.json());
@@ -27,15 +28,19 @@ app.get('/getimage', authenticateToken, getImage);
 app.post('/set', authenticateToken, setPixel);
 
 
-const { mockLogin, poLogin, apiLogin, apiCallback, logout, rotate_tokens } = require('./login');
+const { mockLogin, guestLogin, apiLogin, apiCallback, logout, rotate_tokens } = require('./login');
 
 if (process.env.NODE_ENV === 'DEV') {
     app.get('/login/mock', mockLogin);
     app.post('/login/mock', mockLogin);
 }
-app.get('/login/po', poLogin);
-app.get('/login/api', apiLogin);
-app.get('/login/callback', apiCallback);
+if (ENABLE_GUEST_LOGIN === true) {
+    app.get('/login/guest', guestLogin);
+}
+if (ENABLE_OAUTH2_LOGIN === true) {
+    app.get('/login/api', apiLogin);
+    app.get('/login/callback', apiCallback);
+}
 app.get('/logout', logout);
 app.get('/profile', authenticateToken, profile);
 

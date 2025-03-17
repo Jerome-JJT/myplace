@@ -1,7 +1,15 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
 
-import { JWT_EXPIRES_IN, JWT_REFRESH_EXPIRES_IN, PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER } from './consts';
+import { 
+    JWT_EXPIRES_IN, JWT_REFRESH_EXPIRES_IN,
+    OAUTH2_AUTHORIZE_URL, OAUTH2_TOKEN_URL, OAUTH2_CALLBACK_URL, OAUTH2_INFO_URL,
+    OAUTH2_EMAIL_FIELD, OAUTH2_ID_FIELD, OAUTH2_USERNAME_FIELD, 
+    PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER, 
+    JWT_SECRET,
+    OAUTH2_UID,
+    OAUTH2_SECRET
+} from './consts';
 import { LoggedRequest, UserInfos } from './types';
 import { pool } from './db';
 import { getLastUserPixels } from './pixels_actions';
@@ -22,9 +30,9 @@ const checkToken = async (req: LoggedRequest, res: Response, next: any, fail: bo
         }
     }
     else {
-        jwt.verify(token, process.env.JWT_SECRET as string, (err: any, decoded_t: any) => {
+        jwt.verify(token, JWT_SECRET, (err: any, decoded_t: any) => {
             if (err) {
-                jwt.verify(refresh, process.env.JWT_SECRET as string, async (err: any, decoded_r: any) => {
+                jwt.verify(refresh, JWT_SECRET, async (err: any, decoded_r: any) => {
                     if (err) {
                         res.clearCookie('token');
                         res.clearCookie('refresh');
@@ -49,8 +57,7 @@ const checkToken = async (req: LoggedRequest, res: Response, next: any, fail: bo
                     }
                 })
             }
-            else 
-            {
+            else {
                 if (decoded_t.soft_is_banned) {
                     return res.status(409).json({ message: 'Conflict' });
                 }
@@ -92,7 +99,7 @@ const loginUser = async (id: number, res: Response, verify_seq: number | undefin
                 soft_is_admin: user.is_admin,
                 soft_is_banned: user.banned_at ? true : false,
             } as UserInfos,
-            process.env.JWT_SECRET as string, 
+            JWT_SECRET, 
             { 
                 expiresIn: JWT_EXPIRES_IN 
             }
@@ -103,7 +110,7 @@ const loginUser = async (id: number, res: Response, verify_seq: number | undefin
                 username: user.name,
                 token_seq: user.token_seq,
             } as UserInfos,
-            process.env.JWT_SECRET as string, 
+            JWT_SECRET, 
             { 
                 expiresIn: JWT_REFRESH_EXPIRES_IN 
             }
@@ -128,7 +135,7 @@ const loginUser = async (id: number, res: Response, verify_seq: number | undefin
     }
 }
 
-const createUser = async (id: number, username: string, email: string, admin: boolean): Promise<boolean> => {
+const createUser = async (id: number, username: string, email: string | null, admin: boolean): Promise<boolean> => {
     try {
         const result = await pool.query(`
             INSERT INTO users (id, name, email, is_admin) 
@@ -161,7 +168,7 @@ export const checkAdmin = async (id: number) => {
 }
 
 export const mockLogin = async (req: Request, res: Response) => {
-    if (await loginUser(1, res)) { 
+    if (await loginUser(-1, res)) { 
         return res.status(200).json({ message: 'Login successful' });
     }
     else {
@@ -178,21 +185,20 @@ const getHash = (input: string) => {
     return hash;
 }
 
-export const poLogin = async (req: Request, res: Response) => {
+export const guestLogin = async (req: Request, res: Response) => {
     let uniqid = `${req.socket.remoteAddress}_${req.headers['x-forwarded-for']}_${req.headers['user-agent']}`;
-    console.log('GUEST', uniqid)
     let uniqnum = getHash(uniqid);
 
     if (uniqnum > 0) {
         uniqnum = -uniqnum;
     }
-    uniqnum = (uniqnum % 1000000000)  - 1
+    uniqnum = (uniqnum % 100000000) - 100;
 
     if (await loginUser(uniqnum, res)) { 
         return res.redirect('/')
     }
     else {
-        if (await createUser(uniqnum, 'Guest', 'guest@email.com', false)) {
+        if (await createUser(uniqnum, `Guest_${uniqnum}`, `guest_${uniqnum}@email.com`, false)) {
             if (await loginUser(uniqnum, res)) { 
                 return res.redirect('/')
             }
@@ -209,40 +215,44 @@ export const poLogin = async (req: Request, res: Response) => {
 export const apiLogin = (req: Request, res: Response) => {
     const args = objUrlEncode({
         response_type: 'code',
-        client_id: process.env.API_UID,
         scope: 'public',
-        redirect_uri: process.env.API_CALLBACK
+        client_id: OAUTH2_UID,
+        redirect_uri: OAUTH2_CALLBACK_URL
     });
-    return res.redirect(`https://api.intra.42.fr/oauth/authorize?${args}`);
+    return res.redirect(`${OAUTH2_AUTHORIZE_URL}?${args}`);
 }
 
 export const apiCallback = async (req: Request, res: Response) => {
     try {
-        const token = await axios.post('https://api.intra.42.fr/oauth/token', {
+        const token = await axios.post(OAUTH2_TOKEN_URL!, {
             grant_type: 'authorization_code',
-            client_id: process.env.API_UID,
-            client_secret: process.env.API_SECRET,
             code: req.query.code,
-            redirect_uri: process.env.API_CALLBACK,
+            client_id: OAUTH2_UID,
+            client_secret: OAUTH2_SECRET,
+            redirect_uri: OAUTH2_CALLBACK_URL,
         }, {})
     
         if (token.status === 200) {
             const access_token: string = token.data.access_token;
     
-            const user = await axios.get('https://api.intra.42.fr/v2/me', {
+            const userInfos = await axios.get(OAUTH2_INFO_URL!, {
                 headers: {
                     'Authorization': `Bearer ${access_token}`
                 }
             })
     
-            if (user.status === 200) {
-                if (await loginUser(user.data.id, res)) { 
+            if (userInfos.status === 200) {
+                const userId = userInfos.data[OAUTH2_ID_FIELD!];
+                const userUsername = userInfos.data[OAUTH2_USERNAME_FIELD!];
+                const userEmail = OAUTH2_EMAIL_FIELD ? userInfos.data[OAUTH2_EMAIL_FIELD] : null;
+
+                if (await loginUser(userId, res)) { 
                     return res.redirect('/')
                     // return res.status(200).json({ message: 'Login successful' });
                 }
                 else {
-                    if (await createUser(user.data.id, user.data.login, user.data.email, user.data['staff?'])) {
-                        if (await loginUser(user.data.id, res)) { 
+                    if (await createUser(userId, userUsername, userEmail, false)) {
+                        if (await loginUser(userId, res)) { 
                             return res.redirect('/')
                             // return res.status(200).json({ message: 'Login successful' });
                         }

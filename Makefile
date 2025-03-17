@@ -14,10 +14,8 @@ DOCKER		= docker compose ${COMPOSE_DEV} -p ${APP_NAME}_dev
 #Prod
 # DOCKER		= docker compose ${COMPOSE_PROD} -p ${APP_NAME}
 
-ifeq ($(shell hostname), 42lwatch3)
-	ifeq ($(shell pwd), /var/www/myplace)
-		DOCKER		= docker compose ${COMPOSE_PROD} -p ${APP_NAME}
-	endif
+ifeq ($(shell [ -e ./prod ] && echo 1), 1)
+	DOCKER		= docker compose ${COMPOSE_PROD} -p ${APP_NAME}
 endif
 
 all:		start

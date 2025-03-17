@@ -1,11 +1,13 @@
+import { REDIS_HOST, REDIS_PASSWORD, REDIS_PORT } from "./consts";
+
 const redis = require('redis');
 // import redis from 'redis';
 
 export const redisClient = redis.createClient({
     socket: {
-        host: process.env.REDIS_HOST,
-        port: parseInt(process.env.REDIS_PORT!)
+        host: REDIS_HOST,
+        port: REDIS_PORT
     },
-    password: process.env.REDIS_PASSWORD
+    password: REDIS_PASSWORD
 });
 redisClient.connect();
