@@ -87,9 +87,7 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
     const pixel = board.get(`${activePixel.x}:${activePixel.y}`);
 
     if (pixel !== undefined) {
-      let displayUsername = pixel.username;
-
-      if (displayUsername === 'null') {
+      if (pixel.username === 'null') {
         return (
           <p className='h-fit whitespace-nowrap'>
             {activePixel.x}:{activePixel.y} never set
@@ -97,6 +95,8 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
         );
       }
       else {
+        let displayUsername = <>{pixel.username}</>;
+
         return (
           <p className='h-fit whitespace-nowrap'>
             {activePixel.x}:{activePixel.y} set by {displayUsername} at <br />
