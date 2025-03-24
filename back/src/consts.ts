@@ -11,8 +11,12 @@ export const isTrue = (src: any) => {
 
 export const DEV_MODE = process.env.NODE_ENV === 'DEV';
 
-export const CANVAS_X = parseInt(process.env.CANVAS_X!);
-export const CANVAS_Y = parseInt(process.env.CANVAS_Y!);
+export const CANVAS_MIN_X = parseInt(process.env.CANVAS_MIN_X!);
+export const CANVAS_MIN_Y = parseInt(process.env.CANVAS_MIN_Y!);
+export const CANVAS_MAX_X = parseInt(process.env.CANVAS_MAX_X!);
+export const CANVAS_MAX_Y = parseInt(process.env.CANVAS_MAX_Y!);
+export const CANVAS_SIZE_X = (Math.abs(CANVAS_MIN_X) + Math.abs(CANVAS_MAX_X));
+export const CANVAS_SIZE_Y = (Math.abs(CANVAS_MIN_Y) + Math.abs(CANVAS_MAX_Y));
 
 export const PIXEL_BUFFER_SIZE = parseInt(process.env.PIXEL_BUFFER_SIZE!);
 export const PIXEL_MINUTE_TIMER = parseInt(process.env.PIXEL_MINUTE_TIMER!);

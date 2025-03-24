@@ -52,8 +52,10 @@ services:
       - /etc/localtime:/etc/localtime:ro
 
     environment:
-      CANVAS_X: ${CANVAS_X:-200}
-      CANVAS_Y: ${CANVAS_Y:-200}
+      CANVAS_MIN_X: ${CANVAS_MIN_X:-0}
+      CANVAS_MIN_Y: ${CANVAS_MIN_Y:-0}
+      CANVAS_MAX_X: ${CANVAS_MAX_X:-200}
+      CANVAS_MAX_Y: ${CANVAS_MAX_Y:-200}
       
       PIXEL_BUFFER_SIZE: ${PIXEL_BUFFER_SIZE:-10}
       PIXEL_MINUTE_TIMER: ${PIXEL_MINUTE_TIMER:-60}
