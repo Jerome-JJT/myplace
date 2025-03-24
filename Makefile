@@ -91,8 +91,6 @@ clean:		down
 re:			
 					${MAKE} clean 
 					${MAKE} all
-					sleep 4
-					${MAKE} migrate
 
 
 stats:

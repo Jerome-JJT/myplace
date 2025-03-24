@@ -63,8 +63,8 @@ export const Leaderboard = () => {
   }, []);
 
   return (
-    <div className='rounded-md ml-[10vw] md:mx-auto w-min mt-[5vh] bg-orange-400'>
-      <Tabs value={menus[0].id} className='w-[80vw] md:max-w-[500px]'>
+    <div className='rounded-md ml-[10vw] md:mx-auto w-[80vw] md:max-w-[500px] mt-[5vh] bg-orange-400'>
+      <Tabs value={menus[0].id} className='w-full'>
         <TabsHeader {...QUICK_FIX}>
           {
             menus.map((v) => {
