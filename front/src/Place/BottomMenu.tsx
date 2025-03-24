@@ -84,9 +84,6 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
     });
   }, [queryPlace]);
 
-  const matchCampus: { [key: string]: { countryCode: string } } = {
-    'Lausanne': { countryCode: 'ch' },
-  }
 
   const pixelInfos = useCallback(() => {
     if (activePixel !== undefined) {
@@ -107,7 +104,7 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
               <Flag
                 className='inline mx-1'
                 width='16px'
-                code={matchCampus[pixel.campus_name!]?.countryCode}
+                code={pixel.flag}
                 title={pixel.campus_name}
                 fallback={<span>{pixel.campus_name ? `[${pixel.campus_name}]` : ''}</span>}
               />

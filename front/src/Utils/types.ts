@@ -2,17 +2,22 @@ export interface Pixel {
   color_id: number,
   username: string,
   campus_name: string | undefined
+  flag: string | undefined
   set_time: number
 }
 export interface PixelNetwork {
   c: number,
   u: string,
+  p: string | undefined
+  f: string | undefined
   t: number
 }
 export const PixelFromNetwork = (p: PixelNetwork): Pixel => {
   return {
       color_id: p.c,
       username: p.u,
+      campus_name: p.p,
+      flag: p.f,
       set_time: p.t
   }
 }

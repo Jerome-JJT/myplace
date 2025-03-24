@@ -7,6 +7,7 @@ import { redisClient } from './redis';
 import { pool } from './db';
 import { updates } from './ws';
 import { checkAdmin } from './login';
+import { matchCampus } from './flag';
 
 export const getLastUserPixels = async (user_id: number): Promise<number[]> => {
 
@@ -48,7 +49,7 @@ export const setPixel = async (req: LoggedRequest, res: Response) => {
         
                 if (inserted !== null) {
                     const key = `${inserted.x}:${inserted.y}`;
-                    const p = PixelToNetwork({ username: user.username, campus_name: user.campus_name, color_id: inserted.color_id, set_time: parseInt(inserted.set_time) })
+                    const p = PixelToNetwork({ username: user.username, campus_name: user.campus_name, flag: matchCampus.get(user.campus_name)?.countryCode, color_id: inserted.color_id, set_time: parseInt(inserted.set_time) })
             
                     await redisClient.set(key, JSON.stringify(p), 'EX', redisTimeout());
 
