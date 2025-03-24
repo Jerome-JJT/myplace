@@ -3,8 +3,20 @@ export interface Pixel {
   username: string,
   set_time: number
 }
+export interface PixelNetwork {
+  c: number,
+  u: string,
+  t: number
+}
+export const PixelFromNetwork = (p: PixelNetwork): Pixel => {
+  return {
+      color_id: p.c,
+      username: p.u,
+      set_time: p.t
+  }
+}
 
-export interface Update extends Pixel {
+export interface Update extends PixelNetwork {
   x: number
   y: number
 }
