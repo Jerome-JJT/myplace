@@ -78,7 +78,7 @@ export const Leaderboard = () => {
         </TabsHeader>
       </Tabs>
 
-      <div className='min-h-[40vh] h-[70vh] max-h-[70vh] pr-4 overflow-y-scroll'>
+      <div className='min-h-[40vh] h-[70vh] max-h-[70vh] pr-4 overflow-y-scroll touch-auto'>
         <div className='grid grid-cols-2'>
 
           <div><b>Name</b></div>
