@@ -119,7 +119,7 @@ function App() {
       {
         (params.get('view') == null && !window.location.href.includes('loginpo')) && (
           <>
-            <LoginBox />
+            <LoginBox onLoggedClick={() => router.navigate('/account')} />
 
             <NotificationContainer />
 
