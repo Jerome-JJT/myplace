@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useState, useEffect, useCallback } from 'react';
 
 import { CANVAS_MAX_X, CANVAS_MAX_Y, CANVAS_MIN_X, CANVAS_MIN_Y, CANVAS_SIZE_X, CANVAS_SIZE_Y } from 'src/Utils/consts';
-import { ColorType, Update } from 'src/Utils/types';
+import { ColorType, PixelFromNetwork, Update } from 'src/Utils/types';
 import { useUser } from 'src/UserProvider';
 import { objUrlEncode } from 'src/Utils/objUrlEncode';
 
@@ -71,7 +71,8 @@ export function Place() {
               while (updates.length > 0) {
                 const up = updates.shift()!;
 
-                const { x, y, ...pixel } = up;
+                const { x, y, ...npixel } = up;
+                const pixel = PixelFromNetwork(npixel);
                 const color = colors.get(pixel.color_id);
 
                 if (color !== undefined && pixel.set_time > (prev.get(`${x}:${y}`)?.set_time || 0)) {
@@ -143,7 +144,8 @@ export function Place() {
                     setBoard((prev) => {
                       const fut = new Map(prev);
 
-                      const { x, y, ...pixel } = res.data.update as Update;
+                      const { x, y, ...npixel } = res.data.update as Update;
+                      const pixel = PixelFromNetwork(npixel);
                       const color = colors.get(pixel.color_id);
 
                       if (color !== undefined && pixel.set_time > (prev.get(`${x}:${y}`)?.set_time || 0)) {

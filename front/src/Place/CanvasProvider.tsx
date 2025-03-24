@@ -4,7 +4,7 @@ import axios from 'axios';
 
 import { objUrlEncode } from 'src/Utils/objUrlEncode';
 import { MIN_SCALE, MAX_SCALE, CANVAS_SIZE_X, CANVAS_SIZE_Y, CANVAS_MIN_X, CANVAS_MAX_X, CANVAS_MIN_Y, CANVAS_MAX_Y } from 'src/Utils/consts';
-import { ColorType, Pixel, Point } from 'src/Utils/types';
+import { ColorType, Pixel, PixelFromNetwork, PixelNetwork, Point } from 'src/Utils/types';
 import { useNotification } from 'src/NotificationProvider';
 import { distPoint } from 'src/Utils/mymaths';
 
@@ -152,11 +152,11 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
 
                 if (ctx !== null) {
                   const pixs = new Map();
-                  (res.data.board as Pixel[][]).forEach((column, x) => {
+                  (res.data.board as PixelNetwork[][]).forEach((column, x) => {
                     column.forEach((pixel, y) => {
-                      ctx.fillStyle = 'rgb(' + cols.get(pixel.color_id).color + ')';
+                      ctx.fillStyle = 'rgb(' + cols.get(pixel.c).color + ')';
                       ctx.fillRect(x, y, 1, 1);
-                      pixs.set(`${x + CANVAS_MIN_X}:${y + CANVAS_MIN_Y}`, pixel);
+                      pixs.set(`${x + CANVAS_MIN_X}:${y + CANVAS_MIN_Y}`, PixelFromNetwork(pixel));
                     });
                   });
                   setBoard(pixs);

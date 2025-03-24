@@ -1,14 +1,14 @@
 import { Response } from 'express';
 
 import { CANVAS_MIN_X, CANVAS_MIN_Y, CANVAS_MAX_X, CANVAS_MAX_Y, CANVAS_SIZE_X, CANVAS_SIZE_Y, redisTimeout, UTC_TIME_END } from './consts';
-import { Color, LoggedRequest, Pixel } from './types';
+import { Color, LoggedRequest, PixelNetwork, PixelToNetwork } from './types';
 import { redisClient } from './redis';
 import { pool } from './db';
 import { checkAdmin } from './login';
 const { createCanvas } = require('canvas');
 
 async function initializeBoard() {
-    const board: (Pixel | null)[][] = [];
+    const board: (PixelNetwork | null)[][] = [];
 
     const result = await pool.query(`
         SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.username, users.campus_name, (EXTRACT(EPOCH FROM ranked_board.set_time) * 1000)::BIGINT AS set_time
@@ -51,11 +51,11 @@ async function initializeBoard() {
                 const cell = mapResults.get(key);
                 
                 if (cell !== undefined) {
-                    const p: Pixel = { color_id: cell.color_id, username: cell.username, campus_name: cell.campus_name, set_time: parseInt(cell.set_time) }
+                    const p = PixelToNetwork({ color_id: cell.color_id, username: cell.username, campus_name: cell.campus_name, set_time: parseInt(cell.set_time) });
                     board[x - CANVAS_MIN_X][y - CANVAS_MIN_Y] = p;
                 } //
                 else {
-                    const p: Pixel = { color_id: 1, username: 'null', campus_name: undefined, set_time: 0 }
+                    const p = PixelToNetwork({ color_id: 1, username: 'null', campus_name: undefined, set_time: 0 });
                     board[x - CANVAS_MIN_X][y - CANVAS_MIN_Y] = p;
                 }
 
@@ -71,7 +71,7 @@ async function initializeBoard() {
 }
 
 async function viewTimedBoard(time: string, {user_id = null}: {user_id?: string | null}) {
-    const board: (Pixel | null)[][] = [];
+    const board: (PixelNetwork | null)[][] = [];
     
     const result = await pool.query(`
         SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.username, users.campus_name, (EXTRACT(EPOCH FROM ranked_board.set_time) * 1000)::BIGINT AS set_time
@@ -102,11 +102,11 @@ async function viewTimedBoard(time: string, {user_id = null}: {user_id?: string 
             const key = `${x}:${y}`;
             const cell = mapResults.get(key);
             if (cell !== undefined) {
-                const p: Pixel = { color_id: cell.color_id, username: cell.username, campus_name: cell.campus_name, set_time: parseInt(cell.set_time) }
+                const p = PixelToNetwork({ color_id: cell.color_id, username: cell.username, campus_name: cell.campus_name, set_time: parseInt(cell.set_time) })
                 board[x - CANVAS_MIN_X][y - CANVAS_MIN_Y] = p;
             }
             else {
-                const p: Pixel = { color_id: 1, username: 'null', campus_name: undefined, set_time: 0 }
+                const p = PixelToNetwork({ color_id: 1, username: 'null', campus_name: undefined, set_time: 0 })
                 board[x - CANVAS_MIN_X][y - CANVAS_MIN_Y] = p;
             }
         }

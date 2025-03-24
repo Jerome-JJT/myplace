@@ -2,7 +2,7 @@ import { Response } from 'express';
 
 import { CANVAS_MIN_X, CANVAS_MAX_X, CANVAS_MIN_Y, CANVAS_MAX_Y, PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER, 
     redisTimeout, UTC_TIME_END, UTC_TIME_START } from './consts';
-import { LoggedRequest, Pixel } from './types';
+import { LoggedRequest, PixelToNetwork } from './types';
 import { redisClient } from './redis';
 import { pool } from './db';
 import { updates } from './ws';
@@ -48,7 +48,7 @@ export const setPixel = async (req: LoggedRequest, res: Response) => {
         
                 if (inserted !== null) {
                     const key = `${inserted.x}:${inserted.y}`;
-                    const p: Pixel = { username: user.username, campus_name: user.campus_name, color_id: inserted.color_id, set_time: parseInt(inserted.set_time) }
+                    const p = PixelToNetwork({ username: user.username, campus_name: user.campus_name, color_id: inserted.color_id, set_time: parseInt(inserted.set_time) })
             
                     await redisClient.set(key, JSON.stringify(p), 'EX', redisTimeout());
 
