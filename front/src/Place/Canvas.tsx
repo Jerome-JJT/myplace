@@ -1,11 +1,11 @@
 
-import { CANVAS_X, CANVAS_Y, MAX_SCALE, MIN_SCALE } from 'src/Utils/consts';
+import { MAX_SCALE, MIN_SCALE, CANVAS_SIZE_X, CANVAS_SIZE_Y } from 'src/Utils/consts';
 import { useUser } from 'src/UserProvider';
 import { initScale, useCanvas } from './CanvasProvider';
 import { map } from 'src/Utils/map';
 import { useThrottle } from 'src/Utils/useThrottle';
 
-export const canvasMarginTop = `${map(CANVAS_Y, 100, 1000, 500, 20)}px`;
+export const canvasMarginTop = `${map(CANVAS_SIZE_Y, 100, 1000, 500, 20)}px`;
 
 export const DisplayCanvas = () => {
   const {
@@ -33,8 +33,8 @@ export const DisplayCanvas = () => {
     <>
       <canvas
         className='canvas_display'
-        width={`${CANVAS_X}px`}
-        height={`${CANVAS_Y}px`}
+        width={`${CANVAS_SIZE_X}px`}
+        height={`${CANVAS_SIZE_Y}px`}
         style={{
           transform: `scale(${scale}) translate(${translate.x}px, ${translate.y}px)`,
           marginTop: canvasMarginTop,
@@ -96,7 +96,7 @@ export const DisplayCanvas = () => {
       </canvas>
 
       {
-        params.get('view') == null && activePixel.x !== -1 && (
+        params.get('view') == null && activePixel !== undefined && (
           <>
             <div id="overlay" style={overlayStyle}></div>
             { infos?.soft_is_admin && (

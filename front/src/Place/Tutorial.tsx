@@ -15,7 +15,7 @@ export const Tutorial = () => {
     <Dialog open={tutoOpen} handler={() => setTutoOpen(false)} {...QUICK_FIX}>
 
       <DialogHeader {...QUICK_FIX}>Tutorial for FTplace</DialogHeader>
-      <DialogBody className='max-h-[40vh] overflow-y-scroll' {...QUICK_FIX}>
+      <DialogBody className='max-h-[40vh] overflow-y-scroll touch-auto' {...QUICK_FIX}>
         {
           !isLogged && (
             <>

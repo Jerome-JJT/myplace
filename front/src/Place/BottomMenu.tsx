@@ -88,48 +88,53 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
     'Lausanne': { countryCode: 'ch' },
   }
 
-  const pixelInfos = () => {
-    const pixel = board.get(`${activePixel.x}:${activePixel.y}`);
+  const pixelInfos = useCallback(() => {
+    if (activePixel !== undefined) {
+      const pixel = board.get(`${activePixel.x}:${activePixel.y}`);
 
-    if (pixel !== undefined) {
-      if (pixel.username === 'null') {
-        return (
-          <p className='h-fit whitespace-nowrap'>
-            {activePixel.x}:{activePixel.y} never set
-          </p>
-        );
+      if (pixel !== undefined) {
+        if (pixel.username === 'null') {
+          return (
+            <p className='h-fit whitespace-nowrap'>
+              {activePixel.x}:{activePixel.y} never set
+            </p>
+          );
+        }
+        else {
+          let displayUsername = <>{pixel.username}</>;
+          let displayFlag = (
+            <>
+              <Flag
+                className='inline mx-1'
+                width='16px'
+                code={matchCampus[pixel.campus_name!]?.countryCode}
+                title={pixel.campus_name}
+                fallback={<span>{pixel.campus_name ? `[${pixel.campus_name}]` : ''}</span>}
+              />
+            </>);
+
+          if (!['null', 'Welcome', 'Guest', 'FinalClean'].includes(pixel.username)) {
+            displayUsername = <a href={`https://profile.intra.42.fr/users/${pixel.username}`}><u>{pixel.username}</u></a>;
+          }
+
+          return (
+            <p className='h-fit whitespace-nowrap'>
+              {activePixel.x}:{activePixel.y} set by {displayFlag} {displayUsername} at <br />
+              {
+                dateIsoToNice(pixel.set_time)
+              }
+            </p>
+          );
+        }
       }
       else {
-        let displayUsername = <>{pixel.username}</>;
-        let displayFlag = (
-          <>
-            <Flag 
-              className='inline mx-1'
-              width='16px'
-              code={matchCampus[pixel.campus_name!]?.countryCode} 
-              title={pixel.campus_name} 
-              fallback={ <span>{pixel.campus_name ? `[${pixel.campus_name}]` : ''}</span> }
-            />
-          </>);
-
-        if (!['null', 'Welcome', 'Guest', 'FinalClean'].includes(pixel.username)) {
-          displayUsername = <a href={`https://profile.intra.42.fr/users/${pixel.username}`}><u>{pixel.username}</u></a>;
-        }
-
-        return (
-          <p className='h-fit whitespace-nowrap'>
-            {activePixel.x}:{activePixel.y} set by {displayFlag} {displayUsername} at <br />
-            {
-              dateIsoToNice(pixel.set_time)
-            }
-          </p>
-        );
+        return <></>
       }
     }
     else {
       return <></>
     }
-  };
+  }, [activePixel]);
 
   return (
     <div className='fixed flex bottom-0 text-xs w-[80%] md:w-full md:text-base pointer-events-none'>
@@ -164,7 +169,7 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
               </button>
             )}
 
-          {activePixel.x !== -1 && (
+          {activePixel !== undefined && (
             ['xs', 'sm'].includes(screen) && (
               <IconButton
                 onClick={shareButton}
@@ -229,7 +234,7 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
                   />
                 </div>
                 <button
-                  onClick={() => { setTime(activeTime); } }
+                  onClick={() => { setTime(activeTime); }}
                   className={classNames(
                     'min-w-20 h-8 px-2 mr-4 rounded bg-blue-400 border-2 border-black',
                     isLoading && 'bg-gray-400 pointer-none hover:border-black',
@@ -241,18 +246,18 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
                 </button>
 
                 <button
-                  onClick={() => {switchIsImage(isImage); } }
+                  onClick={() => { switchIsImage(isImage); }}
                   className={classNames(
                     'min-w-20 h-8 px-2 mr-4 rounded bg-blue-400 border-2 border-black',
                     isLoading && 'bg-gray-400 pointer-none hover:border-black',
                     !isLoading && 'hover:border-white',
                   )}
                 >
-                  {!isImage ? 'Switch to image' : 'Switch to canvas' }
+                  {!isImage ? 'Switch to image' : 'Switch to canvas'}
                 </button>
 
                 <button
-                  onClick={() => {setStepType((prev) => (prev + 1) % STEPS.length);}}
+                  onClick={() => { setStepType((prev) => (prev + 1) % STEPS.length); }}
                   className={classNames(
                     'min-w-20 h-8 px-2 ml-4 rounded bg-blue-400 border-2 border-black hover:border-white',
                     isLive && 'bg-orange-700',
@@ -262,13 +267,13 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
                 </button>
 
                 <button
-                  onClick={() => {setIsLive((prev) => !prev);}}
+                  onClick={() => { setIsLive((prev) => !prev); }}
                   className={classNames(
                     'min-w-20 h-8 px-2 ml-4 rounded bg-blue-400 border-2 border-black hover:border-white',
                     isLive && 'bg-orange-700',
                   )}
                 >
-                  {!isLive ? 'Turn on live' : 'Turn off live' }
+                  {!isLive ? 'Turn on live' : 'Turn off live'}
                 </button>
               </div>
             </div>

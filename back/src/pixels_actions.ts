@@ -1,6 +1,7 @@
 import { Response } from 'express';
 
-import { CANVAS_X, CANVAS_Y, PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER, redisTimeout, UTC_TIME_END, UTC_TIME_START } from './consts';
+import { CANVAS_MIN_X, CANVAS_MAX_X, CANVAS_MIN_Y, CANVAS_MAX_Y, PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER, 
+    redisTimeout, UTC_TIME_END, UTC_TIME_START } from './consts';
 import { LoggedRequest, Pixel } from './types';
 import { redisClient } from './redis';
 import { pool } from './db';
@@ -32,7 +33,7 @@ export const setPixel = async (req: LoggedRequest, res: Response) => {
 
     if ((UTC_TIME_START < actualDate && actualDate < UTC_TIME_END) || (user.soft_is_admin === true && (await checkAdmin(user.id)))) {
         if (timers.length < PIXEL_BUFFER_SIZE || (user.soft_is_admin === true && (await checkAdmin(user.id)))) {
-            if (x < 0 || y < 0 || x >= CANVAS_X || y >= CANVAS_Y || color == null || color == undefined) {
+            if (x < CANVAS_MIN_X || y < CANVAS_MIN_Y || x >= CANVAS_MAX_X || y >= CANVAS_MAX_Y || color == null || color == undefined) {
                 return res.status(406).send('Bad payload');
             }
             try {

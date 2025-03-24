@@ -1,6 +1,6 @@
 import { Response } from 'express';
 
-import { CANVAS_X, CANVAS_Y, redisTimeout, UTC_TIME_END } from './consts';
+import { CANVAS_MIN_X, CANVAS_MIN_Y, CANVAS_MAX_X, CANVAS_MAX_Y, CANVAS_SIZE_X, CANVAS_SIZE_Y, redisTimeout, UTC_TIME_END } from './consts';
 import { Color, LoggedRequest, Pixel } from './types';
 import { redisClient } from './redis';
 import { pool } from './db';
@@ -26,12 +26,12 @@ async function initializeBoard() {
     });
 
 
-    for (let x = 0; x < CANVAS_X; x++) {
-        const lineExpire = redisTimeout();
-        board[x] = [];
+    for (let x = CANVAS_MIN_X; x < CANVAS_MAX_X; x++) {
+        const colExpire = redisTimeout();
+        board[x - CANVAS_MIN_X] = [];
         const queryKeys: string[] = [];
 
-        for (let y = 0; y < CANVAS_Y; y++) {
+        for (let y = CANVAS_MIN_Y; y < CANVAS_MAX_Y; y++) {
             const key = `${x}:${y}`;
             queryKeys.push(key);
         }
@@ -39,32 +39,32 @@ async function initializeBoard() {
         const cachedCells = await redisClient.mGet(queryKeys);
         const cachedSet: {[key: string]: string} = {};
 
-        for (let y = 0; y < CANVAS_Y; y++) {
-            if (cachedCells[y] !== null) {
-                board[x][y] = JSON.parse(cachedCells[y]);
+        for (let y = CANVAS_MIN_Y; y < CANVAS_MAX_Y; y++) {
+            if (cachedCells[y - CANVAS_MIN_Y] !== null) {
+                board[x - CANVAS_MIN_X][y - CANVAS_MIN_Y] = JSON.parse(cachedCells[y - CANVAS_MIN_Y]);
             } //
             else {
                 // const cell = result.rows.find((v) => {
                 //     return v.x === x && v.y === y
                 // });
-
-                const cell = mapResults.get(`${x}:${y}`);
+                const key = `${x}:${y}`;
+                const cell = mapResults.get(key);
+                
                 if (cell !== undefined) {
                     const p: Pixel = { color_id: cell.color_id, username: cell.username, campus_name: cell.campus_name, set_time: parseInt(cell.set_time) }
-                    board[x][y] = p;
+                    board[x - CANVAS_MIN_X][y - CANVAS_MIN_Y] = p;
                 } //
                 else {
                     const p: Pixel = { color_id: 1, username: 'null', campus_name: undefined, set_time: 0 }
-                    board[x][y] = p;
+                    board[x - CANVAS_MIN_X][y - CANVAS_MIN_Y] = p;
                 }
 
-                const key = `${x}:${y}`;
-                cachedSet[key] = JSON.stringify(board[x][y]);
+                cachedSet[key] = JSON.stringify(board[x - CANVAS_MIN_X][y - CANVAS_MIN_Y]);
             }
         }
 
         if (Object.keys(cachedSet).length > 0) {
-            await redisClient.mSet(cachedSet, 'EX', lineExpire);
+            await redisClient.mSet(cachedSet, 'EX', colExpire);
         }
     }
     return board;
@@ -95,18 +95,19 @@ async function viewTimedBoard(time: string, {user_id = null}: {user_id?: string 
         mapResults.set(`${v.x}:${v.y}`, v)
     });
 
-    for (let x = 0; x < CANVAS_X; x++) {
-        board[x] = [];
-        for (let y = 0; y < CANVAS_Y; y++) {
+    for (let x = CANVAS_MIN_X; x < CANVAS_MAX_X; x++) {
+        board[x - CANVAS_MIN_X] = [];
+        for (let y = CANVAS_MIN_Y; y < CANVAS_MAX_Y; y++) {
 
-            const cell = mapResults.get(`${x}:${y}`);
+            const key = `${x}:${y}`;
+            const cell = mapResults.get(key);
             if (cell !== undefined) {
                 const p: Pixel = { color_id: cell.color_id, username: cell.username, campus_name: cell.campus_name, set_time: parseInt(cell.set_time) }
-                board[x][y] = p;
+                board[x - CANVAS_MIN_X][y - CANVAS_MIN_Y] = p;
             }
             else {
                 const p: Pixel = { color_id: 1, username: 'null', campus_name: undefined, set_time: 0 }
-                board[x][y] = p;
+                board[x - CANVAS_MIN_X][y - CANVAS_MIN_Y] = p;
             }
         }
     }
@@ -141,17 +142,17 @@ async function createBoardImage(time: string, {scale = 1, transparent = false, u
     const color1 = colors.find((v) => v.id === 1);
     const white = color1 !== undefined ? color1 : {red: 255, green: 255, blue: 255};
 
-    const canvas = createCanvas(CANVAS_X * scale, CANVAS_X * scale);
+    const canvas = createCanvas(CANVAS_SIZE_X * scale, CANVAS_SIZE_Y * scale);
     const ctx = canvas.getContext('2d');
 
-    for (let x = 0; x < CANVAS_X; x++) {
-        for (let y = 0; y < CANVAS_X; y++) {
+    for (let x = CANVAS_MIN_X; x < CANVAS_MAX_X; x++) {
+        for (let y = CANVAS_MIN_Y; y < CANVAS_MAX_Y; y++) {
             const cell = mapResults.get(`${x}:${y}`);
 
             if (cell !== undefined) {
                 const { red, green, blue } = cell;
                 ctx.fillStyle = `rgb(${red}, ${green}, ${blue})`;
-                ctx.fillRect(x * scale, y * scale, scale, scale);
+                ctx.fillRect((x - CANVAS_MIN_X) * scale, (y - CANVAS_MIN_Y) * scale, scale, scale);
             }
             else {
                 if (transparent === true) {
@@ -160,7 +161,7 @@ async function createBoardImage(time: string, {scale = 1, transparent = false, u
                 else {
                     ctx.fillStyle = `rgb(${white.red}, ${white.green}, ${white.blue})`;
                 }
-                ctx.fillRect(x * scale, y * scale, scale, scale);
+                ctx.fillRect((x - CANVAS_MIN_X) * scale, (y - CANVAS_MIN_Y) * scale, scale, scale);
             }
         }
     }

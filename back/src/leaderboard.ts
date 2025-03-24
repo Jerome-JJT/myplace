@@ -33,8 +33,11 @@ const getInPlaceByUser = async () => {
 
 
 export const getLeaderboards = async (req: Request, res: Response) => {
+    const placedByUser = getPlacedByUser();
+    const inPlaceByUser = getInPlaceByUser();
+
     return res.status(200).json({ 
-        placed: await getPlacedByUser(),
-        inPlace: await getInPlaceByUser()
+        placed: await placedByUser,
+        inPlace: await inPlaceByUser
     });
 }

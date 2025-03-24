@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { useState, useEffect, useCallback } from 'react';
 
-import { CANVAS_X, CANVAS_Y } from 'src/Utils/consts';
+import { CANVAS_MAX_X, CANVAS_MAX_Y, CANVAS_MIN_X, CANVAS_MIN_Y, CANVAS_SIZE_X, CANVAS_SIZE_Y } from 'src/Utils/consts';
 import { ColorType, Update } from 'src/Utils/types';
 import { useUser } from 'src/UserProvider';
 import { objUrlEncode } from 'src/Utils/objUrlEncode';
@@ -76,7 +76,7 @@ export function Place() {
 
                 if (color !== undefined && pixel.set_time > (prev.get(`${x}:${y}`)?.set_time || 0)) {
                   ctx.fillStyle = 'rgb(' + color.color + ')';
-                  ctx.fillRect(x, y, 1, 1);
+                  ctx.fillRect(x - CANVAS_MIN_X, y - CANVAS_MIN_Y, 1, 1);
                   fut.set(`${x}:${y}`, pixel);
                 }
                 else {
@@ -124,7 +124,7 @@ export function Place() {
     e?.currentTarget.blur();
 
     if (isLogged) {
-      if (activePixel.x !== -1 && activePixel.y !== -1) {
+      if (activePixel !== undefined) {
         if (activeColor !== -1) {
           axios
             .post('/api/set',
@@ -148,7 +148,7 @@ export function Place() {
 
                       if (color !== undefined && pixel.set_time > (prev.get(`${x}:${y}`)?.set_time || 0)) {
                         ctx.fillStyle = 'rgb(' + color.color + ')';
-                        ctx.fillRect(x, y, 1, 1);
+                        ctx.fillRect(x - CANVAS_MIN_X, y - CANVAS_MIN_Y, 1, 1);
                         fut.set(`${x}:${y}`, pixel);
                       }
                       return fut;
@@ -187,37 +187,43 @@ export function Place() {
     else {
       addNotif('Login first', 'warning');
     }
-  }, [activeColor, activePixel.x, activePixel.y, addNotif, colors, isLogged, pl, setBoard, setPixelInfos]);
+  }, [activeColor, activePixel?.x, activePixel?.y, addNotif, colors, isLogged, pl, setBoard, setPixelInfos]);
 
 
   const shareButton = useCallback(async (e: React.MouseEvent<HTMLElement> | undefined) => {
     e?.currentTarget.blur();
-    const args = objUrlEncode({
-      'x':     Math.min(Math.max(activePixel.x, 0), CANVAS_X),
-      'y':     Math.min(Math.max(activePixel.y, 0), CANVAS_Y),
-      'scale': scale,
-    });
 
-    const base = `${window.location.origin}${window.location.pathname}`;
-    const link = `${base}?${args}`;
-    window.history.replaceState(null, '', link);
-
-    try {
-      await navigator.clipboard.writeText(link);
-      addNotif('Location copied to clipboard', 'info');
+    if (activePixel !== undefined) {
+      const args = objUrlEncode({
+        'x':     Math.min(Math.max(activePixel.x, CANVAS_MIN_X), CANVAS_MAX_X),
+        'y':     Math.min(Math.max(activePixel.y, CANVAS_MIN_Y), CANVAS_MAX_Y),
+        'scale': scale,
+      });
+  
+      const base = `${window.location.origin}${window.location.pathname}`;
+      const link = `${base}?${args}`;
+      window.history.replaceState(null, '', link);
+  
+      try {
+        await navigator.clipboard.writeText(link);
+        addNotif('Location copied to clipboard', 'info');
+      }
+      catch (error) {
+        console.error(error);
+        addNotif('Unable to copy to clipboard', 'error');
+      }
     }
-    catch (error) {
-      console.error(error);
-      addNotif('Unable to copy to clipboard', 'error');
+    else {
+      addNotif('No pixel selected', 'warning');
     }
-  }, [activePixel.x, activePixel.y, addNotif, scale]);
+  }, [activePixel?.x, activePixel?.y, addNotif, scale]);
 
 
   const moveRelative = useCallback((x: number, y: number) => {
     setActivePixel((prev) => {
       return {
-        x: prev.x !== -1 ? Math.min(Math.max(prev.x + x, 0), CANVAS_X) : -1,
-        y: prev.y !== -1 ? Math.min(Math.max(prev.y + y, 0), CANVAS_Y) : -1,
+        x: prev !== undefined ? Math.min(Math.max(prev.x + x, CANVAS_MIN_X), CANVAS_MAX_X) : -1,
+        y: prev !== undefined ? Math.min(Math.max(prev.y + y, CANVAS_MIN_Y), CANVAS_MAX_Y) : -1,
       };
     });
   }, [setActivePixel]);
@@ -263,8 +269,8 @@ export function Place() {
 
       <img
         className='canvas_display'
-        width={`${CANVAS_X}px`}
-        height={`${CANVAS_Y}px`}
+        width={`${CANVAS_SIZE_X}px`}
+        height={`${CANVAS_SIZE_Y}px`}
         style={{
           transform: `scale(${scale})`,
           marginTop: canvasMarginTop,
