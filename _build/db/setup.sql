@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(50),
+    username VARCHAR(50) NOT NULL,
     email VARCHAR(250),
     is_admin BOOLEAN DEFAULT FALSE,
     banned_at TIMESTAMP DEFAULT NULL,
@@ -82,8 +82,8 @@ blue = EXCLUDED.blue;
 
 
 
--- INSERT INTO users (id, name, email) VALUES (42, 'blur', 'blur');
--- INSERT INTO users (id, name, email) VALUES (007, 'moi', 'jerome');
+-- INSERT INTO users (id, username, email) VALUES (-1, 'blur', 'blur');
+-- INSERT INTO users (id, username, email) VALUES (007, 'moi', 'jerome');
 
 
 -- DO $$

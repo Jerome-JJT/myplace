@@ -26,8 +26,12 @@ services:
       dockerfile: ./_build/nginx/Dockerfile-prod
       args:
         VITE_NODE_ENV: PROD
-        VITE_CANVAS_X: ${CANVAS_X}
-        VITE_CANVAS_Y: ${CANVAS_Y}
+        VITE_CANVAS_MIN_X: ${CANVAS_MIN_X:-0}
+        VITE_CANVAS_MIN_Y: ${CANVAS_MIN_Y:-0}
+        VITE_CANVAS_MAX_X: ${CANVAS_MAX_X:-200}
+        VITE_CANVAS_MAX_Y: ${CANVAS_MAX_Y:-200}
+
+        VITE_OAUTH2_DISPLAY_NAME: ${OAUTH2_DISPLAY_NAME-}
 
     restart: "always"
 

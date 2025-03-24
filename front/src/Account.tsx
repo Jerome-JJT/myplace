@@ -26,7 +26,7 @@ const invalidateButton = useCallback((e: React.MouseEvent<HTMLElement> | undefin
 
 
   return (
-    <div className='rounded-md ml-[10vw] md:mx-auto w-min mt-[5vh] min-w-[40vw] bg-red-400 py-2'>
+    <div className='rounded-md ml-[10vw] md:mx-auto w-[80vw] md:max-w-[500px] mt-[5vh] bg-red-400 py-2'>
 
       <h2>Account management</h2>
 

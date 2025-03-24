@@ -1,78 +1,26 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
+import axios from 'axios';
 
-import { JWT_EXPIRES_IN, JWT_REFRESH_EXPIRES_IN, PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER } from './consts';
+import {
+    JWT_EXPIRES_IN, JWT_REFRESH_EXPIRES_IN,
+    OAUTH2_AUTHORIZE_URL, OAUTH2_TOKEN_URL, OAUTH2_CALLBACK_URL, OAUTH2_INFO_URL,
+    OAUTH2_EMAIL_FIELD, OAUTH2_ID_FIELD, OAUTH2_USERNAME_FIELD,
+    PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER,
+    JWT_SECRET,
+    OAUTH2_UID,
+    OAUTH2_SECRET,
+    DEV_MODE
+} from './consts';
 import { LoggedRequest, UserInfos } from './types';
 import { pool } from './db';
 import { getLastUserPixels } from './pixels_actions';
 import { objUrlEncode } from './objUrlEncode';
-import axios from 'axios';
 
 
-const checkToken = async (req: LoggedRequest, res: Response, next: any, fail: boolean = false) => {
-    const token = req.cookies.token;
-    const refresh = req.cookies.refresh;
-    if (!token && !refresh) {
-        if (fail) {
-            return res.status(401).json({ message: 'Unauthorized: No token provided' });
-        }
-        else {
-            req.user = undefined;
-            return next();
-        }
-    }
-    else {
-        jwt.verify(token, process.env.JWT_SECRET as string, (err: any, decoded_t: any) => {
-            if (err) {
-                jwt.verify(refresh, process.env.JWT_SECRET as string, async (err: any, decoded_r: any) => {
-                    if (err) {
-                        res.clearCookie('token');
-                        res.clearCookie('refresh');
-                        if (fail) {
-                            return res.status(401).json({ message: 'Invalid or expired token' });
-                        }
-                        else {
-                            req.user = undefined;
-                            return next();
-                        }
-                    }
-                    else {
-                        const logged = await loginUser(decoded_r.id, res, decoded_r.token_seq);
-                        if (logged) {
-                            return res.status(426).json({ message: 'Token refreshed' });
-                        }
-                        else {
-                            res.clearCookie('token');
-                            res.clearCookie('refresh');
-                            return res.status(410).json({ message: 'Login failed' });
-                        }
-                    }
-                })
-            }
-            else 
-            {
-                if (decoded_t.soft_is_banned) {
-                    return res.status(409).json({ message: 'Conflict' });
-                }
-                else {
-                    req.user = decoded_t;
-                    return next();
-                }
-            }
-        });
-    }
-}
-
-export const queryToken = async (req: LoggedRequest, res: Response, next: any) => {
-    return await checkToken(req, res, next, false);
-}
-export const authenticateToken = async (req: LoggedRequest, res: Response, next: any) => {
-    return await checkToken(req, res, next, true);
-}
-
-const loginUser = async (id: number, res: Response, verify_seq: number | undefined = undefined): Promise<boolean> => {
+export const loginUser = async (id: number, res: Response, verify_seq: number | undefined = undefined): Promise<boolean> => {
     const result = await pool.query(`
-        SELECT id, name, email, is_admin, banned_at, token_seq
+        SELECT id, username, email, is_admin, banned_at, token_seq
         FROM users
         WHERE id = $1
         LIMIT 1
@@ -86,39 +34,39 @@ const loginUser = async (id: number, res: Response, verify_seq: number | undefin
         }
 
         const token = jwt.sign(
-            { 
-                id: user.id, 
-                username: user.name,
+            {
+                id: user.id,
+                username: user.username,
                 soft_is_admin: user.is_admin,
                 soft_is_banned: user.banned_at ? true : false,
             } as UserInfos,
-            process.env.JWT_SECRET as string, 
-            { 
-                expiresIn: JWT_EXPIRES_IN 
+            JWT_SECRET,
+            {
+                expiresIn: JWT_EXPIRES_IN
             }
         );
         const refresh = jwt.sign(
-            { 
+            {
                 id: user.id,
-                username: user.name,
+                username: user.username,
                 token_seq: user.token_seq,
             } as UserInfos,
-            process.env.JWT_SECRET as string, 
-            { 
-                expiresIn: JWT_REFRESH_EXPIRES_IN 
+            JWT_SECRET,
+            {
+                expiresIn: JWT_REFRESH_EXPIRES_IN
             }
         );
-    
+
         res.cookie('token', token, {
             httpOnly: true,
             sameSite: "strict",
-            secure: process.env.NODE_ENV === 'production',
+            secure: DEV_MODE === false,
             maxAge: 4 * JWT_EXPIRES_IN * 1000,
         });
         res.cookie('refresh', refresh, {
             httpOnly: true,
             sameSite: "strict",
-            secure: process.env.NODE_ENV === 'production',
+            secure: DEV_MODE === false,
             maxAge: 4 * JWT_REFRESH_EXPIRES_IN * 1000,
         });
         return true;
@@ -128,14 +76,14 @@ const loginUser = async (id: number, res: Response, verify_seq: number | undefin
     }
 }
 
-const createUser = async (id: number, username: string, email: string, admin: boolean): Promise<boolean> => {
+const createUser = async (id: number, username: string, email: string | null, admin: boolean): Promise<boolean> => {
     try {
         const result = await pool.query(`
-            INSERT INTO users (id, name, email, is_admin) 
+            INSERT INTO users (id, username, email, is_admin) 
             VALUES
             ($1, $2, $3, $4)
         `, [id, username, email, admin]);
-    
+
         return result.rowCount === 1;
     }
     catch {
@@ -161,7 +109,7 @@ export const checkAdmin = async (id: number) => {
 }
 
 export const mockLogin = async (req: Request, res: Response) => {
-    if (await loginUser(1, res)) { 
+    if (await loginUser(-1, res)) {
         return res.status(200).json({ message: 'Login successful' });
     }
     else {
@@ -172,28 +120,27 @@ export const mockLogin = async (req: Request, res: Response) => {
 const getHash = (input: string) => {
     var hash = 0, len = input.length;
     for (var i = 0; i < len; i++) {
-      hash  = ((hash << 5) - hash) + input.charCodeAt(i);
-      hash |= 0; // to 32bit integer
+        hash = ((hash << 5) - hash) + input.charCodeAt(i);
+        hash |= 0; // to 32bit integer
     }
     return hash;
 }
 
-export const poLogin = async (req: Request, res: Response) => {
+export const guestLogin = async (req: Request, res: Response) => {
     let uniqid = `${req.socket.remoteAddress}_${req.headers['x-forwarded-for']}_${req.headers['user-agent']}`;
-    console.log('GUEST', uniqid)
     let uniqnum = getHash(uniqid);
 
     if (uniqnum > 0) {
         uniqnum = -uniqnum;
     }
-    uniqnum = (uniqnum % 1000000000)  - 1
+    uniqnum = (uniqnum % 100000000) - 100;
 
-    if (await loginUser(uniqnum, res)) { 
+    if (await loginUser(uniqnum, res)) {
         return res.redirect('/')
     }
     else {
-        if (await createUser(uniqnum, 'Guest', 'guest@email.com', false)) {
-            if (await loginUser(uniqnum, res)) { 
+        if (await createUser(uniqnum, `Guest_${uniqnum}`, `guest_${uniqnum}@email.com`, false)) {
+            if (await loginUser(uniqnum, res)) {
                 return res.redirect('/')
             }
             else {
@@ -209,67 +156,96 @@ export const poLogin = async (req: Request, res: Response) => {
 export const apiLogin = (req: Request, res: Response) => {
     const args = objUrlEncode({
         response_type: 'code',
-        client_id: process.env.API_UID,
         scope: 'public',
-        redirect_uri: process.env.API_CALLBACK
+        client_id: OAUTH2_UID,
+        redirect_uri: OAUTH2_CALLBACK_URL
     });
-    return res.redirect(`https://api.intra.42.fr/oauth/authorize?${args}`);
+    return res.redirect(`${OAUTH2_AUTHORIZE_URL}?${args}`);
 }
 
 export const apiCallback = async (req: Request, res: Response) => {
     try {
-        const token = await axios.post('https://api.intra.42.fr/oauth/token', {
+        const token = await axios.post(OAUTH2_TOKEN_URL!, {
             grant_type: 'authorization_code',
-            client_id: process.env.API_UID,
-            client_secret: process.env.API_SECRET,
             code: req.query.code,
-            redirect_uri: process.env.API_CALLBACK,
+            client_id: OAUTH2_UID,
+            client_secret: OAUTH2_SECRET,
+            redirect_uri: OAUTH2_CALLBACK_URL,
         }, {})
-    
+
         if (token.status === 200) {
             const access_token: string = token.data.access_token;
-    
-            const user = await axios.get('https://api.intra.42.fr/v2/me', {
+
+            const userInfos = await axios.get(OAUTH2_INFO_URL!, {
                 headers: {
                     'Authorization': `Bearer ${access_token}`
                 }
             })
-    
-            if (user.status === 200) {
-                if (await loginUser(user.data.id, res)) { 
+
+            if (userInfos.status === 200) {
+                const userId = userInfos.data[OAUTH2_ID_FIELD!];
+                const userUsername = userInfos.data[OAUTH2_USERNAME_FIELD!];
+                const userEmail = OAUTH2_EMAIL_FIELD ? userInfos.data[OAUTH2_EMAIL_FIELD] : null;
+
+                if (await loginUser(userId, res)) {
                     return res.redirect('/')
                     // return res.status(200).json({ message: 'Login successful' });
                 }
                 else {
-                    if (await createUser(user.data.id, user.data.login, user.data.email, user.data['staff?'])) {
-                        if (await loginUser(user.data.id, res)) { 
+                    if (await createUser(userId, userUsername, userEmail, false)) {
+                        if (await loginUser(userId, res)) {
                             return res.redirect('/')
                             // return res.status(200).json({ message: 'Login successful' });
+                        }
+                        else {
+                            if (DEV_MODE) {
+                                return res.status(410).json({ message: 'Login failed', dev_reason: 'Login after create failed' });
+                            }
+                            else {
+                                return res.status(410).json({ message: 'Login failed' });
+                            }
+                        }
+                    }
+                    else {
+                        if (DEV_MODE) {
+                            return res.status(410).json({ message: 'Login failed', dev_reason: 'Create fail' });
                         }
                         else {
                             return res.status(410).json({ message: 'Login failed' });
                         }
                     }
-                    else {
-                        return res.status(410).json({ message: 'Login failed' });
-                    }
                 }
             }
             else {
-                return res.status(410).json({ message: 'Login failed' });
+                if (DEV_MODE) {
+                    return res.status(410).json({ message: 'Login failed', dev_reason: 'Not 200 from api info', url: userInfos });
+                }
+                else {
+                    return res.status(410).json({ message: 'Login failed' });
+                }
                 // return res.redirect('/')
             }
         }
         else {
-            console.error('LOGIN FAILED');
-            return res.status(410).json({ message: 'Login failed' });
+            if (DEV_MODE) {
+                console.error('LOGIN FAILED');
+                return res.status(410).json({ message: 'Login failed', dev_reason: 'Not 200 from api info', url: token });
+            }
+            else {
+                return res.status(410).json({ message: 'Login failed' });
+            }
             // return res.redirect('/')
         }
     }
     catch (e: any) {
         if (e.status === 401) {
-            console.error('LOGIN FAILED');
-            return res.status(410).json({ message: 'API login failed' });
+            if (DEV_MODE) {
+                console.error('LOGIN FAILED');
+                return res.status(410).json({ message: 'API login failed', dev_reason: 'Received 401', url: e });
+            }
+            else {
+                return res.status(410).json({ message: 'API login failed' });
+            }
         }
     }
 }

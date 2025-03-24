@@ -1,9 +1,10 @@
 import { Pool } from 'pg';
+import { POSTGRES_DB, POSTGRES_HOST, POSTGRES_PASSWORD, POSTGRES_PORT, POSTGRES_USER } from './consts';
 
 export const pool = new Pool({
-    host: process.env.POSTGRES_HOST,
-    port: parseInt(process.env.POSTGRES_PORT!),
-    database: process.env.POSTGRES_DB,
-    user: process.env.POSTGRES_USER,
-    password: process.env.POSTGRES_PASSWORD,
+    host: POSTGRES_HOST,
+    port: POSTGRES_PORT,
+    database: POSTGRES_DB,
+    user: POSTGRES_USER,
+    password: POSTGRES_PASSWORD,
 });

@@ -24,6 +24,7 @@ import { QUICK_FIX } from './Utils/types';
 import { LoginPo } from './LoginPo';
 import { Account } from './Account';
 import { Leaderboard } from './Leaderboard';
+import { DEV_MODE, ENABLE_GUEST_LOGIN, ENABLE_OAUTH2_LOGIN, OAUTH2_DISPLAY_NAME } from './Utils/consts';
 
 function App() {
   const { isLogged, getUserData, loginButton, loginApi, logout, setTutoOpen } = useUser();
@@ -47,14 +48,14 @@ function App() {
       path:    '/leaderboard/',
       element: <Leaderboard />,
     },
-    {
+    ENABLE_GUEST_LOGIN ? {
       path:    '/loginpo/',
       element: <LoginPo />,
-    },
-    {
+    } : {},
+    ENABLE_GUEST_LOGIN ? {
       path:    '/pologin/',
       element: <LoginPo />,
-    },
+    } : {},
   ]);
 
   axios.interceptors.request.use(
@@ -93,7 +94,7 @@ function App() {
         params.get('ads') != null && (
           <>
             <div className='absolute top-0 text-center left-[42%] md:left-[28%] bg-white text-blue-400 text-6xl p-6 rounded-b-lg'>
-              <u>https://ftplace.42lwatch.ch</u>
+              <u>{window.location.href}</u>
             </div>
             <div className='absolute bg-white text-black text-2xl p-1 top-0 left-0'>
               <img src="/qr.png" width="300px" />
@@ -118,7 +119,7 @@ function App() {
       {
         (params.get('view') == null && !window.location.href.includes('loginpo')) && (
           <>
-            <LoginBox />
+            <LoginBox onLoggedClick={() => router.navigate('/account')} />
 
             <NotificationContainer />
 
@@ -136,16 +137,16 @@ function App() {
                     <IoMdHelpCircle size={20} color='black' />
                     Tuto
                   </SpeedDialAction>
-                  { (!isLogged && import.meta.env.VITE_NODE_ENV === 'DEV') && (
+                  { (!isLogged && DEV_MODE === true) && (
                     <SpeedDialAction className='text-black text-xs w-12 h-12 mb-2  gap-0' {...QUICK_FIX} onClick={loginButton}>
                       <IoMdKey size={20} color='black' />
                       Dev login
                     </SpeedDialAction>
                   )}
-                  { !isLogged && (
+                  { !isLogged && ENABLE_OAUTH2_LOGIN && (
                     <SpeedDialAction className='text-black text-xs w-12 h-12 mb-2 gap-0' {...QUICK_FIX} onClick={loginApi}>
                       <IoLogoIonitron size={20} color='black' />
-                      42 login
+                      {OAUTH2_DISPLAY_NAME}
                     </SpeedDialAction>
                   )}
                   { isLogged && (

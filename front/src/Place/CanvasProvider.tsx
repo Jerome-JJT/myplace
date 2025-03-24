@@ -3,7 +3,7 @@ import { useContext, type ReactNode, createContext } from 'react';
 import axios from 'axios';
 
 import { objUrlEncode } from 'src/Utils/objUrlEncode';
-import { MIN_SCALE, MAX_SCALE, CANVAS_X, CANVAS_Y } from 'src/Utils/consts';
+import { MIN_SCALE, MAX_SCALE, CANVAS_SIZE_X, CANVAS_SIZE_Y, CANVAS_MIN_X, CANVAS_MAX_X, CANVAS_MIN_Y, CANVAS_MAX_Y } from 'src/Utils/consts';
 import { ColorType, Pixel, Point } from 'src/Utils/types';
 import { useNotification } from 'src/NotificationProvider';
 import { distPoint } from 'src/Utils/mymaths';
@@ -13,8 +13,8 @@ interface CanvasContextProps {
 
   queryPlace: (time: string | undefined, type: string | undefined, cb: (() => any) | undefined) => void,
 
-  activePixel: Point,
-  setActivePixel: React.Dispatch<React.SetStateAction<Point>>,
+  activePixel: Point | undefined,
+  setActivePixel: React.Dispatch<React.SetStateAction<Point | undefined>>,
   activeColor: number,
   setActiveColor: React.Dispatch<React.SetStateAction<number>>,
 
@@ -64,14 +64,14 @@ export function useCanvas(): CanvasContextProps {
   return context;
 }
 
-export const initScale = Math.round(Math.max(Math.min(1 / ((CANVAS_X + CANVAS_Y) / 2) * 800, MAX_SCALE), MIN_SCALE));
+export const initScale = Math.round(Math.max(Math.min(1 / ((CANVAS_SIZE_X + CANVAS_SIZE_Y) / 2) * 800, MAX_SCALE), MIN_SCALE));
 
 export function CanvasProvider({ children }: { children: ReactNode }): JSX.Element {
   const { addNotif } = useNotification();
   const pl = useRef<HTMLCanvasElement | null>(null);
   // const params = new URLSearchParams(window.location.search);
 
-  const [activePixel, setActivePixel] = useState<Point>({ x: -1, y: -1 });
+  const [activePixel, setActivePixel] = useState<Point | undefined>(undefined);
   const [activeColor, setActiveColor] = useState(-1);
 
   const [colors, setColors] = useState<Map<number, ColorType>>(new Map());
@@ -156,7 +156,7 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
                     column.forEach((pixel, y) => {
                       ctx.fillStyle = 'rgb(' + cols.get(pixel.color_id).color + ')';
                       ctx.fillRect(x, y, 1, 1);
-                      pixs.set(`${x}:${y}`, pixel);
+                      pixs.set(`${x + CANVAS_MIN_X}:${y + CANVAS_MIN_Y}`, pixel);
                     });
                   });
                   setBoard(pixs);
@@ -164,12 +164,12 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
 
 
                   if (time === undefined && !Number.isNaN(baseX) && !Number.isNaN(baseY)) {
-                    const setX = Math.max(Math.min(baseX, CANVAS_X - 1), 0);
-                    const setY = Math.max(Math.min(baseY, CANVAS_Y - 1), 0);
+                    const setX = Math.max(Math.min(baseX, CANVAS_MAX_X - 1), CANVAS_MIN_X);
+                    const setY = Math.max(Math.min(baseY, CANVAS_MAX_Y - 1), CANVAS_MIN_Y);
 
                     if (baseView === false) {
                       setActivePixel({ x: setX, y: setY });
-                      setTranslate({ x: centerX - setX, y: centerY - setY });
+                      setTranslate({ x: centerX - (setX - CANVAS_MIN_X), y: centerY - (setY - CANVAS_MIN_Y) });
                     }
                     else {
                       setTranslate({ x: baseX, y: baseY });
@@ -207,6 +207,9 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
         if (error?.response === undefined || error.response.status === 502) {
           addNotif('Too soon, server not ready, reload in 2 sec', 'info');
         }
+        else if (error.response.status === 401) {
+          addNotif('Need to be logged to see board', 'warning');
+        }
         if (cb) {
           cb();
         }
@@ -215,7 +218,7 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
 
 
   useEffect(() => {
-    if (pl.current !== null) {
+    if (pl.current !== null && activePixel !== undefined) {
 
       const centerX = pl.current.width / 2;
       const centerY = pl.current.height / 2;
@@ -226,8 +229,8 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
       const offsetX = trueOffsetX;
       const offsetY = trueOffsetY;
 
-      const tx = (activePixel.x + translate.x) * scale + centerX + offsetX;
-      const ty = (activePixel.y + translate.y) * scale + centerY + offsetY;
+      const tx = ((activePixel.x - CANVAS_MIN_X) + translate.x) * scale + centerX + offsetX;
+      const ty = ((activePixel.y - CANVAS_MIN_Y) + translate.y) * scale + centerY + offsetY;
 
       setOverlayStyle((prev) => {
         return {
@@ -240,7 +243,7 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
         };
       });
     }
-  }, [pl.current?.offsetLeft, pl.current?.offsetTop, scale, activePixel.x, activePixel.y, translate.x, translate.y, isDragging]);
+  }, [pl.current?.offsetLeft, pl.current?.offsetTop, scale, activePixel?.x, activePixel?.y, translate.x, translate.y, isDragging]);
 
   const [_windowSize, setWindowSize] = useState<{width: number| undefined, height: number | undefined}>({
     width:  undefined,
@@ -313,10 +316,10 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
       const mouseY = ((pageY - offsetY) - centerY) / scale;
 
 
-      const clickedX = Math.floor(mouseX);
-      const clickedY = Math.floor(mouseY);
+      const clickedX = Math.floor(mouseX) + CANVAS_MIN_X;
+      const clickedY = Math.floor(mouseY) + CANVAS_MIN_Y;
 
-      if (clickedX < CANVAS_X && clickedY < CANVAS_Y) {
+      if (clickedX >= CANVAS_MIN_X && clickedY >= CANVAS_MIN_Y && clickedX < CANVAS_MAX_X && clickedY < CANVAS_MAX_Y) {
         setActivePixel({ x: clickedX, y: clickedY });
 
         const params = new URLSearchParams(window.location.search);
@@ -324,8 +327,8 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
         if (params.get('view') === null) {
           const args = objUrlEncode({
             ...Object.fromEntries(params),
-            'x':     Math.min(Math.max(clickedX, 0), CANVAS_X),
-            'y':     Math.min(Math.max(clickedY, 0), CANVAS_Y),
+            'x':     Math.min(Math.max(clickedX, CANVAS_MIN_X), CANVAS_MAX_X),
+            'y':     Math.min(Math.max(clickedY, CANVAS_MIN_Y), CANVAS_MAX_Y),
             'scale': scale,
           });
   
@@ -335,7 +338,7 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
         }
       }
       else {
-        setActivePixel({ x: -1, y: -1 });
+        setActivePixel(undefined);
       }
     }
   }, [scale, translate.x, translate.y]);
