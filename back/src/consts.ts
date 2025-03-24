@@ -20,6 +20,8 @@ export const PIXEL_MINUTE_TIMER = parseInt(process.env.PIXEL_MINUTE_TIMER!);
 export const UTC_TIME_START = (new Date(process.env.UTC_TIME_START!)).getTime();
 export const UTC_TIME_END = (new Date(process.env.UTC_TIME_END!)).getTime();
 
+export const ENABLE_UNLOGGED_VIEW = isTrue(process.env.ENABLE_UNLOGGED_VIEW);
+
 export const POSTGRES_HOST = process.env.POSTGRES_HOST!;
 export const POSTGRES_PORT = parseInt(process.env.POSTGRES_PORT!);
 export const POSTGRES_DB = process.env.POSTGRES_DB!;

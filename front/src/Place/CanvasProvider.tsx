@@ -207,6 +207,9 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
         if (error?.response === undefined || error.response.status === 502) {
           addNotif('Too soon, server not ready, reload in 2 sec', 'info');
         }
+        else if (error.response.status === 401) {
+          addNotif('Need to be logged to see board', 'warning');
+        }
         if (cb) {
           cb();
         }
