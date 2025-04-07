@@ -6,7 +6,6 @@ import {
     JWT_EXPIRES_IN, JWT_REFRESH_EXPIRES_IN,
     OAUTH2_AUTHORIZE_URL, OAUTH2_TOKEN_URL, OAUTH2_CALLBACK_URL, OAUTH2_INFO_URL,
     OAUTH2_EMAIL_FIELD, OAUTH2_ID_FIELD, OAUTH2_USERNAME_FIELD,
-    PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER,
     JWT_SECRET,
     OAUTH2_UID,
     OAUTH2_SECRET,
@@ -16,6 +15,7 @@ import { LoggedRequest, UserInfos } from './types';
 import { pool } from './db';
 import { getLastUserPixels } from './pixels_actions';
 import { objUrlEncode } from './objUrlEncode';
+import { getUserPresets } from './game_config';
 
 
 export const loginUser = async (id: number, res: Response, verify_seq: number | undefined = undefined): Promise<boolean> => {
@@ -260,12 +260,13 @@ export const logout = (req: Request, res: Response) => {
 export const profile = async (req: LoggedRequest, res: Response) => {
     const user = req.user!;
 
-    const timers = await getLastUserPixels(user.id);
+    const userPreset = getUserPresets(user.id);
+    const timers = getLastUserPixels(user.id);
+
     return res.status(200).json({
         userInfos: {
-            timers: timers,
-            pixel_buffer: PIXEL_BUFFER_SIZE,
-            pixel_timer: PIXEL_MINUTE_TIMER,
+            timers: await timers,
+            ...(await userPreset),
             ...req.user
         }
     });

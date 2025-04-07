@@ -17,7 +17,7 @@ import { useNotification } from 'src/NotificationProvider';
 
 
 export function Place() {
-  const { isLogged, setPixelInfos, setIsConnected } = useUser();
+  const { isLogged, setPixelInfos, setIsConnected, setInfos } = useUser();
   const { addNotif } = useNotification();
   const { pl, board, image, queryPlace, activePixel, setActivePixel, activeColor, setActiveColor, colors, setBoard, scale, setNbConnecteds } = useCanvas();
   const params = new URLSearchParams(window.location.search);
@@ -155,7 +155,13 @@ export function Place() {
                       }
                       return fut;
                     });
-                    setPixelInfos(res.data.timers);
+                    setInfos((prev) => {
+                      return {
+                        ...prev,
+                        ...res.data.userInfos,
+                        timers: res.data.timers
+                      }
+                    });
                   }
                 }
               }
@@ -233,8 +239,9 @@ export function Place() {
 
   const numericAction = useCallback((abs: number | undefined, rel: number | undefined) => {
     if (abs !== undefined) {
-      if (colors.has(abs)) {
-        setActiveColor(abs);
+      const found = Array.from(colors.entries()).find((c) => c[1].corder === abs);
+      if (found !== undefined) {
+        setActiveColor(found[0]);
       }
       else {
         setActiveColor(-1);

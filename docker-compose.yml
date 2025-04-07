@@ -50,6 +50,7 @@ services:
 
     volumes:
       - /etc/localtime:/etc/localtime:ro
+      - ./.game_config.json:/.game_config.json
 
     environment:
       CANVAS_MIN_X: ${CANVAS_MIN_X:-0}

@@ -172,7 +172,7 @@ async function createBoardImage(time: string, {scale = 1, transparent = false, u
 
 async function getColors(): Promise<Color[]> {
     const result = await pool.query(`
-        SELECT id, name, red, green, blue, corder
+        SELECT id, name, red, green, blue, row_number() OVER (ORDER BY corder ASC) AS corder
         FROM colors
         ORDER BY corder ASC
     `);

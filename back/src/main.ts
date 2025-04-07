@@ -6,6 +6,8 @@ import { Duplex } from 'stream';
 import { sendUpdates, sendPing, sendConnecteds } from "./ws";
 import { DEV_MODE, ENABLE_GUEST_LOGIN, ENABLE_OAUTH2_LOGIN, ENABLE_UNLOGGED_VIEW } from "./consts";
 
+import './game_config';
+
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
