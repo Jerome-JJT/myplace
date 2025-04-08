@@ -46,4 +46,4 @@ export interface UserInfos {
   pixel_timer: number
 }
 
-export const QUICK_FIX = { placeholder: '', onPointerEnterCapture: () => {}, onPointerLeaveCapture: () => {} };
+export const QUICK_FIX = { placeholder: '', onPointerEnterCapture: () => {}, onPointerLeaveCapture: () => {}, crossOrigin: undefined };

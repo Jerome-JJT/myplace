@@ -45,6 +45,7 @@ export const JWT_EXPIRES_IN = parseInt(process.env.JWT_EXPIRES_IN!);
 export const JWT_REFRESH_EXPIRES_IN = parseInt(process.env.JWT_REFRESH_EXPIRES_IN!);
 
 export const ENABLE_GUEST_LOGIN = isTrue(process.env.ENABLE_GUEST_LOGIN);
+export const ENABLE_LOCAL_LOGIN = isTrue(1);
 
 export const ENABLE_OAUTH2_LOGIN = isTrue(process.env.ENABLE_OAUTH2_LOGIN);
 export const OAUTH2_UID = ENABLE_OAUTH2_LOGIN ? process.env.OAUTH2_UID! : undefined;

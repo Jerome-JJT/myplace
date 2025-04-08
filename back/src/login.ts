@@ -1,112 +1,18 @@
-import jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
 import axios from 'axios';
 
 import {
-    JWT_EXPIRES_IN, JWT_REFRESH_EXPIRES_IN,
     OAUTH2_AUTHORIZE_URL, OAUTH2_TOKEN_URL, OAUTH2_CALLBACK_URL, OAUTH2_INFO_URL,
     OAUTH2_EMAIL_FIELD, OAUTH2_ID_FIELD, OAUTH2_USERNAME_FIELD,
-    JWT_SECRET,
     OAUTH2_UID,
     OAUTH2_SECRET,
     DEV_MODE
 } from './consts';
-import { LoggedRequest, UserInfos } from './types';
-import { pool } from './db';
+import { LoggedRequest } from './types';
 import { getLastUserPixels } from './pixels_actions';
 import { objUrlEncode } from './objUrlEncode';
 import { getUserPresets } from './game_config';
-
-
-export const loginUser = async (id: number, res: Response, verify_seq: number | undefined = undefined): Promise<boolean> => {
-    const result = await pool.query(`
-        SELECT id, username, email, is_admin, banned_at, token_seq
-        FROM users
-        WHERE id = $1
-        LIMIT 1
-    `, [id]);
-
-    if (result.rows.length > 0) {
-        const user = result.rows[0];
-
-        if (verify_seq !== undefined && verify_seq !== user.token_seq) {
-            return false;
-        }
-
-        const token = jwt.sign(
-            {
-                id: user.id,
-                username: user.username,
-                soft_is_admin: user.is_admin,
-                soft_is_banned: user.banned_at ? true : false,
-            } as UserInfos,
-            JWT_SECRET,
-            {
-                expiresIn: JWT_EXPIRES_IN
-            }
-        );
-        const refresh = jwt.sign(
-            {
-                id: user.id,
-                username: user.username,
-                token_seq: user.token_seq,
-            } as UserInfos,
-            JWT_SECRET,
-            {
-                expiresIn: JWT_REFRESH_EXPIRES_IN
-            }
-        );
-
-        res.cookie('token', token, {
-            httpOnly: true,
-            sameSite: "strict",
-            secure: DEV_MODE === false,
-            maxAge: 4 * JWT_EXPIRES_IN * 1000,
-        });
-        res.cookie('refresh', refresh, {
-            httpOnly: true,
-            sameSite: "strict",
-            secure: DEV_MODE === false,
-            maxAge: 4 * JWT_REFRESH_EXPIRES_IN * 1000,
-        });
-        return true;
-    }
-    else {
-        return false;
-    }
-}
-
-const createUser = async (id: number, username: string, email: string | null, admin: boolean): Promise<boolean> => {
-    try {
-        const result = await pool.query(`
-            INSERT INTO users (id, username, email, is_admin) 
-            VALUES
-            ($1, $2, $3, $4)
-        `, [id, username, email, admin]);
-
-        return result.rowCount === 1;
-    }
-    catch {
-        return false;
-    }
-}
-
-export const checkAdmin = async (id: number) => {
-    const result = await pool.query(`
-        SELECT is_admin
-        FROM users
-        WHERE id = $1
-        LIMIT 1
-    `, [id]);
-
-    if (result.rows.length > 0) {
-        const user = result.rows[0];
-        return user.is_admin;
-    }
-    else {
-        return false;
-    }
-}
+import { checkUserExists, createDirectUser, createLocalUser, getNumHash, loginUser } from './login_helpers';
 
 export const mockLogin = async (req: Request, res: Response) => {
     if (await loginUser(-1, res)) {
@@ -117,18 +23,79 @@ export const mockLogin = async (req: Request, res: Response) => {
     }
 }
 
-const getHash = (input: string) => {
-    var hash = 0, len = input.length;
-    for (var i = 0; i < len; i++) {
-        hash = ((hash << 5) - hash) + input.charCodeAt(i);
-        hash |= 0; // to 32bit integer
+export const localLogin = async (req: Request, res: Response) => {
+    const { username, email, password } = req.body;
+
+
+
+    if (await loginUser(-1, res)) {
+        return res.status(200).json({ message: 'Login successful' });
     }
-    return hash;
+    else {
+        return res.status(410).json({ message: 'Login failed' });
+    }
+}
+
+export const localCreate = async (req: Request, res: Response) => {
+    const { username, email, password } = req.body;
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const errors = [];
+
+    if (!username) {
+        errors.push('Username is required');
+    }
+    else if (username.length < 3) {
+        errors.push('Username min length is 3');
+    }
+    if (!email) {
+        errors.push('Email is required');
+    }
+    else if (!emailRegex.test(email)) {
+        errors.push('Email is invalid');
+    }
+    if (!password) {
+        errors.push('Password is required');
+    }
+    else if (password.length < 16) {
+        errors.push('Password length invalid');
+    }
+
+    if (errors.length > 0) {
+        return res.status(410).json({
+            message: 'Create account validation error',
+            errors: errors
+        });
+    }
+    else {
+        const matches = await checkUserExists(username, email);
+
+        if (matches.length > 0) {
+            if (matches.find((m) => m.username == username)) {
+                errors.push('Username already exists');
+            }
+            if (matches.find((m) => m.email == email)) {
+                errors.push('Email already exists');
+            }
+            return res.status(410).json({
+                message: 'Create account duplicate error',
+                errors: errors
+            });
+        }
+        else {
+            if (await createLocalUser(username, email, password, false)) {
+                return res.status(201).json({ message: 'Create success, login now' });
+            }
+            else {
+                return res.status(410).json({ message: 'Login failed', errors: ['Unknown error'] });
+            }
+        }
+    }
 }
 
 export const guestLogin = async (req: Request, res: Response) => {
     let uniqid = `${req.socket.remoteAddress}_${req.headers['x-forwarded-for']}_${req.headers['user-agent']}`;
-    let uniqnum = getHash(uniqid);
+    let uniqnum = getNumHash(uniqid);
 
     if (uniqnum > 0) {
         uniqnum = -uniqnum;
@@ -139,7 +106,7 @@ export const guestLogin = async (req: Request, res: Response) => {
         return res.redirect('/')
     }
     else {
-        if (await createUser(uniqnum, `Guest_${uniqnum}`, `guest_${uniqnum}@email.com`, false)) {
+        if (await createDirectUser(uniqnum, `Guest_${uniqnum}`, `guest_${uniqnum}@email.com`, false)) {
             if (await loginUser(uniqnum, res)) {
                 return res.redirect('/')
             }
@@ -192,7 +159,7 @@ export const apiCallback = async (req: Request, res: Response) => {
                     // return res.status(200).json({ message: 'Login successful' });
                 }
                 else {
-                    if (await createUser(userId, userUsername, userEmail, false)) {
+                    if (await createDirectUser(userId, userUsername, userEmail, false)) {
                         if (await loginUser(userId, res)) {
                             return res.redirect('/')
                             // return res.status(200).json({ message: 'Login successful' });
@@ -271,21 +238,3 @@ export const profile = async (req: LoggedRequest, res: Response) => {
         }
     });
 };
-
-
-export const rotate_tokens = async (req: LoggedRequest, res: Response) => {
-    const user = req.user!;
-
-    const result = await pool.query(`
-        UPDATE users 
-        SET token_seq = token_seq + 1
-        WHERE id = $1
-    `, [user.id]);
-
-    if (result.rowCount === 1) {
-        return res.status(200).json({ message: 'Success' });
-    }
-    else {
-        return res.status(417).json({ message: 'Preconfition failed' });
-    }
-}

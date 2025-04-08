@@ -24,7 +24,8 @@ import { QUICK_FIX } from './Utils/types';
 import { LoginPo } from './LoginPo';
 import { Account } from './Account';
 import { Leaderboard } from './Leaderboard';
-import { DEV_MODE, ENABLE_GUEST_LOGIN, ENABLE_OAUTH2_LOGIN, OAUTH2_DISPLAY_NAME } from './Utils/consts';
+import { DEV_MODE, ENABLE_GUEST_LOGIN, ENABLE_LOCAL_LOGIN, ENABLE_OAUTH2_LOGIN, OAUTH2_DISPLAY_NAME } from './Utils/consts';
+import { LocalLogin } from './LocalLogin';
 
 function App() {
   const { isLogged, getUserData, loginButton, loginApi, logout, setTutoOpen } = useUser();
@@ -48,6 +49,10 @@ function App() {
       path:    '/leaderboard/',
       element: <Leaderboard />,
     },
+    ENABLE_LOCAL_LOGIN ? {
+      path:    '/login/',
+      element: <LocalLogin />,
+    } : {},
     ENABLE_GUEST_LOGIN ? {
       path:    '/loginpo/',
       element: <LoginPo />,

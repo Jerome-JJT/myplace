@@ -9,7 +9,7 @@ import {
     JWT_SECRET,
 } from './consts';
 import { LoggedRequest } from './types';
-import { loginUser } from './login';
+import { loginUser } from './login_helpers';
 
 
 

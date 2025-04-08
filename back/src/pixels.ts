@@ -4,7 +4,7 @@ import { CANVAS_MIN_X, CANVAS_MIN_Y, CANVAS_MAX_X, CANVAS_MAX_Y, CANVAS_SIZE_X, 
 import { Color, LoggedRequest, PixelNetwork, PixelToNetwork } from './types';
 import { redisClient } from './redis';
 import { pool } from './db';
-import { checkAdmin } from './login';
+import { checkAdmin } from './login_helpers';
 const { createCanvas } = require('canvas');
 
 async function initializeBoard() {

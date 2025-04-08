@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) NOT NULL,
     email VARCHAR(250),
+    password VARCHAR(250),
     is_admin BOOLEAN DEFAULT FALSE,
     banned_at TIMESTAMP DEFAULT NULL,
 
