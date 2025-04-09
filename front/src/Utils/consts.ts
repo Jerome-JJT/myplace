@@ -22,6 +22,8 @@ export const CANVAS_SIZE_X = (Math.abs(CANVAS_MIN_X) + Math.abs(CANVAS_MAX_X));
 export const CANVAS_SIZE_Y = (Math.abs(CANVAS_MIN_Y) + Math.abs(CANVAS_MAX_Y));
 
 export const ENABLE_GUEST_LOGIN = isTrue(import.meta.env.VITE_ENABLE_GUEST_LOGIN);
+export const ENABLE_LOCAL_LOGIN = isTrue(import.meta.env.VITE_ENABLE_LOCAL_LOGIN);
+export const ENABLE_LOCAL_CREATE = isTrue(import.meta.env.VITE_ENABLE_LOCAL_CREATE);
 export const ENABLE_OAUTH2_LOGIN = isTrue(import.meta.env.VITE_ENABLE_OAUTH2_LOGIN);
 
 export const OAUTH2_DISPLAY_NAME = import.meta.env.VITE_OAUTH2_DISPLAY_NAME;

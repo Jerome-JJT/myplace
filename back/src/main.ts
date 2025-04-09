@@ -4,7 +4,7 @@ import cookieParser from 'cookie-parser';
 import { Duplex } from 'stream';
 
 import { sendUpdates, sendPing, sendConnecteds } from "./ws";
-import { DEV_MODE, ENABLE_GUEST_LOGIN, ENABLE_OAUTH2_LOGIN, ENABLE_UNLOGGED_VIEW } from "./consts";
+import { DEV_MODE, ENABLE_GUEST_LOGIN, ENABLE_LOCAL_LOGIN, ENABLE_OAUTH2_LOGIN, ENABLE_UNLOGGED_VIEW } from "./consts";
 
 import './game_config';
 
@@ -40,7 +40,8 @@ app.get('/getimage', authenticateToken, getImage);
 app.post('/set', authenticateToken, setPixel);
 
 
-const { mockLogin, guestLogin, apiLogin, apiCallback, logout, rotate_tokens } = require('./login');
+const { mockLogin, guestLogin, localLogin, localCreate, apiLogin, apiCallback, logout } = require('./login');
+const { rotate_tokens } = require('./login_helpers');
 
 if (DEV_MODE === true) {
     app.get('/login/mock', mockLogin);
@@ -48,6 +49,10 @@ if (DEV_MODE === true) {
 }
 if (ENABLE_GUEST_LOGIN === true) {
     app.get('/login/guest', guestLogin);
+}
+if (ENABLE_LOCAL_LOGIN === true) {
+    app.post('/login/login', localLogin);
+    app.post('/login/create', queryToken, localCreate);
 }
 if (ENABLE_OAUTH2_LOGIN === true) {
     app.get('/login/api', apiLogin);

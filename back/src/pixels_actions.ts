@@ -6,8 +6,8 @@ import { LoggedRequest, PixelToNetwork } from './types';
 import { redisClient } from './redis';
 import { pool } from './db';
 import { updates } from './ws';
-import { checkAdmin } from './login';
 import { getUserPresets } from './game_config';
+import { checkAdmin } from './login_helpers';
 
 export const getLastUserPixels = async (user_id: number): Promise<number[]> => {
     const result = await pool.query(`
