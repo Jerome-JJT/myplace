@@ -7,7 +7,7 @@ import {
 import SHA256 from 'crypto-js/sha256';
 
 import { QUICK_FIX } from './Utils/types';
-import { DEV_MODE } from './Utils/consts';
+import { DEV_MODE, ENABLE_LOCAL_CREATE } from './Utils/consts';
 import { useNotification } from './NotificationProvider';
 import { useUser } from './UserProvider';
 import { useNavigate } from 'react-router-dom';
@@ -22,7 +22,7 @@ export const LocalLogin = () => {
   const [fieldRepeat, setFieldRepeat] = useState('');
 
   const { addNotif } = useNotification();
-  const { getUserData } = useUser();
+  const { getUserData, infos } = useUser();
   const navigate = useNavigate();
 
   const loginAccountAction = useCallback(() => {
@@ -56,7 +56,7 @@ export const LocalLogin = () => {
     const errors = [];
 
     // const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    const regex = DEV_MODE ? /^(?=.{4,})(?=.*[a-z]).*$/ : /^(?=.{8,})(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*$/;
+    const regex = DEV_MODE ? /^(?=.{4,}).*$/ : /^(?=.{8,})(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*$/;
 
     if (regex.test(fieldPassword) == false) {
       errors.push('Password need lowercase, uppercase, numbers and at least 8 characters')
@@ -188,15 +188,18 @@ export const LocalLogin = () => {
           {selectedMode === 'login' && (
             <>
               <Button onClick={loginAccountAction} className="mt-6" fullWidth {...QUICK_FIX}>
-                sign up
+                Login
               </Button>
-              <div className="mt-4 text-center text-lg">
-                Need an account?
-                {" "}
-                <a onClick={() => { setSelectedMode('create') }} className="font-medium text-blue-700 hover:underline">
-                  Create account
-                </a>
-              </div>
+              {(ENABLE_LOCAL_CREATE || infos?.soft_is_admin) && (
+                <div className="mt-4 text-center text-lg">
+                  Need an account?
+                  {" "}
+                  <a onClick={() => { setSelectedMode('create') }} className="font-medium text-blue-700 hover:underline">
+                    Create account
+                  </a>
+                </div>
+                )
+              }
             </>
           ) || selectedMode === 'create' && (
             <>

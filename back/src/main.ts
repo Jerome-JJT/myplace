@@ -52,7 +52,7 @@ if (ENABLE_GUEST_LOGIN === true) {
 }
 if (ENABLE_LOCAL_LOGIN === true) {
     app.post('/login/login', localLogin);
-    app.post('/login/create', localCreate);
+    app.post('/login/create', queryToken, localCreate);
 }
 if (ENABLE_OAUTH2_LOGIN === true) {
     app.get('/login/api', apiLogin);

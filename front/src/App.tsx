@@ -17,7 +17,7 @@ import {
   createBrowserRouter,
   RouterProvider,
 } from 'react-router-dom';
-import { IoIosFiling, IoMdMap, IoMdPodium, IoLogoIonitron, IoMdLock, IoMdKey, IoMdHelpCircle, IoMdPerson } from 'react-icons/io';
+import { IoIosFiling, IoMdMap, IoMdPodium, IoLogoIonitron, IoMdLock, IoMdKey, IoMdHelpCircle, IoMdPerson, IoIosLogIn } from 'react-icons/io';
 import { NotificationContainer } from './NotificationContainer';
 import { Tutorial } from './Place/Tutorial';
 import { QUICK_FIX } from './Utils/types';
@@ -28,7 +28,7 @@ import { DEV_MODE, ENABLE_GUEST_LOGIN, ENABLE_LOCAL_LOGIN, ENABLE_OAUTH2_LOGIN, 
 import { LocalLogin } from './LocalLogin';
 
 function App() {
-  const { isLogged, getUserData, loginButton, loginApi, logout, setTutoOpen } = useUser();
+  const { isLogged, infos, getUserData, loginButton, loginApi, logout, setTutoOpen } = useUser();
   const { addNotif } = useNotification();
   const params = new URLSearchParams(window.location.search);
 
@@ -124,7 +124,17 @@ function App() {
       {
         (params.get('view') == null && !window.location.href.includes('loginpo')) && (
           <>
-            <LoginBox onLoggedClick={() => router.navigate('/account')} />
+            <LoginBox onClick={() => {
+              if (isLogged) {
+                router.navigate('/account')
+              }
+              else if (ENABLE_OAUTH2_LOGIN) {
+                loginApi(undefined);
+              }
+              else if (ENABLE_LOCAL_LOGIN) {
+                router.navigate('/login')
+              }
+            }} />
 
             <NotificationContainer />
 
@@ -146,6 +156,12 @@ function App() {
                     <SpeedDialAction className='text-black text-xs w-12 h-12 mb-2  gap-0' {...QUICK_FIX} onClick={loginButton}>
                       <IoMdKey size={20} color='black' />
                       Dev login
+                    </SpeedDialAction>
+                  )}
+                  { (!isLogged || infos?.soft_is_admin) && ENABLE_LOCAL_LOGIN && (
+                    <SpeedDialAction className='text-black text-xs w-12 h-12 mb-2 gap-0' {...QUICK_FIX} onClick={() => router.navigate('/login')}>
+                      <IoIosLogIn size={20} color='black' />
+                      Login
                     </SpeedDialAction>
                   )}
                   { !isLogged && ENABLE_OAUTH2_LOGIN && (

@@ -8,13 +8,14 @@ import {
     OAUTH2_EMAIL_FIELD, OAUTH2_ID_FIELD, OAUTH2_USERNAME_FIELD,
     OAUTH2_UID,
     OAUTH2_SECRET,
-    DEV_MODE
+    DEV_MODE,
+    ENABLE_LOCAL_CREATE
 } from './consts';
 import { LoggedRequest } from './types';
 import { getLastUserPixels } from './pixels_actions';
 import { objUrlEncode } from './objUrlEncode';
 import { getUserPresets } from './game_config';
-import { checkUserExists, createDirectUser, createLocalUser, getNumHash, getUser, loginUser } from './login_helpers';
+import { checkAdmin, checkUserExists, createDirectUser, createLocalUser, getNumHash, getUser, loginUser } from './login_helpers';
 
 export const mockLogin = async (req: Request, res: Response) => {
     if (await loginUser(-1, res)) {
@@ -81,66 +82,74 @@ export const localLogin = async (req: Request, res: Response) => {
     }
 }
 
-export const localCreate = async (req: Request, res: Response) => {
-    const { username: username_raw, email: email_raw, password, isUnhashed } = req.body;
-    const username = (username_raw as string | undefined)?.trim();
-    const email = (email_raw as string | undefined)?.trim();
+export const localCreate = async (req: LoggedRequest, res: Response) => {
+    const isAdmin = (req.user?.soft_is_admin === true && await checkAdmin(req.user?.id));
+    if (ENABLE_LOCAL_CREATE || isAdmin) {
+        const { username: username_raw, email: email_raw, password, isUnhashed } = req.body;
+        const username = (username_raw as string | undefined)?.trim();
+        const email = (email_raw as string | undefined)?.trim();
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const errors = [];
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const errors = [];
 
-    if (username === undefined || username === null) {
-        errors.push('Username is required');
-    }
-    else if (username.length < 3) {
-        errors.push('Username min length is 3');
-    }
-    if (email === undefined || email === null) {
-        errors.push('Email is required');
-    }
-    else if (!emailRegex.test(email)) {
-        errors.push('Email is invalid');
-    }
-    if (password === undefined || password === null) {
-        errors.push('Password is required');
-    }
-    else if (password.length < 16 && isUnhashed !== true) {
-        errors.push('Password length invalid');
-    }
-
-    if (errors.length > 0) {
-        return res.status(410).json({
-            message: 'Create account validation error',
-            errors: errors
-        });
-    }
-    else {
-        const matches = await checkUserExists(username!, email!);
-
-        if (matches.length > 0) {
-            if (matches.find((m) => m.username == username)) {
-                errors.push('Username already exists');
+        if (username === undefined || username === null) {
+            errors.push('Username is required');
+        }
+        else if (username.length < 3) {
+            errors.push('Username min length is 3');
+        }
+        if (!isAdmin) {
+            if (email === undefined || email === null) {
+                errors.push('Email is required');
             }
-            if (matches.find((m) => m.email == email)) {
-                errors.push('Email already exists');
+            else if (!emailRegex.test(email)) {
+                errors.push('Email is invalid');
             }
+        }
+        if (password === undefined || password === null) {
+            errors.push('Password is required');
+        }
+        else if (password.length < 16 && isUnhashed !== true) {
+            errors.push('Password length invalid');
+        }
+
+        if (errors.length > 0) {
             return res.status(410).json({
-                message: 'Create account duplicate error',
+                message: 'Create account validation error',
                 errors: errors
             });
         }
         else {
-            const prePassword = isUnhashed === true ? SHA256(password).toString() : password;
-            const saltRounds = 10;
-            const hashedPassword = await bcrypt.hash(prePassword, saltRounds);
+            const matches = await checkUserExists(username!, email!);
 
-            if (await createLocalUser(username!, email!, hashedPassword, false)) {
-                return res.status(201).json({ message: 'Create success, login now' });
+            if (matches.length > 0) {
+                if (matches.find((m) => m.username == username)) {
+                    errors.push('Username already exists');
+                }
+                if (email !== null && matches.find((m) => m.email == email)) {
+                    errors.push('Email already exists');
+                }
+                return res.status(410).json({
+                    message: 'Create account duplicate error',
+                    errors: errors
+                });
             }
             else {
-                return res.status(410).json({ message: 'Create failed', errors: ['Unknown error'] });
+                const prePassword = isUnhashed === true ? SHA256(password).toString() : password;
+                const saltRounds = 10;
+                const hashedPassword = await bcrypt.hash(prePassword, saltRounds);
+
+                if (await createLocalUser(username!, email!, hashedPassword, false)) {
+                    return res.status(201).json({ message: 'Create success, login now' });
+                }
+                else {
+                    return res.status(410).json({ message: 'Create failed', errors: ['Unknown error'] });
+                }
             }
         }
+    }
+    else {
+        return res.sendStatus(404);
     }
 }
 

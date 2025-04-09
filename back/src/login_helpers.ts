@@ -82,7 +82,7 @@ export const createDirectUser = async (id: number, username: string, email: stri
     }
 }
 
-export const createLocalUser = async (username: string, email: string, password: string, admin: boolean): Promise<boolean> => {
+export const createLocalUser = async (username: string, email: string | null, password: string, admin: boolean): Promise<boolean> => {
     try {
         const result = await pool.query(`
             INSERT INTO users (username, email, password, is_admin) 
