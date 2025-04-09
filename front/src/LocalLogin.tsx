@@ -66,7 +66,6 @@ export const LocalLogin = () => {
     }
 
     if (errors.length > 0) {
-      console.log(errors, fieldPassword, fieldRepeat)
       setErrorBox(errors);
     }
     else {
