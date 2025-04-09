@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
+import SHA256 from 'crypto-js/sha256';
+import * as bcrypt from 'bcrypt';
 
 import {
     OAUTH2_AUTHORIZE_URL, OAUTH2_TOKEN_URL, OAUTH2_CALLBACK_URL, OAUTH2_INFO_URL,
@@ -12,7 +14,7 @@ import { LoggedRequest } from './types';
 import { getLastUserPixels } from './pixels_actions';
 import { objUrlEncode } from './objUrlEncode';
 import { getUserPresets } from './game_config';
-import { checkUserExists, createDirectUser, createLocalUser, getNumHash, loginUser } from './login_helpers';
+import { checkUserExists, createDirectUser, createLocalUser, getNumHash, getUser, loginUser } from './login_helpers';
 
 export const mockLogin = async (req: Request, res: Response) => {
     if (await loginUser(-1, res)) {
@@ -24,40 +26,85 @@ export const mockLogin = async (req: Request, res: Response) => {
 }
 
 export const localLogin = async (req: Request, res: Response) => {
-    const { username, email, password } = req.body;
+    const { username: username_raw, password } = req.body;
+    const username = (username_raw as string | undefined)?.trim();
 
+    const errors = [];
 
+    if (username === undefined || username === null) {
+        errors.push('Username is required');
+    }
+    if (password === undefined || password === null) {
+        errors.push('Password is required');
+    }
 
-    if (await loginUser(-1, res)) {
-        return res.status(200).json({ message: 'Login successful' });
+    if (errors.length > 0) {
+        return res.status(410).json({
+            message: 'Login account validation error',
+            errors: errors
+        });
     }
     else {
-        return res.status(410).json({ message: 'Login failed' });
+        const user = await getUser(username!);
+
+        if (user === undefined || user.password === undefined || user.password === null) {
+            errors.push('Login error');
+            if (DEV_MODE) {
+                errors.push('Account not found');
+            }
+            return res.status(410).json({
+                message: 'Login account login error',
+                errors: errors
+            });
+        }
+        else {
+            if (await bcrypt.compare(password, user.password)) {
+
+                if (await loginUser(user.id, res)) {
+                    return res.status(200).json({ message: 'Login success' });
+                }
+                else {
+                    return res.status(410).json({ message: 'Login failed', errors: ['Unknown error'] });
+                }
+            }
+            else {
+                errors.push('Login error');
+                if (DEV_MODE) {
+                    errors.push('Password error');
+                }
+                return res.status(410).json({
+                    message: 'Login account login error',
+                    errors: errors
+                });
+            }
+        }
     }
 }
 
 export const localCreate = async (req: Request, res: Response) => {
-    const { username, email, password } = req.body;
+    const { username: username_raw, email: email_raw, password, isUnhashed } = req.body;
+    const username = (username_raw as string | undefined)?.trim();
+    const email = (email_raw as string | undefined)?.trim();
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const errors = [];
 
-    if (!username) {
+    if (username === undefined || username === null) {
         errors.push('Username is required');
     }
     else if (username.length < 3) {
         errors.push('Username min length is 3');
     }
-    if (!email) {
+    if (email === undefined || email === null) {
         errors.push('Email is required');
     }
     else if (!emailRegex.test(email)) {
         errors.push('Email is invalid');
     }
-    if (!password) {
+    if (password === undefined || password === null) {
         errors.push('Password is required');
     }
-    else if (password.length < 16) {
+    else if (password.length < 16 && isUnhashed !== true) {
         errors.push('Password length invalid');
     }
 
@@ -68,7 +115,7 @@ export const localCreate = async (req: Request, res: Response) => {
         });
     }
     else {
-        const matches = await checkUserExists(username, email);
+        const matches = await checkUserExists(username!, email!);
 
         if (matches.length > 0) {
             if (matches.find((m) => m.username == username)) {
@@ -83,11 +130,15 @@ export const localCreate = async (req: Request, res: Response) => {
             });
         }
         else {
-            if (await createLocalUser(username, email, password, false)) {
+            const prePassword = isUnhashed === true ? SHA256(password).toString() : password;
+            const saltRounds = 10;
+            const hashedPassword = await bcrypt.hash(prePassword, saltRounds);
+
+            if (await createLocalUser(username!, email!, hashedPassword, false)) {
                 return res.status(201).json({ message: 'Create success, login now' });
             }
             else {
-                return res.status(410).json({ message: 'Login failed', errors: ['Unknown error'] });
+                return res.status(410).json({ message: 'Create failed', errors: ['Unknown error'] });
             }
         }
     }

@@ -107,6 +107,22 @@ export const checkUserExists = async (username: string, email: string) => {
     return result.rows as any[];
 }
 
+export const getUser = async (username: string) => {
+    const result = await pool.query(`
+        SELECT id, username, password
+        FROM users
+        WHERE username = $1 AND password IS NOT NULL
+        LIMIT 1
+    `, [username]);
+
+    if (result.rows.length > 0) {
+        const user = result.rows[0];
+        return user;
+    }
+    else {
+        return undefined;
+    }
+}
 
 export const checkAdmin = async (id: number) => {
     const result = await pool.query(`

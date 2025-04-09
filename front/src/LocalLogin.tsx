@@ -1,13 +1,16 @@
 import axios from 'axios';
 import { useCallback, useState } from 'react';
-import { QUICK_FIX } from './Utils/types';
 import {
   Input,
   Button,
 } from "@material-tailwind/react";
-import { DEV_MODE } from './Utils/consts';
 import SHA256 from 'crypto-js/sha256';
+
+import { QUICK_FIX } from './Utils/types';
+import { DEV_MODE } from './Utils/consts';
 import { useNotification } from './NotificationProvider';
+import { useUser } from './UserProvider';
+import { useNavigate } from 'react-router-dom';
 
 export const LocalLogin = () => {
   const [selectedMode, setSelectedMode] = useState('login');
@@ -19,9 +22,34 @@ export const LocalLogin = () => {
   const [fieldRepeat, setFieldRepeat] = useState('');
 
   const { addNotif } = useNotification();
+  const { getUserData } = useUser();
+  const navigate = useNavigate();
 
   const loginAccountAction = useCallback(() => {
-  }, []);
+    axios
+      .post('/api/login/login',
+        { 
+          username: fieldUsername,
+          password: SHA256(fieldPassword).toString(),
+        },
+        { withCredentials: true },
+      )
+      .then((res) => {
+        if (res.status === 200) {
+          getUserData();
+          navigate('/');
+          setErrorBox([]);
+        }
+      })
+      .catch((err) => {
+        if (err.response.status === 410) {
+          setErrorBox(err.response.data.errors);
+        }
+        else {
+          setErrorBox([`Unexpected error ${err.response.status}`])
+        }
+      });
+  }, [fieldUsername, fieldPassword]);
 
   const createAccountAction = useCallback(() => {
 
@@ -63,6 +91,9 @@ export const LocalLogin = () => {
           if (err.response.status === 410) {
             setErrorBox(err.response.data.errors);
           }
+          else {
+            setErrorBox([`Unexpected error ${err.response.status}`])
+          }
         });
 
     }
@@ -75,7 +106,8 @@ export const LocalLogin = () => {
           {selectedMode === 'login' && 'Sign In' || selectedMode === 'create' && 'Sign up'}
         </span>
 
-        <form className="mt-8 mb-2 w-80 mx-auto sm:w-96">
+        <form className="mt-8 mb-2 w-80 mx-auto sm:w-96" autoComplete='off'>
+          <input autoComplete='off' className='hidden'></input>
           <div className="mb-1 flex flex-col gap-6">
 
             <div>
