@@ -4,8 +4,8 @@ import { useUser } from 'src/UserProvider';
 import { useCanvas } from './CanvasProvider';
 
 
-export const LoginBox = ({onLoggedClick}: {onLoggedClick: () => Promise<void>}) => {
-  const { isLogged, infos, loginApi } = useUser();
+export const LoginBox = ({onClick}: {onClick: () => void}) => {
+  const { isLogged, infos } = useUser();
   const { nbConnecteds } = useCanvas();
 
   return (
@@ -17,7 +17,7 @@ export const LoginBox = ({onLoggedClick}: {onLoggedClick: () => Promise<void>}) 
       )}
       <button
         className={classNames('p-2 bg-gray-400/90 rounded border-2 border-black hover:border-white')}
-        onClick={isLogged ? onLoggedClick : loginApi}
+        onClick={onClick}
       >
         { isLogged && infos?.username || '<Login>' }
       </button>

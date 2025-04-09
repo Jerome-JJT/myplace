@@ -4,8 +4,8 @@ import { CANVAS_MIN_X, CANVAS_MIN_Y, CANVAS_MAX_X, CANVAS_MAX_Y, CANVAS_SIZE_X, 
 import { Color, LoggedRequest, PixelNetwork, PixelToNetwork } from './types';
 import { redisClient } from './redis';
 import { pool } from './db';
-import { checkAdmin } from './login';
 import { matchCampus } from './flag';
+import { checkAdmin } from './login_helpers';
 const { createCanvas } = require('canvas');
 
 async function initializeBoard() {
@@ -173,7 +173,7 @@ async function createBoardImage(time: string, {scale = 1, transparent = false, u
 
 async function getColors(): Promise<Color[]> {
     const result = await pool.query(`
-        SELECT id, name, red, green, blue, corder
+        SELECT id, name, red, green, blue, row_number() OVER (ORDER BY corder ASC) AS corder
         FROM colors
         ORDER BY corder ASC
     `);

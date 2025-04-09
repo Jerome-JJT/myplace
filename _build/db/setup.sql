@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) NOT NULL,
     email VARCHAR(250),
+    password VARCHAR(250),
     is_admin BOOLEAN DEFAULT FALSE,
     banned_at TIMESTAMP DEFAULT NULL,
 
@@ -20,12 +21,14 @@ CREATE TABLE IF NOT EXISTS colors (
 );
 
 CREATE TABLE IF NOT EXISTS board (
+    id SERIAL PRIMARY KEY,
     x INT NOT NULL,
     y INT NOT NULL,
     color_id INT REFERENCES colors(id) NOT NULL,
     user_id INT REFERENCES users(id),
     set_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (x, y, set_time)
+    cd_time TIMESTAMP
+    -- PRIMARY KEY (x, y, set_time)
 );
 
 

@@ -13,7 +13,7 @@ DOCKER		= docker compose ${COMPOSE_DEV} -p ${APP_NAME}_dev
 #Prod
 # DOCKER		= docker compose ${COMPOSE_PROD} -p ${APP_NAME}
 
-ifeq ($(shell [ -e ./prod ] && echo 1), 1)
+ifeq ($(shell [ -e ./.prod ] && echo 1), 1)
 	DOCKER		= docker compose ${COMPOSE_PROD} -p ${APP_NAME}
 endif
 

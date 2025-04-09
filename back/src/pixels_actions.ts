@@ -1,49 +1,55 @@
 import { Response } from 'express';
 
-import { CANVAS_MIN_X, CANVAS_MAX_X, CANVAS_MIN_Y, CANVAS_MAX_Y, PIXEL_BUFFER_SIZE, PIXEL_MINUTE_TIMER, 
+import { CANVAS_MIN_X, CANVAS_MAX_X, CANVAS_MIN_Y, CANVAS_MAX_Y,
     redisTimeout, UTC_TIME_END, UTC_TIME_START } from './consts';
 import { LoggedRequest, PixelToNetwork } from './types';
 import { redisClient } from './redis';
 import { pool } from './db';
 import { updates } from './ws';
-import { checkAdmin } from './login';
 import { matchCampus } from './flag';
+import { getUserPresets } from './game_config';
+import { checkAdmin } from './login_helpers';
 
 export const getLastUserPixels = async (user_id: number): Promise<number[]> => {
-
     const result = await pool.query(`
-        SELECT (EXTRACT(EPOCH FROM (set_time + INTERVAL '1 minute' * $2)) * 1000)::BIGINT AS set_time
+        SELECT (EXTRACT(EPOCH FROM cd_time) * 1000)::BIGINT AS cd_time
         FROM board
         WHERE user_id = $1 AND 
-        (set_time + INTERVAL '1 minute' * $2) > NOW()
-        ORDER BY set_time DESC
-        LIMIT $3
-    `, [user_id, PIXEL_MINUTE_TIMER, PIXEL_BUFFER_SIZE]);
+        cd_time > NOW()
+        ORDER BY cd_time DESC
+    `, [user_id]);
 
-    return result.rows.map((r: {set_time: string}) => parseInt(r.set_time));
+    return result.rows.map((r: {cd_time: string}) => parseInt(r.cd_time));
 }
 
 export const setPixel = async (req: LoggedRequest, res: Response) => {
     const { x, y, color } = req.body;
     const user = req.user!;
-    const timers = await getLastUserPixels(user.id)
+
+    const userPresetPromise = getUserPresets(user.id);
+    const timersPromise = getLastUserPixels(user.id);
+    const isAdminPromise = checkAdmin(user.id);
+    const userPreset = await userPresetPromise;
+    const timers = await timersPromise;
+    const isAdmin = await isAdminPromise;
 
     const actualDate = Date.now();
     console.log(UTC_TIME_START, UTC_TIME_END, actualDate);
     console.log("PRINT", x, y, color, user);
 
-    if ((UTC_TIME_START < actualDate && actualDate < UTC_TIME_END) || (user.soft_is_admin === true && (await checkAdmin(user.id)))) {
-        if (timers.length < PIXEL_BUFFER_SIZE || (user.soft_is_admin === true && (await checkAdmin(user.id)))) {
+    if ((UTC_TIME_START < actualDate && actualDate < UTC_TIME_END) || (user.soft_is_admin === true && isAdmin)) {
+        if (timers.length < userPreset.pixel_buffer || (user.soft_is_admin === true && isAdmin)) {
             if (x < CANVAS_MIN_X || y < CANVAS_MIN_Y || x >= CANVAS_MAX_X || y >= CANVAS_MAX_Y || color == null || color == undefined) {
                 return res.status(406).send('Bad payload');
             }
             try {
                 const ret = await pool.query(`
-                    INSERT INTO board (x, y, color_id, user_id)
-                    VALUES ($1, $2, $3, $4)
-                    RETURNING x, y, color_id, (EXTRACT(EPOCH FROM set_time) * 1000)::BIGINT AS set_time, 
-                    (EXTRACT(EPOCH FROM (set_time + INTERVAL '1 minute' * $5)) * 1000)::BIGINT AS cd_time
-                    `, [x, y, color, user.id, PIXEL_MINUTE_TIMER]);
+                    INSERT INTO board (x, y, color_id, user_id, cd_time)
+                    VALUES ($1, $2, $3, $4, (CURRENT_TIMESTAMP + INTERVAL '1 minute' * $5))
+                    RETURNING x, y, color_id, 
+                    (EXTRACT(EPOCH FROM set_time) * 1000)::BIGINT AS set_time, 
+                    (EXTRACT(EPOCH FROM  cd_time) * 1000)::BIGINT AS cd_time
+                    `, [x, y, color, user.id, userPreset.pixel_timer]);
                     
                 const inserted = ret.rows.length === 1 ? ret.rows[0] : null;
         
@@ -51,13 +57,20 @@ export const setPixel = async (req: LoggedRequest, res: Response) => {
                     const key = `${inserted.x}:${inserted.y}`;
                     const p = PixelToNetwork({ username: user.username, campus_name: user.campus_name, flag: matchCampus.get(user.campus_name)?.countryCode, color_id: inserted.color_id, set_time: parseInt(inserted.set_time) })
             
-                    await redisClient.set(key, JSON.stringify(p), 'EX', redisTimeout());
+                    const redisPromise = redisClient.set(key, JSON.stringify(p), 'EX', redisTimeout());
+
+                    const newUserPreset = getUserPresets(user.id);
 
                     updates.push({ ...p, x: inserted.x, y: inserted.y });
                     timers.unshift(parseInt(inserted.cd_time));
+
+                    await redisPromise;
                     return res.status(201).send({
                         update: { ...p, x: inserted.x, y: inserted.y },
-                        timers: timers
+                        timers: timers,
+                        userInfos: {
+                            ...(await newUserPreset)
+                        }
                     });
                 }
                 else {

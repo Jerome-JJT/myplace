@@ -50,6 +50,7 @@ services:
 
     volumes:
       - /etc/localtime:/etc/localtime:ro
+      - ./.game_config.json:/.game_config.json
 
     environment:
       CANVAS_MIN_X: ${CANVAS_MIN_X:-0}
@@ -83,6 +84,8 @@ services:
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7200}
 
       ENABLE_GUEST_LOGIN: ${ENABLE_GUEST_LOGIN-false}
+      ENABLE_LOCAL_LOGIN: ${ENABLE_LOCAL_LOGIN-false}
+      ENABLE_LOCAL_CREATE: ${ENABLE_LOCAL_CREATE-false}
 
       ENABLE_OAUTH2_LOGIN: ${ENABLE_OAUTH2_LOGIN-false}
       OAUTH2_UID: ${OAUTH2_UID-}

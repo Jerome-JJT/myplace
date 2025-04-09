@@ -49,3 +49,26 @@ export interface Update extends PixelNetwork {
     y: number
 }
 
+export interface gc_level {
+    min_px: number
+    nb_pixels?: string
+    cooldown?: string
+}
+export interface gc_event {
+    start: string
+    end?: string
+    nb_pixels?: string
+    cooldown?: string
+}
+export interface level {
+    num: number
+    min_px: number
+    pixel_buffer: number
+    pixel_timer: number
+}
+export interface event {
+    start: Date
+    end: Date | undefined
+    pixel_buffer: string | undefined
+    pixel_timer: string | undefined
+};

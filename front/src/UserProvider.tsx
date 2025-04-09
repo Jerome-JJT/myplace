@@ -10,6 +10,7 @@ interface UserContextProps {
   tutoOpen: boolean
   setTutoOpen: React.Dispatch<React.SetStateAction<boolean>>
   infos: UserInfos | undefined
+  setInfos: React.Dispatch<React.SetStateAction<UserInfos | undefined>>
   getUserData: () => void
   setPixelInfos: (timers: number[]) => void
   logout: () => void
@@ -132,6 +133,7 @@ export function UserProvider({ children }: { children: ReactNode }): JSX.Element
         tutoOpen,
         setTutoOpen,
         infos,
+        setInfos,
         getUserData,
         setPixelInfos,
         logout,
