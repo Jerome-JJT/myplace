@@ -9,5 +9,16 @@ export default defineConfig({
       usePolling: true,
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react-dom', 'react-icons', 'react-router-dom'],
+          tailwind: ['tailwindcss', 'tailwind-merge'],
+          mattailwind: ['@material-tailwind/react'],
+        },
+      },
+    },
+  },
   plugins: [react(), tsconfigPaths()],
 });
