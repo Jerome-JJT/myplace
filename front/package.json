@@ -13,6 +13,7 @@
   "dependencies": {
     "@eslint/compat": "^1.1.1",
     "@material-tailwind/react": "^2.1.10",
+    "@weston/react-world-flags": "^2.0.0",
     "axios": "^1.8.2",
     "classnames": "^2.5.1",
     "crypto-js": "^4.2.0",
@@ -21,7 +22,6 @@
     "react-dom": "^18.3.1",
     "react-icons": "^5.3.0",
     "react-router-dom": "^6.27.0",
-    "react-world-flags": "^1.6.0",
     "styled-components": "^6.1.13"
   },
   "devDependencies": {
@@ -30,7 +30,6 @@
     "@types/node": "^22.7.5",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
-    "@types/react-world-flags": "^1.6.0",
     "@types/redis": "^4.0.11",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.20",

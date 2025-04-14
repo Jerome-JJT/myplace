@@ -16,6 +16,7 @@ export default defineConfig({
           react: ['react-dom', 'react-icons', 'react-router-dom'],
           tailwind: ['tailwindcss', 'tailwind-merge'],
           mattailwind: ['@material-tailwind/react'],
+          flags: ['@weston/react-world-flags'],
         },
       },
     },

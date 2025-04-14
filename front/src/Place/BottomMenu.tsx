@@ -10,7 +10,7 @@ import { IconButton } from '@material-tailwind/react';
 import { IoMdBrush, IoIosShareAlt } from 'react-icons/io';
 import useBreakpoint from 'src/Utils/useBreakpoint';
 import { useDebounce } from 'src/Utils/useDebounce';
-import Flag from 'react-world-flags'
+import { Flag32 as Flag } from '@weston/react-world-flags'
 
 interface BottomMenuProps {
   shareButton: (e: React.MouseEvent<HTMLElement> | undefined) => void
