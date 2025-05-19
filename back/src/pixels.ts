@@ -8,7 +8,7 @@ import { matchCampus } from './flag';
 import { checkAdmin } from './login_helpers';
 const { createCanvas } = require('canvas');
 
-async function initializeBoard() {
+async function initializeBoard(loggedView = false) {
     const board: (PixelNetwork | null)[][] = [];
 
     const result = await pool.query(`
@@ -53,6 +53,7 @@ async function initializeBoard() {
                 
                 if (cell !== undefined) {
                     const p = PixelToNetwork({ color_id: cell.color_id, username: cell.username, campus_name: cell.campus_name, flag: matchCampus.get(cell.campus_name)?.countryCode, set_time: parseInt(cell.set_time) });
+                    if(!loggedView) p.u = 'Anon';
                     board[x - CANVAS_MIN_X][y - CANVAS_MIN_Y] = p;
                 } //
                 else {
@@ -242,7 +243,7 @@ export const getPixels = async (req: LoggedRequest, res: Response) => {
             }
         }
         else {
-            const board = await initializeBoard();
+            const board = await initializeBoard(req?.user !== undefined);
             return res.status(200).json({
                 colors: colors,
                 type: 'board',

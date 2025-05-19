@@ -110,7 +110,7 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
               />
             </>);
 
-          if (!['null', 'Welcome', 'Guest', 'FinalClean'].includes(pixel.username)) {
+          if (!['null', 'Welcome', 'Guest', 'Anon', 'FinalClean'].includes(pixel.username)) {
             displayUsername = <a href={`https://profile.intra.42.fr/users/${pixel.username}`}><u>{pixel.username}</u></a>;
           }
 
