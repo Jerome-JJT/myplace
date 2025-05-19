@@ -43,7 +43,7 @@ async function initializeBoard(loggedView = false) {
         for (let y = CANVAS_MIN_Y; y < CANVAS_MAX_Y; y++) {
             if (cachedCells[y - CANVAS_MIN_Y] !== null) {
                 board[x - CANVAS_MIN_X][y - CANVAS_MIN_Y] = JSON.parse(cachedCells[y - CANVAS_MIN_Y]);
-                board[x - CANVAS_MIN_X][y - CANVAS_MIN_Y]!.u = 'Anon';     
+                if(board[x - CANVAS_MIN_X][y - CANVAS_MIN_Y]!.u !== 'null') board[x - CANVAS_MIN_X][y - CANVAS_MIN_Y]!.u = 'Anon';     
             } //
             else {
                 // const cell = result.rows.find((v) => {
