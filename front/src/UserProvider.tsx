@@ -121,7 +121,7 @@ export function UserProvider({ children }: { children: ReactNode }): JSX.Element
 
   const loginPo = useCallback((e: React.MouseEvent<HTMLElement> | undefined) => {
     e?.currentTarget.blur();
-    window.location.href = '/api/login/po';
+    window.location.href = '/api/login/guest';
   }, []);
 
   return (
