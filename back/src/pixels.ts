@@ -43,6 +43,7 @@ async function initializeBoard(loggedView = false) {
         for (let y = CANVAS_MIN_Y; y < CANVAS_MAX_Y; y++) {
             if (cachedCells[y - CANVAS_MIN_Y] !== null) {
                 board[x - CANVAS_MIN_X][y - CANVAS_MIN_Y] = JSON.parse(cachedCells[y - CANVAS_MIN_Y]);
+                board[x - CANVAS_MIN_X][y - CANVAS_MIN_Y]!.u = 'Anon';     
             } //
             else {
                 // const cell = result.rows.find((v) => {
@@ -53,8 +54,8 @@ async function initializeBoard(loggedView = false) {
                 
                 if (cell !== undefined) {
                     const p = PixelToNetwork({ color_id: cell.color_id, username: cell.username, campus_name: cell.campus_name, flag: matchCampus.get(cell.campus_name)?.countryCode, set_time: parseInt(cell.set_time) });
-                    if(!loggedView) p.u = 'Anon';
                     board[x - CANVAS_MIN_X][y - CANVAS_MIN_Y] = p;
+                    board[x - CANVAS_MIN_X][y - CANVAS_MIN_Y]!.u = 'Anon';     
                 } //
                 else {
                     const p = PixelToNetwork({ color_id: 1, username: 'null', campus_name: undefined, flag: undefined, set_time: 0 });
