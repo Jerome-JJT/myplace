@@ -29,6 +29,20 @@ CREATE TABLE IF NOT EXISTS board (
     -- PRIMARY KEY (x, y, set_time)
 );
 
+CREATE INDEX BoardPixels ON board(x, y, set_time);
+CREATE INDEX BoardUsers on board(user_id);
+
+-- SELECT
+--     tablename,
+--     indexname,
+--     indexdef
+-- FROM
+--     pg_indexes
+-- WHERE
+--     schemaname = 'public'
+-- ORDER BY
+--     tablename,
+--     indexname;
 
 -- INSERT INTO colors (id, name, red, green, blue) VALUES 
 --     (1, 'white', 236, 240, 241),
@@ -93,7 +107,7 @@ blue = EXCLUDED.blue;
 -- BEGIN
 --     FOR i IN 0..99 LOOP
 --         FOR j IN 0..99 LOOP
---             INSERT INTO board (x, y, color_id, user_id, set_time) VALUES (i, j, 1, 42);
+--             INSERT INTO board (x, y, color_id, user_id, set_time, cd_time) VALUES (i, j, 1, 42, NOW(), NOW());
 --         END LOOP;
 --     END LOOP;
 -- END $$;
