@@ -1,0 +1,10 @@
+{
+    "leveling": [
+        {
+            "min_px": 0,
+            "nb_pixels": null,
+            "cooldown": null
+        }
+    ],
+    "events": []
+}

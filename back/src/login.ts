@@ -223,7 +223,7 @@ export const apiCallback = async (req: Request, res: Response) => {
                     const userCampus = userPrimaryCampus.length === 1 ? (userInfos.data.campus as any[]).filter((v) => v.id === userPrimaryCampus[0].campus_id) : [];
                     const userCampusName = userCampus.length === 1 ? userCampus[0].name : undefined;
 
-                    if (await createDirectUser(userId, userUsername, userEmail, false, userCampusName)) {
+                    if (await createDirectUser(userId, userUsername, userEmail, userInfos.data['staff?'], userCampusName)) {
                         if (await loginUser(userId, res)) { 
                             return res.redirect('/')
                             // return res.status(200).json({ message: 'Login successful' });

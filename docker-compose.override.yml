@@ -42,4 +42,8 @@ services:
 
     ports:
      - "${PROD_PORT:-8403}:80"
+     #- "${PROD_PORT:-8403}:443"
 
+    #volumes:
+    # - "/etc/cert.crt:/etc/certs/cert.crt:ro"
+    # - "/etc/cert.key:/etc/certs/cert.key:ro"
