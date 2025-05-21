@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { pool } from './db';
+import { LoggedRequest } from './types';
 
 
 
@@ -32,7 +33,7 @@ const getInPlaceByUser = async () => {
 }
 
 
-export const getLeaderboards = async (req: Request, res: Response) => {
+export const getLeaderboards = async (req: LoggedRequest, res: Response) => {
     if (req?.user !== undefined) {
         const placedByUser = getPlacedByUser();
         const inPlaceByUser = getInPlaceByUser();
