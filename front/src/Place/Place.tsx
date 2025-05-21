@@ -19,7 +19,7 @@ import { useNotification } from 'src/NotificationProvider';
 export function Place() {
   const { isLogged, setPixelInfos, setIsConnected, setInfos } = useUser();
   const { addNotif } = useNotification();
-  const { pl, board, image, queryPlace, activePixel, setActivePixel, activeColor, setActiveColor, colors, setBoard, scale, setNbConnecteds } = useCanvas();
+  const { pl, image, queryPlace, activePixel, setActivePixel, activeColor, setActiveColor, colors, setBoard, scale, setNbConnecteds } = useCanvas();
   const params = new URLSearchParams(window.location.search);
   const paramView = params.get('view') !== null;
   const paramType = params.get('type');
