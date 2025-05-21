@@ -7,7 +7,7 @@ import { pool } from './db';
 import { checkAdmin } from './login_helpers';
 const { createCanvas } = require('canvas');
 
-async function initializeBoard() {
+async function initializeBoard(loggedView = false) {
     const board: (PixelNetwork | null)[][] = [];
 
     const result = await pool.query(`
@@ -35,7 +35,7 @@ async function initializeBoard() {
             const key = `${x}:${y}`;
             queryKeys.push(key);
         }
- 
+
         const cachedCells = await redisClient.mGet(queryKeys);
         const cachedSet: {[key: string]: string} = {};
 
@@ -49,7 +49,7 @@ async function initializeBoard() {
                 // });
                 const key = `${x}:${y}`;
                 const cell = mapResults.get(key);
-                
+
                 if (cell !== undefined) {
                     const p = PixelToNetwork({ color_id: cell.color_id, username: cell.username, set_time: parseInt(cell.set_time) });
                     board[x - CANVAS_MIN_X][y - CANVAS_MIN_Y] = p;
@@ -72,7 +72,7 @@ async function initializeBoard() {
 
 async function viewTimedBoard(time: string, {user_id = null}: {user_id?: string | null}) {
     const board: (PixelNetwork | null)[][] = [];
-    
+
     const result = await pool.query(`
         SELECT ranked_board.x, ranked_board.y, ranked_board.color_id, users.username, (EXTRACT(EPOCH FROM ranked_board.set_time) * 1000)::BIGINT AS set_time
         FROM (
@@ -202,6 +202,8 @@ async function getTimes(): Promise<{min_time: number, max_time: number}> {
     return times;
 }
 
+const inFlight = new Map();
+
 export const getPixels = async (req: LoggedRequest, res: Response) => {
     try {
         const colors = await getColors();
@@ -218,7 +220,7 @@ export const getPixels = async (req: LoggedRequest, res: Response) => {
                 const image = buffer.toString('base64');
 
                 return res.status(200).json({
-                    colors: colors, 
+                    colors: colors,
                     type: 'image',
                     image: image,
                     min_time: min_time,
@@ -230,9 +232,9 @@ export const getPixels = async (req: LoggedRequest, res: Response) => {
                 const {board} = await viewTimedBoard(new Date(req.query.time as string).toISOString(), {
                     user_id: req.query.user_id as string || null
                 });
-                
+
                 return res.status(200).json({
-                    colors: colors, 
+                    colors: colors,
                     type: 'board',
                     board: board,
                     min_time: min_time,
@@ -241,7 +243,49 @@ export const getPixels = async (req: LoggedRequest, res: Response) => {
             }
         }
         else {
-            const board = await initializeBoard();
+            const cacheKey = req?.user !== undefined ? 'logged-board' : 'unlogged-board';
+
+            const cachedBoard = JSON.parse(await redisClient.get(cacheKey));
+
+            if (cachedBoard) {
+                console.log('enter cached');
+                return res.status(200).json({
+                    colors: colors,
+                    type: 'board',
+                    origin: 'cached',
+                    board: cachedBoard
+                });
+            }
+
+            if (inFlight.has(cacheKey)) {
+                console.log('enter shared');
+                const sharedPromise = inFlight.get(cacheKey);
+                const sharedBoard = await sharedPromise;
+
+                return res.status(200).json({
+                    colors: colors,
+                    type: 'board',
+                    origin: 'shared',
+                    board: sharedBoard
+                });
+            }
+
+            const promise = initializeBoard(req?.user !== undefined)
+                .then(async (data) => {
+                    await redisClient.set(cacheKey, JSON.stringify(data), { EX: 10 });
+                    inFlight.delete(cacheKey);
+                    return (data);
+                })
+                .catch((err) => {
+                    inFlight.delete(cacheKey);
+                    console.error(err);
+                    return res.status(500).send('Error fetching board data.');
+                });
+
+            console.log('enter normal');
+            inFlight.set(cacheKey, promise);
+            const board = await promise;
+
             return res.status(200).json({
                 colors: colors,
                 type: 'board',
@@ -261,12 +305,12 @@ export const getImage = async (req: LoggedRequest, res: Response) => {
 
             const askedTime = req.query.time;
             const askedScale = parseInt(req.query.scale as string);
-            
+
             const time = askedTime !== undefined ? new Date(askedTime as string) : new Date();
             const scale = !Number.isNaN(askedScale) ? askedScale : 8;
 
             const {canvas} = await createBoardImage(time.toISOString(), {
-                scale: scale, 
+                scale: scale,
                 transparent: req.query.transparent !== undefined,
                 user_id: req.query.user_id as string || null
             });
@@ -295,7 +339,7 @@ export const getMyBoard = async (req: LoggedRequest, res: Response) => {
             const scale = 8;
 
             const {canvas} = await createBoardImage(time.toISOString(), {
-                scale: scale, 
+                scale: scale,
                 transparent: req.query.transparent !== undefined,
                 user_id: `${user.id}`
             });

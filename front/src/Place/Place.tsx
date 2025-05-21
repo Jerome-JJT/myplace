@@ -119,7 +119,7 @@ export function Place() {
   useEffect(() => {
     // const params = new URLSearchParams(window.location.search);
     queryPlace(paramTime ?? undefined, paramType ?? 'board', undefined);
-  }, [board.size, paramTime, paramType, queryPlace]);
+  }, [paramTime, paramType, queryPlace]);
 
   const paintButton = useCallback((e: React.MouseEvent<HTMLElement> | undefined) => {
     e?.currentTarget.blur();
