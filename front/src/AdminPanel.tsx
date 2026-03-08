@@ -1,6 +1,6 @@
 import { Button, Spinner } from '@material-tailwind/react';
 import axios from 'axios';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Tabs,
   TabsHeader,
@@ -50,7 +50,7 @@ export const AdminPanel = () => {
         }
 
       })
-      .catch((err) => {
+      .catch(() => {
         setError("Failed to get banned users");
       });
 
@@ -68,7 +68,7 @@ export const AdminPanel = () => {
         }
 
       })
-      .catch((err) => {
+      .catch(() => {
         setError("Failed to get admin users");
       });
   }, []);
@@ -100,7 +100,7 @@ export const AdminPanel = () => {
         }
 
       })
-      .catch((err) => {
+      .catch(() => {
         setError("Failed to add banned user");
       });
 
@@ -132,7 +132,7 @@ export const AdminPanel = () => {
         }
 
       })
-      .catch((err) => {
+      .catch(() => {
         setError("Failed to add banned user");
       });
 
@@ -166,7 +166,7 @@ export const AdminPanel = () => {
         }
 
       })
-      .catch((err) => {
+      .catch(() => {
         setError("Failed to add admin user");
       });
 
@@ -198,7 +198,7 @@ export const AdminPanel = () => {
         }
 
       })
-      .catch((err) => {
+      .catch(() => {
         setError("Failed to add banned user");
       });
 
