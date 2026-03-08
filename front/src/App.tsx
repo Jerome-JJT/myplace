@@ -23,6 +23,7 @@ import { Tutorial } from './Place/Tutorial';
 import { QUICK_FIX } from './Utils/types';
 import { LoginPo } from './LoginPo';
 import { Account } from './Account';
+import { AdminPanel } from './AdminPanel';
 import { Leaderboard } from './Leaderboard';
 import { DEV_MODE, ENABLE_GUEST_LOGIN, ENABLE_LOCAL_LOGIN, ENABLE_OAUTH2_LOGIN, OAUTH2_DISPLAY_NAME } from './Utils/consts';
 import { LocalLogin } from './LocalLogin';
@@ -48,6 +49,10 @@ function App() {
     {
       path:    '/leaderboard/',
       element: <Leaderboard />,
+    },
+    {
+      path:    '/admin/',
+      element: <AdminPanel />,
     },
     ENABLE_LOCAL_LOGIN ? {
       path:    '/login/',

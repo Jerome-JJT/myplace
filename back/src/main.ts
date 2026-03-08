@@ -27,6 +27,7 @@ const { profile } = require('./login');
 const { getPixels, getImage, getMyBoard } = require('./pixels');
 const { setPixel } = require('./pixels_actions');
 const { getLeaderboards } = require('./leaderboard');
+const { getBanned, setBanned,  getAdmins, setAdmins } = require('./user_management');
 
 if (ENABLE_UNLOGGED_VIEW === false) {
     app.get('/get', authenticateToken, getPixels);
@@ -61,6 +62,12 @@ if (ENABLE_OAUTH2_LOGIN === true) {
 app.get('/logout', logout);
 app.get('/profile', authenticateToken, profile);
 
+app.get('/banned', authenticateToken, getBanned);
+app.post('/banned', authenticateToken, setBanned);
+
+app.get('/admins', authenticateToken, getAdmins);
+app.post('/admins', authenticateToken, setAdmins);
+
 app.get('/myboard', authenticateToken, getMyBoard);
 app.get('/rotate_tokens', authenticateToken, rotate_tokens);
 
@@ -83,7 +90,7 @@ const server = app.listen(8080, () => {
 
 const wss = new WebSocket.Server({ noServer: true });
 
-server.on('upgrade', (request: Request, socket: Duplex, head: Buffer) => 
+server.on('upgrade', (request: Request, socket: Duplex, head: Buffer) =>
     upgradeRequest(request, socket, head, wss)
 );
 
