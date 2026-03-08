@@ -72,6 +72,8 @@ export const checkToken = async (req: LoggedRequest, res: Response, next: any, f
             }
             else {
                 if (decoded_t.soft_is_banned) {
+                    res.clearCookie('token');
+                    res.clearCookie('refresh');
                     return res.status(409).json({ message: 'Conflict' });
                 }
                 else {
