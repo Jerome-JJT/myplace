@@ -4,7 +4,8 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(250),
     password VARCHAR(250),
     is_admin BOOLEAN DEFAULT FALSE,
-    banned_at TIMESTAMP DEFAULT NULL,
+    banned_at  TIMESTAMP DEFAULT NULL,
+    ban_reason VARCHAR(250) DEFAULT NULL,
 
     campus_name VARCHAR(250) DEFAULT NULL,
 
@@ -46,7 +47,7 @@ CREATE INDEX BoardUsers on board(user_id);
 --     tablename,
 --     indexname;
 
--- INSERT INTO colors (id, name, red, green, blue) VALUES 
+-- INSERT INTO colors (id, name, red, green, blue) VALUES
 --     (1, 'white', 236, 240, 241),
 --     (2, 'black', 44, 62, 80),
 --     (3, 'red', 231, 76, 60),
@@ -60,7 +61,7 @@ CREATE INDEX BoardUsers on board(user_id);
 
 
 
--- INSERT INTO colors (id, name, red, green, blue) VALUES 
+-- INSERT INTO colors (id, name, red, green, blue) VALUES
 --     (1, 'white', 236, 240, 241),
 --     (2, 'black', 44, 62, 80),
 --     (3, 'red', 231, 76, 60),
@@ -73,7 +74,7 @@ CREATE INDEX BoardUsers on board(user_id);
 -- ;
 
 
-INSERT INTO colors (id, corder, name, red, green, blue) VALUES 
+INSERT INTO colors (id, corder, name, red, green, blue) VALUES
 (1,   10, 'white', 236, 240, 241),
 (2,   20, 'lightgray', 165, 180, 190),
 (3,   30, 'darkgray', 105, 121, 135),

@@ -15,7 +15,7 @@ export const getBanned = async (req: LoggedRequest, res: Response) => {
     }
 
     const result = await pool.query(`
-        SELECT users.id, users.username
+        SELECT users.id, users.username, users.ban_reason
         FROM users
         WHERE banned_at IS NOT NULL
     `, []);
@@ -38,13 +38,14 @@ export const setBanned = async (req: LoggedRequest, res: Response) => {
         });
     }
 
-    const { doBan, usernames } = req.body;
+    const { doBan, usernames, ban_reason } = req.body;
 
     await pool.query(`
         UPDATE users
-        SET banned_at = CASE WHEN $1 THEN NOW() ELSE NULL END
-        WHERE users.username = ANY($2) and is_admin = FALSE
-    `, [doBan, usernames]);
+        SET banned_at = CASE WHEN $1 THEN NOW() ELSE NULL END,
+            ban_reason = $2
+        WHERE users.username = ANY($3) and is_admin = FALSE
+    `, [doBan, ban_reason, usernames]);
 
     return res.status(200).send();
 }

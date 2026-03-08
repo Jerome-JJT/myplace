@@ -17,24 +17,14 @@ export const AdminPanel = () => {
   const menus = [{ id: 'banned', name: 'Banneds' }, { id: 'admins', name: 'Admins' }];
   const [selectedMenu, setSelectedMenu] = useState('banned');
 
-  const [bannedUsers, setBannedUsers] = useState<{ username: string }[] | undefined>(undefined);
+  const [bannedUsers, setBannedUsers] = useState<{ username: string, ban_reason: string }[] | undefined>(undefined);
   const [adminUsers, setAdminUsers] = useState<{ username: string }[] | undefined>(undefined);
 
   const [error, setError] = useState<string | undefined>(undefined);
 
   const [newUser, setNewUser] = useState('');
+  const [banReason, setBanReason] = useState('');
 
-  // const selectedLeaderboard = useMemo(() => {
-  //   if (selectedMenu === 'placed') {
-  //     return leaderboards.placed;
-  //   }
-  //   else if (selectedMenu === 'inplace') {
-  //     return leaderboards.inPlace;
-  //   }
-  //   else {
-  //     return undefined;
-  //   }
-  // }, [leaderboards.inPlace, leaderboards.placed, selectedMenu]);
 
   useEffect(() => {
     axios
@@ -81,8 +71,9 @@ export const AdminPanel = () => {
     axios
       .post('/api/banned',
         {
-          doBan:     true,
-          usernames: usernames,
+          doBan:      true,
+          usernames:  usernames,
+          ban_reason: banReason,
         },
         { withCredentials: true },
       )
@@ -92,7 +83,7 @@ export const AdminPanel = () => {
           setBannedUsers((banned) => {
             return [
               ...(banned || []),
-              ...(usernames.map(u => { return {username: u} })),
+              ...(usernames.map(u => { return { username: u, ban_reason: banReason} })),
             ]
           });
 
@@ -105,6 +96,7 @@ export const AdminPanel = () => {
       });
 
     setNewUser('');
+    setBanReason('');
   };
 
   const removeBannedUsers = (username: string) => {
@@ -140,7 +132,7 @@ export const AdminPanel = () => {
   };
 
 
-    const addAdminUsers = () => {
+  const addAdminUsers = () => {
 
     const usernames = newUser.split(',').map(u => u.trim()).filter(u => u.length > 0);
 
@@ -206,7 +198,7 @@ export const AdminPanel = () => {
   };
 
   return (
-    <div className='rounded-md ml-[10vw] md:mx-auto w-[80vw] md:max-w-[500px] mt-[5vh] bg-teal-400'>
+    <div className='rounded-md ml-[10vw] md:mx-auto w-[80vw] md:max-w-[700px] mt-[5vh] bg-teal-400'>
       <Tabs value={menus[0].id} className='w-full'>
         <TabsHeader {...QUICK_FIX}>
           {
@@ -233,6 +225,12 @@ export const AdminPanel = () => {
                 placeholder="Username"
                 className="flex-1 px-3 py-2 border border-dark-red rounded bg-black text-white"
               />
+              <input
+                value={banReason}
+                onChange={(e) => setBanReason(e.target.value)}
+                placeholder="Ban reason"
+                className="flex-1 px-3 py-2 border border-dark-red rounded bg-black text-white"
+              />
 
               <Button
                 onClick={addBannedUsers}
@@ -243,9 +241,10 @@ export const AdminPanel = () => {
               </Button>
             </div>
 
-            <div className='grid grid-cols-2'>
+            <div className='grid grid-cols-3'>
 
               <div><b>Name</b></div>
+              <div><b>Reason</b></div>
               <div><b>Remove</b></div>
 
               {(bannedUsers && bannedUsers.map((v, index) => {
@@ -259,6 +258,7 @@ export const AdminPanel = () => {
                 return (
                   <div key={v.username} className='contents'>
                     <div className={classes}>{v.username}</div>
+                    <div className={classes}>{v.ban_reason}</div>
 
                     <button
                       className={`${classes} text-red-500 font-bold hover:text-red-700`}
@@ -270,11 +270,11 @@ export const AdminPanel = () => {
                 );
 
               })) || error !== undefined && (
-                <span className='py-4 col-span-2 mx-auto text-red-500 font-bold'>
+                <span className='py-4 col-span-3 mx-auto text-red-500 font-bold'>
                   {error}
                 </span>
               ) || (
-                  <div className='py-4 col-span-2 mx-auto'>
+                  <div className='py-4 col-span-3 mx-auto'>
                     <Spinner className='m-auto w-12 h-12' {...QUICK_FIX} />
                   </div>
                 )}
