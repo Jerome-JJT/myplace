@@ -2,7 +2,12 @@ import express, { Request, Response, NextFunction } from "express";
 import WebSocket from "ws";
 import cookieParser from 'cookie-parser';
 import { Duplex } from 'stream';
+import jwt from 'jsonwebtoken';
+import {
+    JWT_SECRET,
+} from './consts';
 
+import * as cookie from 'cookie';
 import { sendUpdates, sendPing, sendConnecteds } from "./ws";
 import { DEV_MODE, ENABLE_GUEST_LOGIN, ENABLE_LOCAL_LOGIN, ENABLE_OAUTH2_LOGIN, ENABLE_UNLOGGED_VIEW } from "./consts";
 
@@ -94,10 +99,20 @@ server.on('upgrade', (request: Request, socket: Duplex, head: Buffer) =>
     upgradeRequest(request, socket, head, wss)
 );
 
-wss.on('connection', (client) => {
+wss.on('connection', (client, req: Request) => {
     const str = JSON.stringify({
         type: 'connecteds',
         nbConnecteds: wss.clients.size
+    });
+
+    const cookies = cookie.parse(req.headers.cookie ?? '');
+    const token = cookies.token ?? '';
+
+    jwt.verify(token, JWT_SECRET, (err: any, decoded_t: any) => {
+        if (!err) {
+            console.log(decoded_t);
+            (client as any).user = decoded_t;
+        }
     });
 
     client.send(str);
