@@ -16,6 +16,7 @@ import { getLastUserPixels } from './pixels_actions';
 import { objUrlEncode } from './objUrlEncode';
 import { getUserPresets } from './game_config';
 import { checkAdmin, checkUserExists, createDirectUser, createLocalUser, getNumHash, getUser, loginUser } from './login_helpers';
+import { matchCampus } from './flag';
 
 export const mockLogin = async (req: Request, res: Response) => {
     if (await loginUser(-1, res)) {
@@ -214,17 +215,22 @@ export const apiCallback = async (req: Request, res: Response) => {
                 const userUsername = userInfos.data[OAUTH2_USERNAME_FIELD!];
                 const userEmail = OAUTH2_EMAIL_FIELD ? userInfos.data[OAUTH2_EMAIL_FIELD] : null;
 
+                const userPrimaryCampus = (userInfos.data.campus_users as any[]).filter((v) => v.is_primary);
+                const userCampus = userPrimaryCampus.length === 1 ? (userInfos.data.campus as any[]).filter((v) => v.id === userPrimaryCampus[0].campus_id) : [];
+                const userCampusName = userCampus.length === 1 ? userCampus[0].name : undefined;
+
+                if(matchCampus.get(userCampusName)?.enabled === false)
+                {
+                    return res.status(410).json({ message: 'Login failed, campus not authorized' });
+                }
+
                 if (await loginUser(userId, res)) {
                     return res.redirect('/')
                     // return res.status(200).json({ message: 'Login successful' });
                 }
                 else {
-                    const userPrimaryCampus = (userInfos.data.campus_users as any[]).filter((v) => v.is_primary);
-                    const userCampus = userPrimaryCampus.length === 1 ? (userInfos.data.campus as any[]).filter((v) => v.id === userPrimaryCampus[0].campus_id) : [];
-                    const userCampusName = userCampus.length === 1 ? userCampus[0].name : undefined;
-
                     if (await createDirectUser(userId, userUsername, userEmail, userInfos.data['staff?'], userCampusName)) {
-                        if (await loginUser(userId, res)) { 
+                        if (await loginUser(userId, res)) {
                             return res.redirect('/')
                             // return res.status(200).json({ message: 'Login successful' });
                         }

@@ -1,4 +1,4 @@
 
-export const matchCampus: Map<string, { countryCode: string }> = new Map([
-    ['Lausanne', { countryCode: 'ch' }]
+export const matchCampus: Map<string, { enabled: boolean, countryCode: string }> = new Map([
+    ['Lausanne', { enabled: true, countryCode: 'ch' }]
 ]);
