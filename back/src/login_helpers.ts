@@ -71,11 +71,11 @@ export const loginUser = async (id: number, res: Response, verify_seq: number | 
 export const createDirectUser = async (id: number, username: string, email: string | null, admin: boolean, campus_name?: string): Promise<boolean> => {
     try {
         const result = await pool.query(`
-            INSERT INTO users (id, username, email, is_admin, campus_name) 
+            INSERT INTO users (id, username, email, is_admin, campus_name)
             VALUES
             ($1, $2, $3, $4, $5)
         `, [id, username, email, admin, campus_name]);
-    
+
         return result.rowCount === 1;
     }
     catch {
@@ -86,7 +86,7 @@ export const createDirectUser = async (id: number, username: string, email: stri
 export const createLocalUser = async (username: string, email: string | null, password: string, admin: boolean): Promise<boolean> => {
     try {
         const result = await pool.query(`
-            INSERT INTO users (username, email, password, is_admin) 
+            INSERT INTO users (username, email, password, is_admin)
             VALUES
             ($1, $2, $3, $4)
         `, [username, email, password, admin]);
@@ -155,7 +155,7 @@ export const rotate_tokens = async (req: LoggedRequest, res: Response) => {
     const user = req.user!;
 
     const result = await pool.query(`
-        UPDATE users 
+        UPDATE users
         SET token_seq = token_seq + 1
         WHERE id = $1
     `, [user.id]);
@@ -164,6 +164,6 @@ export const rotate_tokens = async (req: LoggedRequest, res: Response) => {
         return res.status(200).json({ message: 'Success' });
     }
     else {
-        return res.status(417).json({ message: 'Preconfition failed' });
+        return res.status(417).json({ message: 'Precondition failed' });
     }
 }

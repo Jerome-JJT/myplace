@@ -16,7 +16,7 @@ services:
 
   back:
     build: ./_build/node
-    
+
     ports:
       - "8081:8080"
 
@@ -32,8 +32,8 @@ services:
     networks:
       - front
 
-    ports:
-     - "8080:5173"
+    # ports:
+    #  - "8080:5173"
 
     volumes:
       - /etc/localtime:/etc/localtime:ro
@@ -41,7 +41,7 @@ services:
 
     environment:
       VITE_NODE_ENV: DEV
-  
+
       VITE_CANVAS_MIN_X: ${CANVAS_MIN_X:-0}
       VITE_CANVAS_MIN_Y: ${CANVAS_MIN_Y:-0}
       VITE_CANVAS_MAX_X: ${CANVAS_MAX_X:-200}
@@ -53,12 +53,12 @@ services:
       VITE_ENABLE_OAUTH2_LOGIN: ${ENABLE_OAUTH2_LOGIN-false}
 
       VITE_OAUTH2_DISPLAY_NAME: ${OAUTH2_DISPLAY_NAME-}
-    
+
     working_dir: /app
 
 
   nginx:
-    build: 
+    build:
       context: .
       dockerfile: ./_build/nginx/Dockerfile
 
@@ -72,6 +72,6 @@ services:
 
     ports:
      - "7979:80"
-     
+
 networks:
   front:
