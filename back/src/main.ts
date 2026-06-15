@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 import {
     JWT_SECRET,
 } from './consts';
+import { WebSocketServer } from 'ws';
 
 import * as cookie from 'cookie';
 import { sendUpdates, sendPing, sendConnecteds } from "./ws";
@@ -93,13 +94,14 @@ const server = app.listen(8080, () => {
     console.log('Server is running on port 8080');
 });
 
-const wss = new WebSocket.Server({ noServer: true });
+// const wss = new WebSocket.Server({ noServer: true });
+const wss = new WebSocketServer({ noServer: true });
 
 server.on('upgrade', (request: Request, socket: Duplex, head: Buffer) =>
     upgradeRequest(request, socket, head, wss)
 );
 
-wss.on('connection', (client, req: Request) => {
+wss.on('connection', (client: any, req: Request) => {
     const str = JSON.stringify({
         type: 'connecteds',
         nbConnecteds: wss.clients.size

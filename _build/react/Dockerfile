@@ -1,4 +1,4 @@
-FROM node:lts-alpine3.20
+FROM node:lts-alpine3.23
 
 COPY start.sh /
 RUN dos2unix /start.sh
