@@ -15,10 +15,11 @@ import { Flag32 as Flag } from '@weston/react-world-flags'
 interface BottomMenuProps {
   shareButton: (e: React.MouseEvent<HTMLElement> | undefined) => void
   paintButton: (e: React.MouseEvent<HTMLElement> | undefined) => void
+  banButton: (e: React.MouseEvent<HTMLElement> | undefined) => void
 }
 
-export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
-  const { isLogged, loginApi } = useUser();
+export const BottomMenu = ({ shareButton, paintButton, banButton }: BottomMenuProps) => {
+  const { infos, isLogged, loginApi } = useUser();
   const { queryPlace, activePixel, board, colors, activeColor, setActiveColor, times, activeTime, setActiveTime } = useCanvas();
   const screen = useBreakpoint();
   const debounceFunction = useDebounce();
@@ -182,6 +183,15 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
                 Share pixel
               </button>
             )
+          )}
+
+          {activePixel !== undefined && board.get(`${activePixel.x}:${activePixel.y}`)?.username !== 'null' && infos?.soft_is_admin && (
+            <button
+              className={classNames('px-2 h-8 bg-gray-500 rounded border-2 border-black hover:border-white')}
+              onClick={banButton}
+            >
+              Ban {board.get(`${activePixel.x}:${activePixel.y}`)?.username}
+            </button>
           )}
         </div>
         {
