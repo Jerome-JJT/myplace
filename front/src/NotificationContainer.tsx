@@ -5,6 +5,7 @@ import { AiFillCheckCircle, AiFillCloseCircle, AiFillInfoCircle, AiFillQuestionC
 import classNames from 'classnames';
 import styled from 'styled-components';
 import { useNotification } from './NotificationProvider';
+import { JSX } from 'react/jsx-runtime';
 
 const StyledAlert = styled.div`
   button {
