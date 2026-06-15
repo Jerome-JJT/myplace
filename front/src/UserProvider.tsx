@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { JSX, useContext, type ReactNode, createContext, useCallback, useState } from 'react';
+import { useContext, type ReactNode, createContext, useCallback, useState } from 'react';
 import { UserInfos } from './Utils/types';
 import { useNotification } from './NotificationProvider';
 

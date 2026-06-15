@@ -10,32 +10,32 @@ export default defineConfig({
     },
   },
   build: {
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('react-dom') || id.includes('react-icons') || id.includes('react-router-dom')) {
-              return 'react';
-            }
-            if (id.includes('tailwindcss') || id.includes('tailwind-merge')) {
-              return 'tailwind';
-            }
-            if (id.includes('@material-tailwind')) {
-              return 'mattailwind';
-            }
-            if (id.includes('@weston/react-world-flags')) {
-              return 'flags';
-            }
-          }
-        },
+    // rollupOptions: {
+    //   output: {
+        // manualChunks(id) {
+        //   if (id.includes('node_modules')) {
+        //     if (id.includes('react-dom') || id.includes('react-icons') || id.includes('react-router-dom')) {
+        //       return 'react';
+        //     }
+        //     if (id.includes('tailwindcss') || id.includes('tailwind-merge')) {
+        //       return 'tailwind';
+        //     }
+        //     if (id.includes('@material-tailwind')) {
+        //       return 'mattailwind';
+        //     }
+        //     if (id.includes('@weston/react-world-flags')) {
+        //       return 'flags';
+        //     }
+        //   }
+        // },
         // manualChunks: {
         //   react: ['react-dom', 'react-icons', 'react-router-dom'],
         //   tailwind: ['tailwindcss', 'tailwind-merge'],
         //   mattailwind: ['@material-tailwind/react'],
         //   flags: ['@weston/react-world-flags'],
         // } as any,
-      },
-    },
+    //   },
+    // },
   },
   plugins: [react(), tsconfigPaths()],
 });
