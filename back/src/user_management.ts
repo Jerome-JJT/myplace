@@ -47,7 +47,8 @@ export const setBanned = async (req: LoggedRequest, res: Response) => {
         WHERE users.username = ANY($3) and is_admin = FALSE
     `, [doBan, ban_reason, usernames]);
 
-    return res.status(200).send();
+    return res.status(200).json({
+    });
 }
 
 

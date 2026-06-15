@@ -14,10 +14,11 @@ import { useDebounce } from 'src/Utils/useDebounce';
 interface BottomMenuProps {
   shareButton: (e: React.MouseEvent<HTMLElement> | undefined) => void
   paintButton: (e: React.MouseEvent<HTMLElement> | undefined) => void
+  banButton: (e: React.MouseEvent<HTMLElement> | undefined) => void
 }
 
-export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
-  const { isLogged, loginApi } = useUser();
+export const BottomMenu = ({ shareButton, paintButton, banButton }: BottomMenuProps) => {
+  const { infos, isLogged, loginApi } = useUser();
   const { queryPlace, activePixel, board, colors, activeColor, setActiveColor, times, activeTime, setActiveTime } = useCanvas();
   const screen = useBreakpoint();
   const debounceFunction = useDebounce();
@@ -86,7 +87,7 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
   const pixelInfos = useCallback(() => {
     if (activePixel !== undefined) {
       const pixel = board.get(`${activePixel.x}:${activePixel.y}`);
-  
+
       if (pixel !== undefined) {
         if (pixel.username === 'null') {
           return (
@@ -97,7 +98,7 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
         }
         else {
           let displayUsername = <>{pixel.username}</>;
-  
+
           return (
             <p className='h-fit whitespace-nowrap'>
               {activePixel.x}:{activePixel.y} set by {displayUsername} at <br />
@@ -166,6 +167,15 @@ export const BottomMenu = ({ shareButton, paintButton }: BottomMenuProps) => {
                 Share pixel
               </button>
             )
+          )}
+
+          {activePixel !== undefined && board.get(`${activePixel.x}:${activePixel.y}`)?.username !== 'null' && infos?.soft_is_admin && (
+            <button
+              className={classNames('px-2 h-8 bg-gray-500 rounded border-2 border-black hover:border-white')}
+              onClick={banButton}
+            >
+              Ban {board.get(`${activePixel.x}:${activePixel.y}`)?.username}
+            </button>
           )}
         </div>
         {

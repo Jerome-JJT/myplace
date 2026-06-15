@@ -19,7 +19,7 @@ import { useNotification } from 'src/NotificationProvider';
 export function Place() {
   const { isLogged, setPixelInfos, setIsConnected, setInfos } = useUser();
   const { addNotif } = useNotification();
-  const { pl, image, queryPlace, activePixel, setActivePixel, activeColor, setActiveColor, colors, setBoard, scale, setNbConnecteds } = useCanvas();
+  const { pl, image, queryPlace, activePixel, setActivePixel, board, activeColor, setActiveColor, colors, setBoard, scale, setNbConnecteds } = useCanvas();
   const params = new URLSearchParams(window.location.search);
   const paramView = params.get('view') !== null;
   const paramType = params.get('type');
@@ -207,11 +207,11 @@ export function Place() {
         'y':     Math.min(Math.max(activePixel.y, CANVAS_MIN_Y), CANVAS_MAX_Y),
         'scale': scale,
       });
-  
+
       const base = `${window.location.origin}${window.location.pathname}`;
       const link = `${base}?${args}`;
       window.history.replaceState(null, '', link);
-  
+
       try {
         await navigator.clipboard.writeText(link);
         addNotif('Location copied to clipboard', 'info');
@@ -219,6 +219,52 @@ export function Place() {
       catch (error) {
         console.error(error);
         addNotif('Unable to copy to clipboard', 'error');
+      }
+    }
+    else {
+      addNotif('No pixel selected', 'warning');
+    }
+  }, [activePixel?.x, activePixel?.y, addNotif, scale]);
+
+
+  const banButton = useCallback(async (e: React.MouseEvent<HTMLElement> | undefined) => {
+    e?.currentTarget.blur();
+
+    if (activePixel !== undefined) {
+
+      const pixel = board.get(`${activePixel.x}:${activePixel.y}`);
+
+      if(pixel !== undefined && pixel.username !== 'null')
+      {
+        const banReason = prompt("Ban reason");
+
+
+        axios
+        .post('/api/banned',
+          {
+            doBan:      true,
+            usernames:  [pixel?.username],
+            ban_reason: banReason,
+          },
+          { withCredentials: true },
+        )
+        .then((res) => {
+          if (res.status === 200) {
+
+            // setBannedUsers((banned) => {
+            //   return [
+            //     ...(banned || []),
+            //     ...(usernames.map(u => { return { username: u, ban_reason: banReason} })),
+            //   ]
+            // });
+
+            addNotif("User banned", 'success');
+          }
+
+        })
+        .catch(() => {
+          addNotif("Failed to add banned user", 'error');
+        });
       }
     }
     else {
@@ -258,7 +304,7 @@ export function Place() {
           }
           return acc;
         }, undefined) ;
-        
+
         if (next !== undefined) {
           return next[0];
         }
@@ -285,7 +331,7 @@ export function Place() {
           marginTop: canvasMarginTop,
           display:   (image !== undefined ? 'block' : 'none'),
         }}
-        src={`data:image/png;base64,${image}`} 
+        src={`data:image/png;base64,${image}`}
       />
       <DisplayCanvas />
 
@@ -299,6 +345,7 @@ export function Place() {
             <BottomMenu
               shareButton={shareButton}
               paintButton={paintButton}
+              banButton={banButton}
             />
           </>
         )
