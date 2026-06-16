@@ -1,4 +1,4 @@
-import { JSX, useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { useContext, type ReactNode, createContext } from 'react';
 import axios from 'axios';
 
@@ -331,7 +331,7 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
             'y':     Math.min(Math.max(clickedY, CANVAS_MIN_Y), CANVAS_MAX_Y),
             'scale': scale,
           });
-
+  
           const base = `${window.location.origin}${window.location.pathname}`;
           const link = `${base}?${args}`;
           window.history.replaceState(null, '', link);
@@ -398,12 +398,12 @@ export function CanvasProvider({ children }: { children: ReactNode }): JSX.Eleme
               'y':     Math.round(calcNewY),
               'scale': scale,
             });
-
+    
             const base = `${window.location.origin}${window.location.pathname}`;
             const link = `${base}?${args}`;
             window.history.replaceState(null, '', link);
           }
-
+          
           return {
             x: calcNewX,
             y: calcNewY,

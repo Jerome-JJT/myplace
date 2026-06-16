@@ -2,7 +2,7 @@
 import { useRef } from 'react';
 
 export const useThrottle = () => {
-  const throttleSeed = useRef<any | null>(null);
+  const throttleSeed = useRef<NodeJS.Timeout | null>(null);
 
   const throttleFunction = useRef((func: any, delay=200) => {
     if (!throttleSeed.current) {

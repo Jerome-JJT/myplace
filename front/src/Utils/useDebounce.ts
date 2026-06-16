@@ -2,7 +2,7 @@
 import { useRef } from 'react';
 
 export const useDebounce = () => {
-  const debounceSeed = useRef<any | null>(null);
+  const debounceSeed = useRef<NodeJS.Timeout | null>(null);
 
   const debounceFunction = useRef((func: any, timeout = 200) => {
     if (debounceSeed.current) {
