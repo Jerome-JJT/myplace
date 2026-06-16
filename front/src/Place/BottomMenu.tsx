@@ -177,7 +177,7 @@ export const BottomMenu = ({ shareButton, paintButton, banButton }: BottomMenuPr
               </IconButton>
             ) || (
               <button
-                className={classNames('px-2 h-8 bg-gray-500 rounded border-2 border-black hover:border-white')}
+                className={classNames('px-2 h-8 bg-gray-500 rounded border-2 border-black hover:border-white whitespace-nowrap')}
                 onClick={shareButton}
               >
                 Share pixel
@@ -185,9 +185,9 @@ export const BottomMenu = ({ shareButton, paintButton, banButton }: BottomMenuPr
             )
           )}
 
-          {activePixel !== undefined && board.get(`${activePixel.x}:${activePixel.y}`)?.username !== 'null' && infos?.soft_is_admin && (
+          {activePixel !== undefined && !['null', 'Welcome'].includes(board.get(`${activePixel.x}:${activePixel.y}`)?.username) && infos?.soft_is_admin && (
             <button
-              className={classNames('px-2 h-8 bg-gray-500 rounded border-2 border-black hover:border-white')}
+              className={classNames('px-2 h-8 bg-gray-500 rounded border-2 border-black hover:border-white whitespace-nowrap')}
               onClick={banButton}
             >
               Ban {board.get(`${activePixel.x}:${activePixel.y}`)?.username}

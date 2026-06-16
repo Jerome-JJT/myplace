@@ -238,7 +238,6 @@ export function Place() {
       {
         const banReason = prompt("Ban reason");
 
-
         axios
         .post('/api/banned',
           {
