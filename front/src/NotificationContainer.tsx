@@ -5,7 +5,7 @@ import { AiFillCheckCircle, AiFillCloseCircle, AiFillInfoCircle, AiFillQuestionC
 import classNames from 'classnames';
 import styled from 'styled-components';
 import { useNotification } from './NotificationProvider';
-import { ReactNode } from 'react';
+import { JSX } from 'react/jsx-runtime';
 
 const StyledAlert = styled.div`
   button {
@@ -13,13 +13,12 @@ const StyledAlert = styled.div`
   }
 `;
 
-export function NotificationContainer(): any {
+export function NotificationContainer(): JSX.Element {
   const { notifications, removeNotif } = useNotification();
-
 
   const iconSize = '24px';
 
-  function NotifIcon(type: string): ReactNode {
+  function NotifIcon(type: string): JSX.Element {
     switch (type) {
     case 'question':
       return <AiFillQuestionCircle size={iconSize} />;

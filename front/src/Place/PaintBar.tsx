@@ -62,6 +62,6 @@ export const PaintBar = () => {
           </div>
         </div>
       </div>
-    ) || <></>
+    )
   );
 };
