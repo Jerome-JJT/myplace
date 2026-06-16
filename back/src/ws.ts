@@ -1,11 +1,10 @@
 import WebSocket from "ws";
-import { WebSocketServer } from 'ws';
 
 import { Update } from "./types";
 
 export const updates: Update[] = [];
 
-export const sendUpdates = (wss: WebSocketServer) => {
+export const sendUpdates = (wss: WebSocket.Server) => {
 
     if (updates.length > 0) {
         const str = JSON.stringify({
@@ -21,7 +20,7 @@ export const sendUpdates = (wss: WebSocketServer) => {
             }),
         });
 
-        wss.clients.forEach((client: any) => {
+        wss.clients.forEach((client) => {
 
             console.log((client as any).user!, updates)
 
@@ -38,24 +37,24 @@ export const sendUpdates = (wss: WebSocketServer) => {
     }
 }
 
-export const sendPing = (wss: WebSocketServer) => {
+export const sendPing = (wss: WebSocket.Server) => {
     const str = JSON.stringify({
         type: 'ping'
     });
 
-    wss.clients.forEach((client: any) => {
+    wss.clients.forEach((client) => {
         client.send(str);
     });
 }
 
-export const sendConnecteds = (wss: WebSocketServer) => {
+export const sendConnecteds = (wss: WebSocket.Server) => {
     const str = JSON.stringify({
         type: 'connecteds',
         nbConnecteds: wss.clients.size
     });
 
 
-    wss.clients.forEach((client: any) => {
+    wss.clients.forEach((client) => {
         client.send(str);
     });
 }
