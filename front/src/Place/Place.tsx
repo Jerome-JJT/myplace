@@ -33,7 +33,7 @@ export function Place() {
     const socket = new WebSocket(`${document.location.protocol.includes('https') ? 'wss' : 'ws'}://${document.location.host}/ws/`);
     const sockId = Math.round(Math.random() * 10000);
     const updates: Update[] = [];
-    let interval: NodeJS.Timeout | undefined = undefined;
+    let interval: any | undefined = undefined;
 
     socket.onopen = () => {
       console.log(`WebSocket ${sockId} connected.`);
