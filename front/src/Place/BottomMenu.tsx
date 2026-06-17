@@ -185,7 +185,7 @@ export const BottomMenu = ({ shareButton, paintButton, banButton }: BottomMenuPr
             )
           )}
 
-          {activePixel !== undefined && !['null', 'Welcome'].includes(board.get(`${activePixel.x}:${activePixel.y}`)?.username) && infos?.soft_is_admin && (
+          {activePixel !== undefined && !['null', 'Welcome'].includes(board.get(`${activePixel.x}:${activePixel.y}`)?.username ?? '') && infos?.soft_is_admin && (
             <button
               className={classNames('px-2 h-8 bg-gray-500 rounded border-2 border-black hover:border-white whitespace-nowrap')}
               onClick={banButton}
